@@ -7,31 +7,47 @@
     <style>
         body {
             margin: 0;
+            padding-top: 70px;
+            padding-bottom: 90px;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
         header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-            color: white;
-            padding: 20px 30px;
-            position: relative;
-            z-index: 100;
-            border-bottom: 2px solid #0066cc;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 32px;
+            box-sizing: border-box;
+            z-index: 99999;
+            background: rgba(10, 18, 32, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
         }
 
         header h1 {
             margin: 0;
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 0.5px;
         }
 
         header p {
-            margin: 5px 0 0 0;
-            font-size: 14px;
-            opacity: 0.9;
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.7;
+            color: rgba(255, 255, 255, 0.8);
+            display: none;
         }
 
         main {
@@ -41,11 +57,11 @@
 
         .experience {
             position: fixed;
-            top: 0;
+            top: 70px;
             left: 0;
             width: 100%;
-            height: 100vh;
-            z-index: 2;
+            height: calc(100vh - 160px);
+            z-index: 1;
         }
 
         .scrollTarget {
@@ -59,9 +75,9 @@
         .vignette-radial {
             position: fixed;
             z-index: 11;
-            top: 0;
+            top: 70px;
             left: 0;
-            height: 100vh;
+            height: calc(100vh - 160px);
             width: 100%;
             pointer-events: none;
         }
@@ -80,20 +96,23 @@
         /* STORYTELLING OVERLAY STYLES */
         .story-overlay {
             position: fixed;
-            top: 0;
+            top: 70px;
+            bottom: 90px;
             left: 0;
-            width: 100%;
-            height: 100vh;
+            right: 0;
+            width: auto;
+            height: auto;
             z-index: 10;
             pointer-events: none;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
         }
 
         .story-container {
             background: rgba(15, 52, 96, 0.85);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 2px solid rgba(0, 153, 255, 0.5);
             border-radius: 15px;
             padding: 40px;
@@ -140,8 +159,8 @@
 
         .progress-indicator {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            bottom: 110px;
+            right: 32px;
             z-index: 9;
             text-align: right;
             color: white;
@@ -167,7 +186,7 @@
 
         .chapter-marker {
             position: fixed;
-            left: 30px;
+            left: 32px;
             top: 50%;
             transform: translateY(-50%);
             z-index: 9;
@@ -185,66 +204,114 @@
         }
 
         footer {
-            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
-            color: white;
-            padding: 30px;
-            position: relative;
-            z-index: 100;
-            border-top: 2px solid #0066cc;
-            margin-top: 1000vh;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            box-sizing: border-box;
+            z-index: 99999;
+            background: rgba(10, 18, 32, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
+            margin-top: 0;
+            overflow: hidden;
         }
 
         footer h2 {
-            margin: 0 0 15px 0;
-            font-size: 20px;
-            border-bottom: 1px solid #0066cc;
-            padding-bottom: 10px;
+            margin: 0;
+            font-size: 14px;
+            border: none;
+            padding: 0;
+            color: white;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         footer .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            display: none;
         }
 
-        footer .footer-section h3 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-            color: #0099ff;
+        footer .footer-section {
+            display: none;
         }
 
-        footer .footer-section p, footer .footer-section ul {
-            margin: 0;
-            font-size: 14px;
-            line-height: 1.6;
-        }
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            header {
+                height: 60px;
+                padding: 0 16px;
+            }
 
-        footer ul {
-            list-style: none;
-            padding: 0;
-        }
+            header h1 {
+                font-size: 16px;
+            }
 
-        footer li {
-            margin-bottom: 5px;
-        }
+            body {
+                padding-top: 60px;
+                padding-bottom: 80px;
+            }
 
-        footer a {
-            color: #0099ff;
-            text-decoration: none;
-        }
+            .experience {
+                top: 60px;
+                height: calc(100vh - 140px);
+            }
 
-        footer a:hover {
-            text-decoration: underline;
+            .vignette-radial {
+                top: 60px;
+                height: calc(100vh - 140px);
+            }
+
+            footer {
+                height: 80px;
+                padding: 0 16px;
+            }
+
+            footer h2 {
+                font-size: 12px;
+            }
+
+            .progress-indicator {
+                right: 16px;
+                bottom: 100px;
+            }
+
+            .chapter-marker {
+                left: 16px;
+                font-size: 10px;
+            }
+
+            .story-container {
+                padding: 30px;
+                max-width: 90%;
+            }
+
+            .story-container h2 {
+                font-size: 24px;
+            }
+
+            .story-container .story-content {
+                font-size: 14px;
+            }
+
+            .story-container .story-stat {
+                font-size: 24px;
+            }
         }
     </style>
 
 </head>
 
 <body>
-    <!-- HEADER -->
+    <!-- FIXED HEADER -->
     <header>
         <h1>🚀 3D Tube Navigation Experience</h1>
-        <p>Interactive scroll-based 3D visualization powered by Three.js, GSAP & ScrollTrigger</p>
+        <p>Interactive scroll-based 3D visualization</p>
     </header>
 
     <!-- MAIN CONTENT -->
@@ -277,48 +344,9 @@
         <div class="chapter-marker" id="chapterMarker">CHAPTER</div>
     </main>
 
-    <!-- FOOTER -->
+    <!-- FIXED FOOTER -->
     <footer>
-        <h2>Top IT Job Profiles in the USA — 2026</h2>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>📊 Highest Paying Roles</h3>
-                <ul>
-                    <li><strong>IT Manager/Director:</strong> $171,000</li>
-                    <li><strong>Security Architect:</strong> $150,000–$170,000+</li>
-                    <li><strong>AI/ML Engineer:</strong> $130,000–$180,000</li>
-                    <li><strong>Cloud Architect:</strong> $143,270</li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>🎯 Market Trends 2026</h3>
-                <ul>
-                    <li>AI & Cloud dominate hiring</li>
-                    <li>Skills over experience prioritized</li>
-                    <li>Talent shortage persists</li>
-                    <li>Salaries rising 8–10% annually</li>
-                    <li>Houston & Chicago leading hubs</li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>💼 Critical Demand Roles</h3>
-                <ul>
-                    <li>Cybersecurity Engineer</li>
-                    <li>Data Engineer</li>
-                    <li>Platform/DevOps Engineer</li>
-                    <li>Cloud Architect</li>
-                    <li>AI/ML Specialist</li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h3>📌 Key Insight</h3>
-                <p>The US IT market rewards specialization. With 76% of IT employers struggling to find qualified talent, focus on AI, cloud, and cybersecurity skills for maximum career growth and compensation.</p>
-                <p style="margin-top: 10px; font-size: 12px; opacity: 0.8;">Report compiled by Norlox Solutions | June 2026</p>
-            </div>
-        </div>
+        <h2>💼 Top IT Job Profiles in the USA — 2026 | Report by Norlox Solutions</h2>
     </footer>
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
@@ -432,7 +460,6 @@
         };
         var markers = [];
 
-
         //Get window size
         var ww = window.innerWidth,
             wh = window.innerHeight;
@@ -467,13 +494,11 @@
         camera.rotation.y = cameraRotationProxyX;
         camera.rotation.z = cameraRotationProxyY;
 
-        //camera.position.z = 400;
         var c = new THREE.Group();
         c.position.z = 400;
 
         c.add(camera);
         scene.add(c);
-
 
         //set up render pass
         var renderScene = new THREE.RenderPass(scene, camera);
@@ -486,7 +511,6 @@
         composer.setSize(window.innerWidth, window.innerHeight);
         composer.addPass(renderScene);
         composer.addPass(bloomPass);
-
 
         //Array of points
         var points = [
@@ -512,27 +536,21 @@
         }
         //Create a path from the points
         var path = new THREE.CatmullRomCurve3(points);
-        //path.curveType = 'catmullrom';
         path.tension = .5;
 
         //Create a new geometry with a different radius
         var geometry = new THREE.TubeGeometry(path, 300, 4, 32, false);
 
         var texture = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/3d_space_5.jpg', function (texture) {
-
             texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
             texture.offset.set(0, 0);
             texture.repeat.set(15, 2);
-
         });
 
-
         var mapHeight = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/waveform-bump3.jpg', function (texture) {
-
             texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
             texture.offset.set(0, 0);
             texture.repeat.set(15, 2);
-
         });
 
         var material = new THREE.MeshPhongMaterial({
@@ -546,16 +564,11 @@
 
         //Create a mesh
         var tube = new THREE.Mesh(geometry, material);
-        //tube.receiveShadows = true;
-        //Push the mesh into the scene
         scene.add(tube);
 
-        //inner tube.=========================================
-
-        //Create a new geometry with a different radius
+        //inner tube
         var geometry = new THREE.TubeGeometry(path, 150, 3.4, 32, false);
         var geo = new THREE.EdgesGeometry(geometry);
-        //THREE.EdgesGeometry( geometry );
 
         var mat = new THREE.LineBasicMaterial({
             linewidth: 2,
@@ -566,14 +579,10 @@
         var wireframe = new THREE.LineSegments(geo, mat);
         scene.add(wireframe);
 
-        //-------------------------
-
-
         //Create a point light in our scene
         var light = new THREE.PointLight(0xffffff, .35, 4, 0);
         light.castShadow = true;
         scene.add(light);
-
 
         function updateCameraPercentage(percentage) {
             p1 = path.getPointAt(percentage);
@@ -584,11 +593,8 @@
             light.position.set(p2.x, p2.y, p2.z);
         }
 
-
         var cameraTargetPercentage = 0;
         var currentCameraPercentage = 0;
-
-
 
         gsap.defaultEase = Linear.easeNone;
 
@@ -620,10 +626,7 @@
             }
         });
 
-
         function render() {
-            //texture.offset.x+=.004
-            //texture2.needsUpdate = true;
             currentCameraPercentage = cameraTargetPercentage
 
             camera.rotation.y += (cameraRotationProxyX - camera.rotation.y) / 15;
@@ -631,14 +634,10 @@
 
             updateCameraPercentage(currentCameraPercentage);
 
-            //animate texture
-
             particleSystem1.rotation.y += 0.00002;
             particleSystem2.rotation.x += 0.00005;
             particleSystem3.rotation.z += 0.00001;
 
-            //Render the scene
-            //renderer.render(scene, camera);
             composer.render();
 
             requestAnimationFrame(render);
@@ -652,7 +651,6 @@
         });
 
         window.addEventListener('resize', function () {
-
             var width = window.innerWidth;
             var height = window.innerHeight;
 
@@ -661,21 +659,13 @@
 
             renderer.setSize(width, height);
             composer.setSize(width, height);
-
         }, false);
-
-
 
         var lastPlace = 0;
         var newPlace = 0;
 
-
-
         //particle system
-        // create the particle variables
-        //
         var spikeyTexture = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/spikey.png');
-
 
         var particleCount = 6800,
             particles1 = new THREE.Geometry(),
@@ -691,64 +681,43 @@
 
         // now create the individual particles
         for (var p = 0; p < particleCount; p++) {
-
-            // create a particle with random
-            // position values, -250 -> 250
             var pX = Math.random() * 500 - 250,
                 pY = Math.random() * 50 - 25,
                 pZ = Math.random() * 500 - 250,
                 particle = new THREE.Vector3(pX, pY, pZ);
 
-            // add it to the geometry
             particles1.vertices.push(particle);
         }
 
         // now create the individual particles
         for (var p = 0; p < particleCount; p++) {
-
-            // create a particle with random
-            // position values, -250 -> 250
             var pX = Math.random() * 500,
                 pY = Math.random() * 10 - 5,
                 pZ = Math.random() * 500,
                 particle = new THREE.Vector3(pX, pY, pZ);
 
-            // add it to the geometry
             particles2.vertices.push(particle);
         }
 
         // now create the individual particles
         for (var p = 0; p < particleCount; p++) {
-
-            // create a particle with random
-            // position values, -250 -> 250
             var pX = Math.random() * 500,
                 pY = Math.random() * 10 - 5,
                 pZ = Math.random() * 500,
                 particle = new THREE.Vector3(pX, pY, pZ);
 
-            // add it to the geometry
             particles3.vertices.push(particle);
         }
 
         // create the particle system
-        var particleSystem1 = new THREE.ParticleSystem(
-            particles1,
-            pMaterial);
-
-        var particleSystem2 = new THREE.ParticleSystem(
-            particles2,
-            pMaterial);
-
-        var particleSystem3 = new THREE.ParticleSystem(
-            particles3,
-            pMaterial);
+        var particleSystem1 = new THREE.ParticleSystem(particles1, pMaterial);
+        var particleSystem2 = new THREE.ParticleSystem(particles2, pMaterial);
+        var particleSystem3 = new THREE.ParticleSystem(particles3, pMaterial);
 
         // add it to the scene
         scene.add(particleSystem1);
         scene.add(particleSystem2);
         scene.add(particleSystem3);
-
 
         document.addEventListener('mousemove', function (evt) {
             cameraRotationProxyX = Mathutils.map(evt.clientX, 0, window.innerWidth, 3.24, 3.04);
@@ -801,7 +770,7 @@
                 }, 300);
             }
 
-            // Make chapter marker visible after 25% scroll
+            // Make chapter marker visible after 15% scroll
             if (progressPercent > 15) {
                 chapterMarker.classList.add('active');
             } else {
