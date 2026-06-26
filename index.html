@@ -77,6 +77,113 @@
             background: radial-gradient(circle, transparent 60%, black 150%);
         }
 
+        /* STORYTELLING OVERLAY STYLES */
+        .story-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .story-container {
+            background: rgba(15, 52, 96, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 153, 255, 0.5);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 700px;
+            text-align: center;
+            color: white;
+            opacity: 0;
+            transform: scale(0.8) translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+
+        .story-container.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .story-container h2 {
+            margin: 0 0 15px 0;
+            font-size: 32px;
+            color: #00ccff;
+            text-shadow: 0 0 20px rgba(0, 204, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .story-container .story-content {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .story-container .story-stat {
+            font-size: 28px;
+            color: #0099ff;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+        }
+
+        .story-container .story-detail {
+            font-size: 13px;
+            color: rgba(0, 204, 255, 0.8);
+            font-style: italic;
+        }
+
+        .progress-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9;
+            text-align: right;
+            color: white;
+            font-size: 12px;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 204, 255, 0.4);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0099ff, #00ccff);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .chapter-marker {
+            position: fixed;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 9;
+            color: rgba(0, 204, 255, 0.6);
+            font-size: 12px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            letter-spacing: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .chapter-marker.active {
+            opacity: 1;
+        }
+
         footer {
             background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
             color: white;
@@ -145,6 +252,29 @@
         <canvas class="experience"></canvas>
         <div class="scrollTarget"></div>
         <div class="vignette-radial"></div>
+
+        <!-- STORYTELLING OVERLAY -->
+        <div class="story-overlay">
+            <div class="story-container" id="storyContainer">
+                <h2 id="storyTitle">Welcome to Your Journey</h2>
+                <div class="story-content" id="storyContent">
+                    Begin your exploration through the digital landscape...
+                </div>
+                <div class="story-stat" id="storyStat">READY?</div>
+                <div class="story-detail" id="storyDetail">Scroll to begin the experience</div>
+            </div>
+        </div>
+
+        <!-- PROGRESS INDICATOR -->
+        <div class="progress-indicator">
+            <div id="progressText">0%</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- CHAPTER MARKER -->
+        <div class="chapter-marker" id="chapterMarker">CHAPTER</div>
     </main>
 
     <!-- FOOTER -->
@@ -203,8 +333,85 @@
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/ScrollTrigger.min.js'></script>
     <script src='https://codepen.io/motionharvest/pen/wBvaRbB/2e0a33310abc78fed3c00970d23e6f5c.js'></script>
     
-    <!-- ALL ORIGINAL JAVASCRIPT REMAINS UNCHANGED -->
+    <!-- ALL ORIGINAL JAVASCRIPT REMAINS UNCHANGED + NEW STORYTELLING LOGIC -->
     <script>
+        // ===== STORYTELLING DATA =====
+        const storyChapters = [
+            {
+                progress: 0,
+                title: "Welcome to Your Journey",
+                content: "Begin your exploration through the digital landscape of IT careers...",
+                stat: "READY?",
+                detail: "Scroll to begin the experience",
+                chapter: "START"
+            },
+            {
+                progress: 12,
+                title: "Chapter 1: The Rising Demand",
+                content: "The IT industry is experiencing unprecedented growth. Companies everywhere are racing to find top talent in specialized roles.",
+                stat: "700K+",
+                detail: "Unfilled cybersecurity positions in the US",
+                chapter: "DEMAND"
+            },
+            {
+                progress: 25,
+                title: "Chapter 2: The Cloud Revolution",
+                content: "Cloud architecture has become essential. Organizations across all industries are migrating to cloud-native solutions at scale.",
+                stat: "$143K",
+                detail: "Average Cloud Architect salary",
+                chapter: "CLOUD"
+            },
+            {
+                progress: 37,
+                title: "Chapter 3: AI Takes Center Stage",
+                content: "Artificial Intelligence and Machine Learning are transforming every sector. AI engineers command the highest premiums in the job market.",
+                stat: "$180K",
+                detail: "Top AI/ML Engineer salary potential",
+                chapter: "AI & ML"
+            },
+            {
+                progress: 50,
+                title: "Chapter 4: Security First",
+                content: "Cybersecurity has evolved from a specialty to a strategic necessity. Zero-trust models and AI-powered threat detection are now industry standards.",
+                stat: "CRITICAL",
+                detail: "Security Architect demand level",
+                chapter: "SECURITY"
+            },
+            {
+                progress: 62,
+                title: "Chapter 5: The Data Pipeline",
+                content: "Data Engineers are the backbone of modern intelligence. They build the infrastructure that powers AI, analytics, and real-time decision-making.",
+                stat: "$150K",
+                detail: "Top Data Engineer compensation",
+                chapter: "DATA"
+            },
+            {
+                progress: 75,
+                title: "Chapter 6: Platform Engineering",
+                content: "DevOps has evolved into Platform Engineering. Building internal developer platforms and CI/CD systems is now a core competitive advantage.",
+                stat: "$145K",
+                detail: "Platform Engineer average salary",
+                chapter: "PLATFORM"
+            },
+            {
+                progress: 87,
+                title: "Chapter 7: The Future Awaits",
+                content: "Skills matter more than years of experience. The IT industry rewards specialization, continuous learning, and demonstrable technical ability.",
+                stat: "8-10%",
+                detail: "Projected IT salary growth in 2026",
+                chapter: "FUTURE"
+            },
+            {
+                progress: 96,
+                title: "Your Destination",
+                content: "You've journeyed through the entire digital landscape. The opportunities are vast, the demand is real, and the compensation reflects the value you bring.",
+                stat: "BEGIN",
+                detail: "Your next chapter starts now",
+                chapter: "END"
+            }
+        ];
+
+        // ===== ORIGINAL CODE (UNTOUCHED) =====
         var Mathutils = {
             normalize: function ($value, $min, $max) {
                 return ($value - $min) / ($max - $min);
@@ -397,7 +604,11 @@
                 start: "top top",
                 end: "bottom 100%",
                 scrub: 5,
-                markers: { color: "white" }
+                markers: { color: "white" },
+                onUpdate: function(self) {
+                    // Update storytelling content based on scroll progress
+                    updateStoryContent(self.progress);
+                }
             }
         })
         tl.to(tubePerc, {
@@ -542,6 +753,65 @@
         document.addEventListener('mousemove', function (evt) {
             cameraRotationProxyX = Mathutils.map(evt.clientX, 0, window.innerWidth, 3.24, 3.04);
             cameraRotationProxyY = Mathutils.map(evt.clientY, 0, window.innerHeight, -0.1, 0.1);
+        });
+
+        // ===== NEW STORYTELLING LOGIC =====
+        function updateStoryContent(scrollProgress) {
+            // Convert scroll progress (0-1) to percentage (0-100)
+            const progressPercent = Math.round(scrollProgress * 100);
+
+            // Update progress bar
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+            document.getElementById('progressText').textContent = progressPercent + '%';
+
+            // Find the appropriate chapter based on scroll progress
+            let currentChapter = storyChapters[0];
+            
+            for (let i = 0; i < storyChapters.length; i++) {
+                if (progressPercent >= storyChapters[i].progress) {
+                    currentChapter = storyChapters[i];
+                }
+            }
+
+            // Update story content with smooth transitions
+            const storyContainer = document.getElementById('storyContainer');
+            const storyTitle = document.getElementById('storyTitle');
+            const storyContent = document.getElementById('storyContent');
+            const storyStat = document.getElementById('storyStat');
+            const storyDetail = document.getElementById('storyDetail');
+            const chapterMarker = document.getElementById('chapterMarker');
+
+            // Add active class for animation
+            if (!storyContainer.classList.contains('active')) {
+                storyContainer.classList.add('active');
+            }
+
+            // Update text content (will trigger fade animations via CSS)
+            if (storyTitle.textContent !== currentChapter.title) {
+                storyContainer.classList.remove('active');
+                
+                setTimeout(() => {
+                    storyTitle.textContent = currentChapter.title;
+                    storyContent.textContent = currentChapter.content;
+                    storyStat.textContent = currentChapter.stat;
+                    storyDetail.textContent = currentChapter.detail;
+                    chapterMarker.textContent = currentChapter.chapter;
+                    
+                    storyContainer.classList.add('active');
+                }, 300);
+            }
+
+            // Make chapter marker visible after 25% scroll
+            if (progressPercent > 15) {
+                chapterMarker.classList.add('active');
+            } else {
+                chapterMarker.classList.remove('active');
+            }
+        }
+
+        // Initialize story on load
+        window.addEventListener('load', () => {
+            updateStoryContent(0);
         });
     </script>
 
