@@ -7,6 +7,36 @@
     <style>
         body {
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: white;
+            padding: 20px 30px;
+            position: relative;
+            z-index: 100;
+            border-bottom: 2px solid #0066cc;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        main {
+            flex: 1;
+            position: relative;
         }
 
         .experience {
@@ -46,14 +76,121 @@
             right: 0;
             background: radial-gradient(circle, transparent 60%, black 150%);
         }
+
+        footer {
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+            color: white;
+            padding: 30px;
+            position: relative;
+            z-index: 100;
+            border-top: 2px solid #0066cc;
+            margin-top: 1000vh;
+        }
+
+        footer h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            border-bottom: 1px solid #0066cc;
+            padding-bottom: 10px;
+        }
+
+        footer .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        footer .footer-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #0099ff;
+        }
+
+        footer .footer-section p, footer .footer-section ul {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        footer ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        footer li {
+            margin-bottom: 5px;
+        }
+
+        footer a {
+            color: #0099ff;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 
 </head>
 
 <body>
-    <canvas class="experience"></canvas>
-    <div class="scrollTarget"></div>
-    <div class="vignette-radial"></div>
+    <!-- HEADER -->
+    <header>
+        <h1>🚀 3D Tube Navigation Experience</h1>
+        <p>Interactive scroll-based 3D visualization powered by Three.js, GSAP & ScrollTrigger</p>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <canvas class="experience"></canvas>
+        <div class="scrollTarget"></div>
+        <div class="vignette-radial"></div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <h2>Top IT Job Profiles in the USA — 2026</h2>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>📊 Highest Paying Roles</h3>
+                <ul>
+                    <li><strong>IT Manager/Director:</strong> $171,000</li>
+                    <li><strong>Security Architect:</strong> $150,000–$170,000+</li>
+                    <li><strong>AI/ML Engineer:</strong> $130,000–$180,000</li>
+                    <li><strong>Cloud Architect:</strong> $143,270</li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>🎯 Market Trends 2026</h3>
+                <ul>
+                    <li>AI & Cloud dominate hiring</li>
+                    <li>Skills over experience prioritized</li>
+                    <li>Talent shortage persists</li>
+                    <li>Salaries rising 8–10% annually</li>
+                    <li>Houston & Chicago leading hubs</li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>💼 Critical Demand Roles</h3>
+                <ul>
+                    <li>Cybersecurity Engineer</li>
+                    <li>Data Engineer</li>
+                    <li>Platform/DevOps Engineer</li>
+                    <li>Cloud Architect</li>
+                    <li>AI/ML Specialist</li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>📌 Key Insight</h3>
+                <p>The US IT market rewards specialization. With 76% of IT employers struggling to find qualified talent, focus on AI, cloud, and cybersecurity skills for maximum career growth and compensation.</p>
+                <p style="margin-top: 10px; font-size: 12px; opacity: 0.8;">Report compiled by Norlox Solutions | June 2026</p>
+            </div>
+        </div>
+    </footer>
+
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js'></script>
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/EffectComposer.js'></script>
@@ -65,6 +202,8 @@
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js'></script>
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/ScrollTrigger.min.js'></script>
     <script src='https://codepen.io/motionharvest/pen/wBvaRbB/2e0a33310abc78fed3c00970d23e6f5c.js'></script>
+    
+    <!-- ALL ORIGINAL JAVASCRIPT REMAINS UNCHANGED -->
     <script>
         var Mathutils = {
             normalize: function ($value, $min, $max) {
