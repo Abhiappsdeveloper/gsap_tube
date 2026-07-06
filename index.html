@@ -916,14 +916,14 @@
     <!-- FIXED FOOTER -->
     <footer>
         <div class="footer-left">
-            <button class="hud-mute-btn">✖ SOUND OFF</button>
+            <button class="hud-mute-btn">SOUND ON</button>
         </div>
         <div class="footer-spacer-cell"></div>
         <div class="footer-center">
-            <span>↓</span> SCROLL TO EXPLORE <span>↓</span>
+            SCROLL TO EXPLORE
         </div>
         <div class="footer-right">
-            <a href="#contact" class="footer-chat-btn">CHAT WITH US 💬</a>
+            <a href="#contact" class="footer-chat-btn">CHAT WITH US</a>
         </div>
     </footer>
 
@@ -1000,6 +1000,19 @@
                 actionUrl: "#projects"
             }
         ];
+
+        // ===== CUSTOM 3D STAGE VARIABLES =====
+        let futureCube;
+        let bubbleParticles;
+        let riverLight;
+        let riverLine;
+        let riverCurve;
+        let collabGroup;
+        let excellenceGroup;
+        let purposeGroup;
+        let legacyCubesGroup;
+        let customWater;
+        let stageMountains = [];
 
         // ===== ORIGINAL CODE (UNTOUCHED) =====
         var Mathutils = {
@@ -1265,22 +1278,207 @@
             specular: 0x0b2349
         });
 
-        //Create a mesh
-        var tube = new THREE.Mesh(geometry, material);
-        scene.add(tube);
+        // ===== INITIALIZE CUSTOM 3D HUD STAGES =====
+        function initCustomStages() {
+            // 1. Reflective Water Plane
+            const waterGeom = new THREE.PlaneGeometry(1000, 1000, 32, 32);
+            const waterMat = new THREE.MeshStandardMaterial({
+                color: 0x01132b,
+                roughness: 0.12,
+                metalness: 0.9,
+                flatShading: true
+            });
+            customWater = new THREE.Mesh(waterGeom, waterMat);
+            customWater.rotation.x = -Math.PI / 2;
+            customWater.position.set(120, -10, 90);
+            scene.add(customWater);
 
-        //inner tube
-        var geometry = new THREE.TubeGeometry(path, 150, 3.4, 32, false);
-        var geo = new THREE.EdgesGeometry(geometry);
+            // 2. Canyon Mountains flanking the camera path
+            const mountainGeom = new THREE.ConeGeometry(25, 55, 4);
+            const mountainMat = new THREE.MeshStandardMaterial({
+                color: 0x030a1c,
+                roughness: 0.95,
+                metalness: 0.05,
+                flatShading: true
+            });
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+                // left side mountain
+                const mLeft = new THREE.Mesh(mountainGeom, mountainMat);
+                mLeft.position.set(p.x - 45, p.y + 12, p.z - 15);
+                mLeft.rotation.y = Math.random() * Math.PI;
+                scene.add(mLeft);
+                stageMountains.push(mLeft);
 
-        var mat = new THREE.LineBasicMaterial({
-            linewidth: 2,
-            opacity: .2,
-            transparent: 1
-        });
+                // right side mountain
+                const mRight = new THREE.Mesh(mountainGeom, mountainMat);
+                mRight.position.set(p.x + 45, p.y + 12, p.z + 15);
+                mRight.rotation.y = Math.random() * Math.PI;
+                scene.add(mRight);
+                stageMountains.push(mRight);
+            }
 
-        var wireframe = new THREE.LineSegments(geo, mat);
-        scene.add(wireframe);
+            // 3. Stage 0: FUTURE - Large glowing central cube & rising bubble particles
+            const futurePoint = path.getPointAt(0);
+            const cubeGeom = new THREE.BoxGeometry(10, 10, 10);
+            const cubeMat = new THREE.MeshStandardMaterial({
+                color: 0x00f5d4,
+                emissive: 0x00f5d4,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.9,
+                roughness: 0.1,
+                metalness: 0.9
+            });
+            futureCube = new THREE.Mesh(cubeGeom, cubeMat);
+            futureCube.position.set(futurePoint.x + 5, futurePoint.y + 12, futurePoint.z + 5);
+            scene.add(futureCube);
+
+            // Rising bubble particles (Mesh Group instead of Point Cloud)
+            bubbleParticles = new THREE.Group();
+            for (let i = 0; i < 40; i++) {
+                const bubbleMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.3, 4, 4),
+                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.8 })
+                );
+                bubbleMesh.position.set(
+                    futurePoint.x + (Math.random() - 0.5) * 60,
+                    -10 + Math.random() * 40,
+                    futurePoint.z + (Math.random() - 0.5) * 60
+                );
+                bubbleParticles.add(bubbleMesh);
+            }
+            scene.add(bubbleParticles);
+
+            // 4. Stage 1: INNOVATION - Winding river light channel & moving light
+            const riverPoints = [];
+            for (let i = 0; i <= 20; i++) {
+                const ratio = 0.18 + (i / 20) * 0.14;
+                const node = path.getPointAt(ratio);
+                riverPoints.push(new THREE.Vector3(node.x, node.y - 9.8, node.z));
+            }
+            riverCurve = new THREE.CatmullRomCurve3(riverPoints);
+            const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 64, 2, 8, false);
+            const riverTubeMat = new THREE.MeshBasicMaterial({
+                color: 0x00a8ff,
+                transparent: true,
+                opacity: 0.25,
+                wireframe: true
+            });
+            riverLine = new THREE.Mesh(riverTubeGeom, riverTubeMat);
+            scene.add(riverLine);
+
+            riverLight = new THREE.PointLight(0x00f5d4, 2, 45);
+            scene.add(riverLight);
+
+            // 5. Stage 2: COLLABORATION - Winding neon fiber ribbon lines
+            collabGroup = new THREE.Group();
+            for (let i = 0; i < 4; i++) {
+                const fiberPoints = [];
+                for (let j = 0; j < 10; j++) {
+                    const ratio = 0.36 + (j / 10) * 0.10;
+                    const node = path.getPointAt(ratio);
+                    fiberPoints.push(new THREE.Vector3(
+                        node.x + Math.sin(j + i) * 6,
+                        node.y + Math.cos(j * 2 + i) * 6,
+                        node.z + (Math.random() - 0.5) * 4
+                    ));
+                }
+                const fiberCurve = new THREE.CatmullRomCurve3(fiberPoints);
+                const fiberGeom = new THREE.TubeGeometry(fiberCurve, 32, 0.4, 6, false);
+                const fiberMat = new THREE.MeshBasicMaterial({
+                    color: i % 2 === 0 ? 0x00f5d4 : 0x00a8ff,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const fiberMesh = new THREE.Mesh(fiberGeom, fiberMat);
+                collabGroup.add(fiberMesh);
+            }
+            scene.add(collabGroup);
+
+            // 6. Stage 3: EXCELLENCE - Multi-cube landscape with connector threads
+            excellenceGroup = new THREE.Group();
+            const excellencePoint = path.getPointAt(0.60);
+
+            // Central bright cube
+            const centralExCube = new THREE.Mesh(cubeGeom, cubeMat);
+            centralExCube.position.set(excellencePoint.x, excellencePoint.y + 4, excellencePoint.z);
+            excellenceGroup.add(centralExCube);
+
+            // Distant cubes
+            for (let i = 0; i < 15; i++) {
+                const distCubeGeom = new THREE.BoxGeometry(4 + Math.random() * 4, 4 + Math.random() * 4, 4 + Math.random() * 4);
+                const distCubeMat = new THREE.MeshStandardMaterial({
+                    color: 0x00a8ff,
+                    emissive: 0x00a8ff,
+                    emissiveIntensity: 0.4,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const distCube = new THREE.Mesh(distCubeGeom, distCubeMat);
+                distCube.position.set(
+                    excellencePoint.x + (Math.random() - 0.5) * 120,
+                    excellencePoint.y + 20 + (Math.random() - 0.5) * 40,
+                    excellencePoint.z + (Math.random() - 0.5) * 120
+                );
+                excellenceGroup.add(distCube);
+
+                // Add simple connecting thread line (using BufferGeometry)
+                const lineGeom = new THREE.BufferGeometry().setFromPoints([
+                    centralExCube.position,
+                    distCube.position
+                ]);
+                const lineMat = new THREE.LineBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.2 });
+                const line = new THREE.Line(lineGeom, lineMat);
+                excellenceGroup.add(line);
+            }
+            scene.add(excellenceGroup);
+
+            // 7. Stage 4: PURPOSE - Mountain peaks with flying light trails
+            purposeGroup = new THREE.Group();
+            const purposePoint = path.getPointAt(0.80);
+            for (let i = 0; i < 40; i++) {
+                const trailMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.2, 4, 4),
+                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.8 })
+                );
+                trailMesh.position.set(
+                    purposePoint.x + (Math.random() - 0.5) * 80,
+                    purposePoint.y + Math.random() * 40,
+                    purposePoint.z + (Math.random() - 0.5) * 80
+                );
+                purposeGroup.add(trailMesh);
+            }
+            scene.add(purposeGroup);
+
+            // 8. Stage 5: LEGACY - Vast digital grid of cubes
+            legacyCubesGroup = new THREE.Group();
+            const legacyPoint = path.getPointAt(0.96);
+            const gridCubeGeom = new THREE.BoxGeometry(2.5, 2.5, 2.5);
+            for (let x = -8; x <= 8; x++) {
+                for (let z = -8; z <= 8; z++) {
+                    const gridCubeMat = new THREE.MeshStandardMaterial({
+                        color: 0x00f5d4,
+                        emissive: 0x00f5d4,
+                        emissiveIntensity: 0.35,
+                        transparent: true,
+                        opacity: 0.75,
+                        roughness: 0.2
+                    });
+                    const mCube = new THREE.Mesh(gridCubeGeom, gridCubeMat);
+                    mCube.position.set(
+                        legacyPoint.x + x * 9,
+                        legacyPoint.y - 8 + (Math.sin(x) * Math.cos(z) * 2),
+                        legacyPoint.z + z * 9
+                    );
+                    legacyCubesGroup.add(mCube);
+                }
+            }
+            scene.add(legacyCubesGroup);
+        }
+
+        // Initialize custom 3D scenes
+        initCustomStages();
 
         //Create a point light in our scene
         var light = new THREE.PointLight(0xfff4e0, .35, 4, 0);
@@ -1330,12 +1528,112 @@
         });
 
         function render() {
-            currentCameraPercentage = cameraTargetPercentage
+            currentCameraPercentage = cameraTargetPercentage;
 
             camera.rotation.y += (cameraRotationProxyX - camera.rotation.y) / 15;
             camera.rotation.x += (cameraRotationProxyY - camera.rotation.x) / 15;
 
             updateCameraPercentage(currentCameraPercentage);
+
+            // 1. Water Plane Wave Animation
+            if (customWater && customWater.geometry && customWater.geometry.vertices) {
+                const time = Date.now() * 0.0015;
+                customWater.geometry.vertices.forEach((v, idx) => {
+                    v.z = Math.sin(v.x * 0.04 + time) * Math.cos(v.y * 0.04 + time) * 1.8;
+                });
+                customWater.geometry.verticesNeedUpdate = true;
+            }
+
+            // 2. Stage 0: FUTURE Animation
+            if (futureCube) {
+                futureCube.rotation.y += 0.008;
+                futureCube.rotation.x += 0.004;
+
+                // Zoom/Scale up cube on initial scroll
+                if (currentCameraPercentage < 0.15) {
+                    const scaleVal = 1 + (currentCameraPercentage / 0.15) * 3.5;
+                    futureCube.scale.set(scaleVal, scaleVal, scaleVal);
+                    futureCube.material.opacity = 0.9;
+                    futureCube.visible = true;
+                } else if (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.22) {
+                    // Break apart/Fade out
+                    const fade = 1 - (currentCameraPercentage - 0.15) / 0.07;
+                    futureCube.material.opacity = Math.max(0, fade);
+                    futureCube.scale.set(4.5, 4.5, 4.5);
+                    futureCube.visible = futureCube.material.opacity > 0;
+                } else {
+                    futureCube.visible = false;
+                }
+            }
+
+            if (bubbleParticles) {
+                bubbleParticles.visible = (currentCameraPercentage < 0.22);
+                if (bubbleParticles.visible) {
+                    bubbleParticles.children.forEach(v => {
+                        v.position.y += 0.2;
+                        if (v.position.y > 35) v.position.y = -10;
+                    });
+                }
+            }
+
+            // 3. Stage 1: INNOVATION Animation (Moving River Light)
+            if (riverLight) {
+                if (currentCameraPercentage >= 0.12 && currentCameraPercentage < 0.36) {
+                    riverLight.visible = true;
+                    // Interpolate light position along the river curve
+                    const riverRatio = Mathutils.map(currentCameraPercentage, 0.15, 0.32, 0, 1);
+                    const lightPos = riverCurve.getPointAt(riverRatio);
+                    riverLight.position.copy(lightPos);
+                } else {
+                    riverLight.visible = false;
+                }
+            }
+
+            // 4. Stage 2: COLLABORATION Animation
+            if (collabGroup) {
+                collabGroup.visible = (currentCameraPercentage >= 0.32 && currentCameraPercentage < 0.52);
+                if (collabGroup.visible) {
+                    collabGroup.rotation.z = Math.sin(Date.now() * 0.001) * 0.08;
+                }
+            }
+
+            // 5. Stage 3: EXCELLENCE Animation
+            if (excellenceGroup) {
+                excellenceGroup.visible = (currentCameraPercentage >= 0.50 && currentCameraPercentage < 0.72);
+                if (excellenceGroup.visible) {
+                    excellenceGroup.children.forEach(child => {
+                        if (child.isMesh) {
+                            child.rotation.y += 0.01;
+                            child.rotation.x += 0.005;
+                        }
+                    });
+                }
+            }
+
+            // 6. Stage 4: PURPOSE Animation
+            if (purposeGroup) {
+                purposeGroup.visible = (currentCameraPercentage >= 0.70 && currentCameraPercentage < 0.88);
+                if (purposeGroup.visible) {
+                    const purposePoint = path.getPointAt(0.80);
+                    purposeGroup.children.forEach((v, idx) => {
+                        v.position.x += Math.sin(idx + Date.now() * 0.0015) * 0.12;
+                        v.position.y += Math.cos(idx + Date.now() * 0.0015) * 0.12;
+                        v.position.z -= 0.12;
+                        if (v.position.z < purposePoint.z - 80) v.position.z = purposePoint.z + 80;
+                    });
+                }
+            }
+
+            // 7. Stage 5: LEGACY Animation
+            if (legacyCubesGroup) {
+                legacyCubesGroup.visible = (currentCameraPercentage >= 0.85);
+                if (legacyCubesGroup.visible) {
+                    legacyCubesGroup.children.forEach((cube, idx) => {
+                        cube.rotation.y += 0.005;
+                        cube.position.y += Math.sin(idx + Date.now() * 0.002) * 0.01;
+                    });
+                }
+            }
 
             particleSystem1.rotation.y += 0.00002;
             particleSystem2.rotation.x += 0.00005;
@@ -1728,7 +2026,7 @@
             }
             const muteBtn = document.querySelector('.hud-mute-btn');
             if (muteBtn) {
-                muteBtn.textContent = '🔊 SOUND ON';
+                muteBtn.textContent = 'SOUND ON';
                 muteBtn.style.color = '#00f5d4';
                 muteBtn.style.borderColor = '#00f5d4';
             }
@@ -1761,7 +2059,7 @@
                         stopAmbientMusic();
                         const muteBtn = document.querySelector('.hud-mute-btn');
                         if (muteBtn) {
-                            muteBtn.textContent = '✖ SOUND OFF';
+                            muteBtn.textContent = 'SOUND OFF';
                             muteBtn.style.color = '#ffb703';
                             muteBtn.style.borderColor = 'rgba(255, 183, 3, 0.2)';
                         }
@@ -1782,12 +2080,12 @@
                     enableMasterAudio();
                 } else {
                     if (this.textContent.includes('SOUND OFF')) {
-                        this.textContent = '🔊 SOUND ON';
+                        this.textContent = 'SOUND ON';
                         this.style.color = '#00f5d4';
                         this.style.borderColor = '#00f5d4';
                         startAmbientMusic();
                     } else {
-                        this.textContent = '✖ SOUND OFF';
+                        this.textContent = 'SOUND OFF';
                         this.style.color = '#ffb703';
                         this.style.borderColor = 'rgba(255, 183, 3, 0.2)';
                         stopAmbientMusic();
