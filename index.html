@@ -3,53 +3,219 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>ScrollTriggering Through a Tube GSAP - ScrollTrigger Demo</title>
+    <title>Ukonnect - USA Staffing & Workforce Solutions</title>
+    <!-- Google Fonts: Outfit & Gaming HUD Fonts (Orbitron, Share Tech Mono) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding-top: 70px;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding-top: 100px;
             padding-bottom: 90px;
+            background-color: #050b14;
+            color: #f8fafc;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
+        /* HEADER NAVBAR - HUD STYLE */
         header {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 20px;
+            left: 20px;
+            width: calc(100% - 40px);
             height: 70px;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 0 32px;
-            box-sizing: border-box;
+            align-items: center;
+            padding: 0 24px;
             z-index: 99999;
-            background: rgba(10, 18, 32, 0.82);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom: none;
+            box-shadow: none;
+            font-family: 'Share Tech Mono', monospace;
+            transition: all 0.3s ease;
         }
 
-        header h1 {
+        .header-container {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 100%;
             margin: 0;
-            font-size: 20px;
-            font-weight: 600;
-            color: white;
-            letter-spacing: 0.5px;
+            position: relative;
         }
 
-        header p {
-            margin: 0;
+        /* Logo Area with Small HUD Sub-text */
+        .logo-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hud-audio-trigger {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .hud-audio-trigger:hover {
+            color: #00f5d4;
+        }
+
+        .hud-audio-trigger::before {
+            content: '■';
+            color: #00f5d4;
+            font-size: 8px;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+            text-decoration: none;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            line-height: 1;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+        }
+
+        /* HUD Links Styling */
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
             font-size: 12px;
-            opacity: 0.7;
-            color: rgba(255, 255, 255, 0.8);
-            display: none;
+            font-weight: normal;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            position: relative;
+            padding: 4px 8px;
         }
 
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #00f5d4;
+            text-shadow: 0 0 8px rgba(0, 245, 212, 0.5);
+        }
+
+        /* Custom Hover Border/Bracket effect for Active links */
+        .nav-links a::before {
+            content: '[';
+            position: absolute;
+            left: -2px;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            transform: translateX(4px);
+        }
+
+        .nav-links a.active::before {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .nav-links a.active::after {
+            content: ']';
+            display: block;
+            position: absolute;
+            right: -2px;
+            top: 4px;
+            background: none;
+            width: auto;
+            height: auto;
+            opacity: 1;
+            transition: opacity 0.2s, transform 0.2s;
+            transform: translateX(0);
+        }
+
+        /* Header Actions and Chamfered HUD Buttons */
+        .header-actions {
+            display: flex;
+            gap: 0;
+            align-items: center;
+        }
+
+        /* Login Button - Dark Tech */
+        .btn-signin {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-right: none;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            transition: all 0.2s ease;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+            /* Chamfered bottom-left */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-signin:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+            border-right: none;
+        }
+
+        /* Menu / CTA Button - Bright Cyberpunk Light Blue/White */
+        .btn-cta {
+            background: #e2ebf8;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #050b14;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            transition: all 0.2s ease;
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+            /* Chamfered top-right */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-cta:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        /* MAIN & CANVAS */
         main {
             flex: 1;
             position: relative;
@@ -57,10 +223,10 @@
 
         .experience {
             position: fixed;
-            top: 70px;
+            top: 0;
             left: 0;
             width: 100%;
-            height: calc(100vh - 160px);
+            height: 100%;
             z-index: 1;
         }
 
@@ -75,9 +241,9 @@
         .vignette-radial {
             position: fixed;
             z-index: 11;
-            top: 70px;
+            top: 0;
             left: 0;
-            height: calc(100vh - 160px);
+            height: 100%;
             width: 100%;
             pointer-events: none;
         }
@@ -90,14 +256,14 @@
             left: 0;
             bottom: 0;
             right: 0;
-            background: radial-gradient(circle, transparent 60%, black 150%);
+            background: radial-gradient(circle, transparent 40%, rgba(5, 11, 20, 0.9) 130%);
         }
 
         /* STORYTELLING OVERLAY STYLES */
         .story-overlay {
             position: fixed;
-            top: 70px;
-            bottom: 90px;
+            top: 80px;
+            bottom: 70px;
             left: 0;
             right: 0;
             width: auto;
@@ -105,213 +271,527 @@
             z-index: 10;
             pointer-events: none;
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
+            padding-left: 8%;
         }
 
         .story-container {
-            background: rgba(15, 52, 96, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 153, 255, 0.5);
-            border-radius: 15px;
-            padding: 40px;
-            max-width: 700px;
-            text-align: center;
+            background: rgba(9, 15, 29, 0.76);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 4px solid #00f5d4;
+            border-radius: 16px;
+            padding: 44px;
+            width: 480px;
+            max-width: 90%;
             color: white;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
             opacity: 0;
-            transform: scale(0.8) translateY(30px);
-            transition: all 0.6s ease-out;
+            transform: translateX(-40px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
         }
 
         .story-container.active {
             opacity: 1;
-            transform: scale(1) translateY(0);
+            transform: translateX(0);
         }
 
         .story-container h2 {
-            margin: 0 0 15px 0;
-            font-size: 32px;
-            color: #00ccff;
-            text-shadow: 0 0 20px rgba(0, 204, 255, 0.5);
-            letter-spacing: 2px;
+            margin: 0 0 16px 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.25;
+            letter-spacing: -0.5px;
         }
 
         .story-container .story-content {
-            font-size: 16px;
-            line-height: 1.8;
-            margin-bottom: 20px;
-            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            line-height: 1.65;
+            margin-bottom: 24px;
+            color: rgba(255, 255, 255, 0.75);
+            font-weight: 300;
         }
 
         .story-container .story-stat {
-            font-size: 28px;
-            color: #0099ff;
-            font-weight: bold;
-            margin: 20px 0 10px 0;
+            font-size: 32px;
+            color: #ffb703;
+            font-weight: 700;
+            margin: 20px 0 6px 0;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 20px rgba(255, 183, 3, 0.15);
         }
 
         .story-container .story-detail {
             font-size: 13px;
-            color: rgba(0, 204, 255, 0.8);
-            font-style: italic;
+            color: #00f5d4;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
+        /* Dynamic Action Link in Story Container */
+        .story-action {
+            display: inline-block;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding: 10px 24px;
+            background: rgba(0, 245, 212, 0.1);
+            border: 1px solid rgba(0, 245, 212, 0.3);
+            border-radius: 20px;
+            color: #00f5d4;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .story-action:hover {
+            background: #00f5d4;
+            color: #050b14;
+            transform: translateY(-1px);
+        }
+
+        /* PROGRESS INDICATOR */
         .progress-indicator {
             position: fixed;
-            bottom: 110px;
-            right: 32px;
+            bottom: 95px;
+            right: 48px;
             z-index: 9;
             text-align: right;
             color: white;
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: 500;
         }
 
         .progress-bar {
-            width: 200px;
+            width: 180px;
             height: 4px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 2px;
             margin-top: 8px;
             overflow: hidden;
-            border: 1px solid rgba(0, 204, 255, 0.4);
+            border: none;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #0099ff, #00ccff);
+            background: linear-gradient(90deg, #00f5d4, #ffb703);
             width: 0%;
             transition: width 0.3s ease;
         }
 
+        /* CHAPTER MARKER */
         .chapter-marker {
             position: fixed;
-            left: 32px;
+            left: 48px;
             top: 50%;
             transform: translateY(-50%);
             z-index: 9;
-            color: rgba(0, 204, 255, 0.6);
-            font-size: 12px;
+            color: rgba(0, 245, 212, 0.4);
+            font-size: 13px;
+            font-weight: 600;
             writing-mode: vertical-rl;
             text-orientation: mixed;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
         }
 
         .chapter-marker.active {
             opacity: 1;
+            color: #00f5d4;
+            text-shadow: 0 0 10px rgba(0, 245, 212, 0.3);
         }
 
+        /* FIXED FOOTER - HUD CELL STYLE */
         footer {
             position: fixed;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-            height: 90px;
-            display: flex;
+            bottom: 20px;
+            left: 20px;
+            width: calc(100% - 40px);
+            height: 60px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
             align-items: center;
-            padding: 0 32px;
+            padding: 0 24px;
             box-sizing: border-box;
             z-index: 99999;
-            background: rgba(10, 18, 32, 0.82);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
-            margin-top: 0;
-            overflow: hidden;
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-top: none;
+            font-family: 'Share Tech Mono', monospace;
+            box-shadow: none;
         }
 
-        footer h2 {
-            margin: 0;
-            font-size: 14px;
+        .footer-left {
+            width: 180px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
+
+        .footer-spacer-cell {
+            width: 80px;
+            height: 100%;
+            background: transparent;
+        }
+
+        .hud-mute-btn {
+            background: none;
             border: none;
-            padding: 0;
-            color: white;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.85);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            padding: 8px;
+            transition: all 0.2s;
         }
 
-        footer .footer-content {
-            display: none;
+        .hud-mute-btn:hover {
+            color: #ffb703;
         }
 
-        footer .footer-section {
-            display: none;
+        .footer-center {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            gap: 8px;
         }
 
-        /* Responsive adjustments for smaller screens */
-        @media (max-width: 768px) {
+        .footer-center span {
+            color: #00f5d4;
+            animation: pulse-hud 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-hud {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 8px #00f5d4;
+            }
+        }
+
+        .footer-right {
+            width: 250px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer-chat-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .footer-chat-btn:hover {
+            color: #00f5d4;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
             header {
-                height: 60px;
-                padding: 0 16px;
+                padding: 0 24px 12px 24px;
             }
 
-            header h1 {
-                font-size: 16px;
+            .nav-links {
+                display: none;
             }
 
-            body {
-                padding-top: 60px;
-                padding-bottom: 80px;
-            }
-
-            .experience {
-                top: 60px;
-                height: calc(100vh - 140px);
-            }
-
-            .vignette-radial {
-                top: 60px;
-                height: calc(100vh - 140px);
-            }
-
-            footer {
-                height: 80px;
-                padding: 0 16px;
-            }
-
-            footer h2 {
-                font-size: 12px;
-            }
-
-            .progress-indicator {
-                right: 16px;
-                bottom: 100px;
-            }
-
-            .chapter-marker {
-                left: 16px;
-                font-size: 10px;
+            .story-overlay {
+                padding-left: 5%;
             }
 
             .story-container {
-                padding: 30px;
-                max-width: 90%;
+                width: 420px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+                padding-bottom: 120px;
+            }
+
+            header {
+                height: 80px;
+                padding: 0 16px 12px 16px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .btn-cta {
+                padding: 8px 16px;
+                font-size: 11px;
+            }
+
+            .btn-signin {
+                display: none;
+            }
+
+            .story-overlay {
+                padding-left: 0;
+                justify-content: center;
+                align-items: flex-end;
+                padding-bottom: 40px;
+            }
+
+            .story-container {
+                width: 90%;
+                padding: 24px;
+                border-left: none;
+                border-top: 4px solid #00f5d4;
             }
 
             .story-container h2 {
-                font-size: 24px;
+                font-size: 22px;
+                margin-bottom: 10px;
             }
 
             .story-container .story-content {
-                font-size: 14px;
+                font-size: 13px;
+                margin-bottom: 16px;
             }
 
             .story-container .story-stat {
                 font-size: 24px;
+                margin-top: 10px;
             }
+
+            footer {
+                height: auto;
+                grid-template-columns: 1fr;
+                justify-content: center;
+                gap: 12px;
+                padding: 16px 24px;
+            }
+
+            .footer-left {
+                justify-content: center;
+            }
+
+            .footer-center {
+                justify-content: center;
+                order: -1;
+            }
+
+            .footer-right {
+                justify-content: center;
+            }
+
+            .progress-indicator {
+                right: 16px;
+                bottom: 140px;
+            }
+
+            .chapter-marker {
+                display: none;
+            }
+        }
+
+        /* Floating HUD Cursor Tooltip */
+        .hud-cursor-tooltip {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000000;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: #00f5d4;
+            background: rgba(5, 11, 20, 0.9);
+            border: 1px solid rgba(0, 245, 212, 0.3);
+            padding: 6px 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transform: translate(15px, 15px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+        }
+
+        .hud-cursor-tooltip.visible {
+            opacity: 1;
+        }
+
+        /* HUD Preloader styles */
+        .hud-preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #050b14;
+            z-index: 10000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
+            font-family: 'Share Tech Mono', monospace;
+            pointer-events: all;
+        }
+
+        .hud-preloader-container {
+            display: flex;
+            flex-direction: column;
+            width: 340px;
+            user-select: none;
+        }
+
+        .hud-preloader-meta {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8px;
+        }
+
+        .hud-preloader-percentage {
+            font-size: 11px;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .hud-preloader-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .hud-preloader-block {
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .hud-preloader-block.active {
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .hud-preloader-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 2px;
+            text-align: left;
+        }
+
+        .hud-preloader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Responsive HUD Viewport Frame */
+        .hud-frame-svg {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: calc(100% - 40px);
+            height: calc(100% - 40px);
+            pointer-events: none;
+            z-index: 9998;
         }
     </style>
 
 </head>
 
 <body>
+    <!-- FIXED PRELOADER -->
+    <div class="hud-preloader" id="hudPreloader">
+        <div class="hud-preloader-container">
+            <div class="hud-preloader-meta">
+                <span class="hud-preloader-percentage" id="preloaderPercent">0%</span>
+            </div>
+            <div class="hud-preloader-bar">
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+                <div class="hud-preloader-block"></div>
+            </div>
+            <div class="hud-preloader-label">LOADING CONTENT</div>
+        </div>
+    </div>
+
+    <!-- FIXED HUD BORDER FRAME -->
+    <svg class="hud-frame-svg" id="hudFrameSvg" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+        <!-- Soft Glow Outer Path -->
+        <path id="hudFramePathGlow" fill="none" stroke="rgba(0, 245, 212, 0.25)" stroke-width="3"
+            style="filter: blur(1.5px);" />
+        <!-- Sharp Inner Path -->
+        <path id="hudFramePathSharp" fill="none" stroke="rgba(0, 245, 212, 0.75)" stroke-width="1.2" />
+    </svg>
+
     <!-- FIXED HEADER -->
     <header>
-        <h1>3D Tube Navigation Experience</h1>
-        <p>Interactive scroll-based 3D visualization</p>
+        <div class="header-container">
+            <div class="logo-wrap">
+                <div class="hud-audio-trigger">■ CLICK TO ENABLE AUDIO</div>
+                <a href="#" class="logo">Ukonnect</a>
+            </div>
+            <nav class="nav-links">
+                <a href="#home" class="active">Home</a>
+                <a href="#services">Services</a>
+                <a href="#process">Process</a>
+                <a href="#benefits">Benefits</a>
+                <a href="#about">About</a>
+                <a href="#industries">Industries</a>
+                <a href="#workshop">Workshop</a>
+                <a href="#testimonials">Testimonials</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <div class="header-actions">
+                <a href="#signin" class="btn-signin">⁚ LOGIN</a>
+                <a href="#contact" class="btn-cta">⁙ MENU</a>
+            </div>
+        </div>
     </header>
 
     <!-- MAIN CONTENT -->
@@ -323,12 +803,14 @@
         <!-- STORYTELLING OVERLAY -->
         <div class="story-overlay">
             <div class="story-container" id="storyContainer">
-                <h2 id="storyTitle">Welcome to Your Journey</h2>
+                <h2 id="storyTitle">USA Staffing & Workforce Solutions</h2>
                 <div class="story-content" id="storyContent">
-                    Begin your exploration through the digital landscape...
+                    We connect exceptional talent with America's most ambitious companies — through smart sourcing,
+                    seamless compliance, and people-first hiring at every stage.
                 </div>
-                <div class="story-stat" id="storyStat">READY?</div>
-                <div class="story-detail" id="storyDetail">Scroll to begin the experience</div>
+                <div id="storyActionContainer"><a href="#contact" class="story-action">Let's Ukonnect!</a></div>
+                <div class="story-stat" id="storyStat">PEOPLE. POSITIONS.</div>
+                <div class="story-detail" id="storyDetail">PERFECTLY UKONNECTED</div>
             </div>
         </div>
 
@@ -341,12 +823,21 @@
         </div>
 
         <!-- CHAPTER MARKER -->
-        <div class="chapter-marker" id="chapterMarker">CHAPTER</div>
+        <div class="chapter-marker" id="chapterMarker">START</div>
     </main>
 
     <!-- FIXED FOOTER -->
     <footer>
-        <h2>Top IT Job Profiles in the USA — 2026 | Report by Norlox Solutions</h2>
+        <div class="footer-left">
+            <button class="hud-mute-btn">✖ SOUND OFF</button>
+        </div>
+        <div class="footer-spacer-cell"></div>
+        <div class="footer-center">
+            <span>↓</span> SCROLL TO EXPLORE <span>↓</span>
+        </div>
+        <div class="footer-right">
+            <a href="#contact" class="footer-chat-btn">CHAT WITH US 💬</a>
+        </div>
     </footer>
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
@@ -360,82 +851,90 @@
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js'></script>
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/ScrollTrigger.min.js'></script>
     <script src='https://codepen.io/motionharvest/pen/wBvaRbB/2e0a33310abc78fed3c00970d23e6f5c.js'></script>
-    
+
     <!-- ALL ORIGINAL JAVASCRIPT REMAINS UNCHANGED + NEW STORYTELLING LOGIC -->
     <script>
         // ===== STORYTELLING DATA =====
         const storyChapters = [
             {
                 progress: 0,
-                title: "Welcome to Your Journey",
-                content: "Begin your exploration through the digital landscape of IT careers...",
-                stat: "READY?",
-                detail: "Scroll to begin the experience",
-                chapter: "START"
+                title: "USA Staffing & Workforce Solutions",
+                content: "We connect exceptional talent with America's most ambitious companies — through smart sourcing, seamless compliance, and people-first hiring at every stage.",
+                stat: "PEOPLE. POSITIONS.",
+                detail: "PERFECTLY UKONNECTED",
+                chapter: "HOME",
+                actionText: "Let's Ukonnect!",
+                actionUrl: "#contact"
             },
             {
                 progress: 12,
-                title: "Chapter 1: The Rising Demand",
-                content: "The IT industry is experiencing unprecedented growth. Companies everywhere are racing to find top talent in specialized roles.",
-                stat: "700K+",
-                detail: "Unfilled cybersecurity positions in the US",
-                chapter: "DEMAND"
+                title: "Our Core Services",
+                content: "End-to-end workforce solutions tailored to scale: Outsourcing Solutions, Payroll & Compliance, Executive Search, and Contract Staffing ready to deploy on demand.",
+                stat: "EXPLORE",
+                detail: "Vetted Contract and Permanent Talent",
+                chapter: "SERVICES",
+                actionText: "Explore Services",
+                actionUrl: "#services"
             },
             {
                 progress: 25,
-                title: "Chapter 2: The Cloud Revolution",
-                content: "Cloud architecture has become essential. Organizations across all industries are migrating to cloud-native solutions at scale.",
-                stat: "$143K",
-                detail: "Average Cloud Architect salary",
-                chapter: "CLOUD"
+                title: "Our 4-Step Process",
+                content: "A streamlined, transparent approach to finding your perfect talent match: 01. Discovery of culture & vision, 02. Active Sourcing & Screening, 03. Interview & Placement, 04. Support & Retention.",
+                stat: "01 - 04 STEPS",
+                detail: "Discovery to Day One Support",
+                chapter: "PROCESS"
             },
             {
                 progress: 37,
-                title: "Chapter 3: AI Takes Center Stage",
-                content: "Artificial Intelligence and Machine Learning are transforming every sector. AI engineers command the highest premiums in the job market.",
-                stat: "$180K",
-                detail: "Top AI/ML Engineer salary potential",
-                chapter: "AI & ML"
+                title: "Advantages of Ukonnect",
+                content: "Hire with confidence: deep industry expertise, 72-hour shortlist turnaround, full regulatory compliance, 98% client retention, and dedicated account management.",
+                stat: "98% RETAIN",
+                detail: "Average 72hr Shortlist Delivery",
+                chapter: "BENEFITS"
             },
             {
                 progress: 50,
-                title: "Chapter 4: Security First",
-                content: "Cybersecurity has evolved from a specialty to a strategic necessity. Zero-trust models and AI-powered threat detection are now industry standards.",
-                stat: "CRITICAL",
-                detail: "Security Architect demand level",
-                chapter: "SECURITY"
+                title: "Empowering Businesses",
+                content: "Ukonnect Staffing USA was built on a simple belief: the right person in the right role changes everything. We blend data-driven sourcing with a genuinely human approach.",
+                stat: "50 STATES",
+                detail: "5+ Years of trusted staffing excellence",
+                chapter: "ABOUT"
             },
             {
                 progress: 62,
-                title: "Chapter 5: The Data Pipeline",
-                content: "Data Engineers are the backbone of modern intelligence. They build the infrastructure that powers AI, analytics, and real-time decision-making.",
-                stat: "$150K",
-                detail: "Top Data Engineer compensation",
-                chapter: "DATA"
+                title: "Trusted Talent Solutions",
+                content: "Empowering USA industries with reliable talent. We source and place high-performance professionals in IT & Technology, Finance & Accounting, and Healthcare sectors.",
+                stat: "IT • FINANCE",
+                detail: "Healthcare & Tech Talent Sourcing",
+                chapter: "INDUSTRIES"
             },
             {
                 progress: 75,
-                title: "Chapter 6: Platform Engineering",
-                content: "DevOps has evolved into Platform Engineering. Building internal developer platforms and CI/CD systems is now a core competitive advantage.",
-                stat: "$145K",
-                detail: "Platform Engineer average salary",
-                chapter: "PLATFORM"
+                title: "Ukonnect Training Programs",
+                content: "Boost your career with our practitioner-led courses built for USA job market demands: Online Business Analyst, Data Analyst, Python, and Java training.",
+                stat: "WORKSHOPS",
+                detail: "BA, Data Analyst, Python, Java",
+                chapter: "WORKSHOP",
+                actionText: "Enroll Now",
+                actionUrl: "#workshop"
             },
             {
                 progress: 87,
-                title: "Chapter 7: The Future Awaits",
-                content: "Skills matter more than years of experience. The IT industry rewards specialization, continuous learning, and demonstrable technical ability.",
-                stat: "8-10%",
-                detail: "Projected IT salary growth in 2026",
-                chapter: "FUTURE"
+                title: "Your Hiring Journey",
+                content: "A structured timeline for success. Week 1: Job requirements & fit. Week 1-2: Active sourcing & screening. Week 2-3: Interviews & negotiations. Week 4+: Onboarding & payroll support.",
+                stat: "SUCCESS",
+                detail: "From Application to Day One",
+                chapter: "JOURNEY"
             },
             {
                 progress: 96,
-                title: "Your Destination",
-                content: "You've journeyed through the entire digital landscape. The opportunities are vast, the demand is real, and the compensation reflects the value you bring.",
-                stat: "BEGIN",
-                detail: "Your next chapter starts now",
-                chapter: "END"
+                title: "Partner with Ukonnect Staffing",
+                content: "Join the network of smart businesses across America who rely on Ukonnect for their critical hiring needs. Let's make your perfect match.",
+                stat: "LET'S UKONNECT!",
+                detail: "hello@ukonnectstaffing.com",
+                chapter: "CONTACT",
+                actionText: "Let's Ukonnect!",
+                actionUrl: "mailto:hello@ukonnectstaffing.com"
             }
         ];
 
@@ -482,7 +981,8 @@
 
         //Create an empty scene
         var scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x194794, 0, 100);
+        scene.background = new THREE.Color(0x050b14);
+        scene.fog = new THREE.Fog(0x050b14, 0, 100);
 
         var clock = new THREE.Clock();
 
@@ -541,17 +1041,157 @@
         //Create a new geometry with a different radius
         var geometry = new THREE.TubeGeometry(path, 300, 4, 32, false);
 
-        var texture = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/3d_space_5.jpg', function (texture) {
-            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            texture.offset.set(0, 0);
-            texture.repeat.set(15, 2);
-        });
+        // Procedural Talent Network Texture
+        var textureCanvas = document.createElement('canvas');
+        textureCanvas.width = 2048;
+        textureCanvas.height = 1024;
+        var ctx = textureCanvas.getContext('2d');
 
-        var mapHeight = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/waveform-bump3.jpg', function (texture) {
-            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            texture.offset.set(0, 0);
-            texture.repeat.set(15, 2);
-        });
+        // Draw background gradient matching website tone
+        var gradient = ctx.createLinearGradient(0, 0, 2048, 0);
+        gradient.addColorStop(0, '#050b14');
+        gradient.addColorStop(0.5, '#0a172a');
+        gradient.addColorStop(1, '#050b14');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 2048, 1024);
+
+        // Draw network grid lines
+        ctx.strokeStyle = 'rgba(0, 245, 212, 0.08)';
+        ctx.lineWidth = 1;
+        var gridX = 128;
+        var gridY = 128;
+        for (var x = 0; x <= 2048; x += gridX) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, 1024);
+            ctx.stroke();
+        }
+        for (var y = 0; y <= 1024; y += gridY) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(2048, y);
+            ctx.stroke();
+        }
+
+        // Generate node coordinates representing people/positions
+        var nodes = [];
+        var numNodes = 75;
+        var seed = 42;
+        function random() {
+            var x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        for (var i = 0; i < numNodes; i++) {
+            nodes.push({
+                x: random() * 2048,
+                y: random() * 1024,
+                radius: random() * 6 + 3,
+                color: random() > 0.35 ? '#00f5d4' : '#ffb703',
+                type: random() > 0.5 ? 'talent' : 'company'
+            });
+        }
+
+        // Draw connection lines representing "Ukonnecting" people and companies
+        ctx.lineWidth = 1;
+        for (var i = 0; i < nodes.length; i++) {
+            var connectionsCount = 0;
+            for (var j = i + 1; j < nodes.length; j++) {
+                var dx = nodes[i].x - nodes[j].x;
+                var dy = nodes[i].y - nodes[j].y;
+
+                // Wrap around X boundary (since texture repeats)
+                if (dx > 1024) dx -= 2048;
+                if (dx < -1024) dx += 2048;
+
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 280 && connectionsCount < 3) {
+                    connectionsCount++;
+                    var alpha = (1 - dist / 280) * 0.35;
+                    ctx.strokeStyle = nodes[i].color === '#00f5d4' ? 'rgba(0, 245, 212, ' + alpha + ')' : 'rgba(255, 183, 3, ' + alpha + ')';
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[i].x - dx, nodes[i].y - dy);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Draw nodes and professional icons/shapes
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+
+            // Outer glow
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = node.color;
+
+            // Draw core node
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+            ctx.fillStyle = node.color;
+            ctx.fill();
+
+            ctx.shadowBlur = 0; // Reset shadow
+
+            // Draw outer ring
+            ctx.strokeStyle = node.color === '#00f5d4' ? 'rgba(0, 245, 212, 0.25)' : 'rgba(255, 183, 3, 0.25)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius * 2.2, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw clean representation shapes representing 'connections' or 'staffing profiles'
+            if (node.radius > 6) {
+                if (node.type === 'talent') {
+                    // Small user representation (circle and shoulder arc)
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.lineWidth = 1;
+                    // head
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y - node.radius * 3.5, node.radius * 0.8, 0, Math.PI * 2);
+                    ctx.stroke();
+                    // shoulders
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y - node.radius * 3.5 + node.radius * 1.8, node.radius * 1.5, Math.PI, 0);
+                    ctx.stroke();
+                } else {
+                    // Small building / company representation (little outline hexagon)
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    for (var k = 0; k < 6; k++) {
+                        var angle = (k * Math.PI) / 3;
+                        var hx = node.x + Math.cos(angle) * (node.radius * 1.5);
+                        var hy = node.y + Math.sin(angle) * (node.radius * 1.5);
+                        if (k === 0) ctx.moveTo(hx, hy);
+                        else ctx.lineTo(hx, hy);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+            }
+        }
+
+        var texture = new THREE.CanvasTexture(textureCanvas);
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.offset.set(0, 0);
+        texture.repeat.set(10, 2);
+
+        // Procedural Bump Map
+        var bumpCanvas = document.createElement('canvas');
+        bumpCanvas.width = 512;
+        bumpCanvas.height = 512;
+        var bCtx = bumpCanvas.getContext('2d');
+        bCtx.fillStyle = '#808080';
+        bCtx.fillRect(0, 0, 512, 512);
+        bCtx.fillStyle = '#ffffff';
+        for (var y = 0; y < 512; y += 16) {
+            bCtx.fillRect(0, y, 512, 4);
+        }
+        var mapHeight = new THREE.CanvasTexture(bumpCanvas);
+        mapHeight.wrapS = mapHeight.wrapT = THREE.RepeatWrapping;
+        mapHeight.offset.set(0, 0);
+        mapHeight.repeat.set(10, 2);
 
         var material = new THREE.MeshPhongMaterial({
             side: THREE.BackSide,
@@ -580,7 +1220,7 @@
         scene.add(wireframe);
 
         //Create a point light in our scene
-        var light = new THREE.PointLight(0xffffff, .35, 4, 0);
+        var light = new THREE.PointLight(0xfff4e0, .35, 4, 0);
         light.castShadow = true;
         scene.add(light);
 
@@ -611,7 +1251,7 @@
                 end: "bottom 100%",
                 scrub: 5,
                 markers: { color: "white" },
-                onUpdate: function(self) {
+                onUpdate: function (self) {
                     // Update storytelling content based on scroll progress
                     updateStoryContent(self.progress);
                 }
@@ -659,7 +1299,42 @@
 
             renderer.setSize(width, height);
             composer.setSize(width, height);
+
+            updateHUDFrame();
         }, false);
+
+        // HUD VIEWPORT FRAME RENDERING
+        function updateHUDFrame() {
+            const svg = document.getElementById('hudFrameSvg');
+            const glowPath = document.getElementById('hudFramePathGlow');
+            const sharpPath = document.getElementById('hudFramePathSharp');
+            if (!svg || !glowPath || !sharpPath) return;
+
+            const rect = svg.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+            const cut = 20;    // Size of the diagonal corner cuts
+
+            // Outer beveled rectangle
+            const outerBox = `M ${cut} 0 L ${w - cut} 0 L ${w} ${cut} L ${w} ${h - cut} L ${w - cut} ${h} L ${cut} ${h} L 0 ${h - cut} L 0 ${cut} Z`;
+
+            // Horizontal dividers for header and footer areas
+            const headerDivider = ` M 0 70 L ${w} 70`;
+            const footerDivider = ` M 0 ${h - 60} L ${w} ${h - 60}`;
+
+            // Vertical dividers inside the footer (left sound cell, spacer cell, right chat cell)
+            const cellDiv1 = ` M 180 ${h - 60} L 180 ${h}`;
+            const cellDiv2 = ` M 260 ${h - 60} L 260 ${h}`;
+            const cellDiv3 = ` M ${w - 250} ${h - 60} L ${w - 250} ${h}`;
+
+            const d = outerBox + headerDivider + footerDivider + cellDiv1 + cellDiv2 + cellDiv3;
+
+            glowPath.setAttribute('d', d);
+            sharpPath.setAttribute('d', d);
+        }
+
+        // Initialize HUD frame path coordinates on startup
+        updateHUDFrame();
 
         var lastPlace = 0;
         var newPlace = 0;
@@ -735,7 +1410,7 @@
 
             // Find the appropriate chapter based on scroll progress
             let currentChapter = storyChapters[0];
-            
+
             for (let i = 0; i < storyChapters.length; i++) {
                 if (progressPercent >= storyChapters[i].progress) {
                     currentChapter = storyChapters[i];
@@ -755,17 +1430,29 @@
                 storyContainer.classList.add('active');
             }
 
-            // Update text content (will trigger fade animations via CSS)
+            // Update text content
             if (storyTitle.textContent !== currentChapter.title) {
                 storyContainer.classList.remove('active');
-                
+
                 setTimeout(() => {
                     storyTitle.textContent = currentChapter.title;
                     storyContent.textContent = currentChapter.content;
                     storyStat.textContent = currentChapter.stat;
                     storyDetail.textContent = currentChapter.detail;
                     chapterMarker.textContent = currentChapter.chapter;
-                    
+
+                    // Handle dynamic action button
+                    const actionContainer = document.getElementById('storyActionContainer');
+                    if (actionContainer) {
+                        if (currentChapter.actionText) {
+                            actionContainer.innerHTML = `<a href="${currentChapter.actionUrl || '#'}" class="story-action">${currentChapter.actionText}</a>`;
+                            actionContainer.style.display = 'block';
+                        } else {
+                            actionContainer.style.display = 'none';
+                            actionContainer.innerHTML = '';
+                        }
+                    }
+
                     storyContainer.classList.add('active');
                 }, 300);
             }
@@ -776,12 +1463,301 @@
             } else {
                 chapterMarker.classList.remove('active');
             }
+
+            // Update active state of navbar links based on current chapter
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href').substring(1);
+                if (href && currentChapter.chapter.toLowerCase().includes(href.toLowerCase())) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
         }
 
-        // Initialize story on load
-        window.addEventListener('load', () => {
-            updateStoryContent(0);
+        // Initialize story immediately
+        updateStoryContent(0);
+
+        // ===== HUD AUDIO & INTERACTIVITY =====
+        let audioCtx = null;
+        let ambientOscs = [];
+        let ambientGain = null;
+        let melodyInterval = null;
+        let audioEnabled = false;
+
+        // Create the cursor tooltip element dynamically
+        let cursorTooltip = document.createElement('div');
+        cursorTooltip.className = 'hud-cursor-tooltip';
+        cursorTooltip.textContent = '[ CLICK TO ENABLE AUDIO ]';
+        document.body.appendChild(cursorTooltip);
+
+        // Mousemove logic: Follow cursor and show if audio is not enabled
+        document.addEventListener('mousemove', function (evt) {
+            if (!audioEnabled) {
+                cursorTooltip.style.left = evt.clientX + 'px';
+                cursorTooltip.style.top = evt.clientY + 'px';
+                if (!cursorTooltip.classList.contains('visible')) {
+                    cursorTooltip.classList.add('visible');
+                }
+            }
         });
+
+        // Click sound synth
+        function playClickSound() {
+            if (!audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.09);
+            } catch (err) {
+                console.warn("Audio error: ", err);
+            }
+        }
+
+        // Ambient music synth
+        function startAmbientMusic() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // Low deep spacey drone
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const filter = audioCtx.createBiquadFilter();
+            ambientGain = audioCtx.createGain();
+
+            osc1.type = 'sawtooth';
+            osc1.frequency.value = 55; // A1
+
+            osc2.type = 'triangle';
+            osc2.frequency.value = 110.5; // A2 detuned
+
+            filter.type = 'lowpass';
+            filter.frequency.value = 180;
+            filter.Q.value = 4;
+
+            // Modulate filter with LFO for spatial movement
+            const lfo = audioCtx.createOscillator();
+            const lfoGain = audioCtx.createGain();
+            lfo.frequency.value = 0.12; // slow drift
+            lfoGain.gain.value = 60;
+            lfo.connect(lfoGain);
+            lfoGain.connect(filter.frequency);
+
+            ambientGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+            ambientGain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 2.0); // slow fade-in
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(ambientGain);
+            ambientGain.connect(audioCtx.destination);
+
+            osc1.start();
+            osc2.start();
+            lfo.start();
+
+            ambientOscs = [osc1, osc2, lfo];
+
+            // Ambient randomized melody (Am7 pentatonic scale)
+            const notes = [220, 261.63, 329.63, 392.00, 440, 523.25];
+            melodyInterval = setInterval(() => {
+                if (audioCtx.state === 'suspended') return;
+
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                const delay = audioCtx.createDelay();
+                const feedback = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 0.5);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.5);
+
+                delay.delayTime.value = 0.4;
+                feedback.gain.value = 0.4;
+
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                gainNode.connect(delay);
+                delay.connect(feedback);
+                feedback.connect(delay);
+                delay.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 2.6);
+            }, 3000);
+        }
+
+        function stopAmbientMusic() {
+            if (ambientGain) {
+                try {
+                    ambientGain.gain.setValueAtTime(ambientGain.gain.value, audioCtx.currentTime);
+                    ambientGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                    setTimeout(() => {
+                        ambientOscs.forEach(o => { try { o.stop(); } catch (e) { } });
+                        ambientOscs = [];
+                    }, 600);
+                } catch (e) { }
+            }
+            if (melodyInterval) {
+                clearInterval(melodyInterval);
+                melodyInterval = null;
+            }
+        }
+
+        // Master Audio Enabler function
+        function enableMasterAudio() {
+            if (audioEnabled) return;
+            audioEnabled = true;
+
+            // Fade out the floating cursor tooltip
+            cursorTooltip.classList.remove('visible');
+            setTimeout(() => { cursorTooltip.remove(); }, 400);
+
+            // Initialize Audio Context
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Start the looping game ambient track
+            startAmbientMusic();
+
+            // Play a startup audio chime
+            setTimeout(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.45);
+            }, 50);
+
+            // Update UI elements
+            const audioTrigger = document.querySelector('.hud-audio-trigger');
+            if (audioTrigger) {
+                audioTrigger.textContent = '■ AUDIO ACTIVE';
+                audioTrigger.style.color = '#00f5d4';
+            }
+            const muteBtn = document.querySelector('.hud-mute-btn');
+            if (muteBtn) {
+                muteBtn.textContent = '🔊 SOUND ON';
+                muteBtn.style.color = '#00f5d4';
+                muteBtn.style.borderColor = '#00f5d4';
+            }
+        }
+
+        // Event listener: click anywhere to enable audio if not enabled
+        document.addEventListener('click', function (e) {
+            if (!audioEnabled) {
+                enableMasterAudio();
+            } else {
+                // If audio is already active, play satisfying click feedback for button/links
+                if (e.target.closest('a, button, .hud-audio-trigger, .hud-mute-btn')) {
+                    playClickSound();
+                }
+            }
+        });
+
+        // Specific toggle buttons logic (preserving original controls)
+        const audioTriggerBtn = document.querySelector('.hud-audio-trigger');
+        if (audioTriggerBtn) {
+            audioTriggerBtn.addEventListener('click', function (e) {
+                e.stopPropagation(); // prevent document click trigger
+                if (!audioEnabled) {
+                    enableMasterAudio();
+                } else {
+                    // Toggle audio active/inactive
+                    if (this.textContent.includes('AUDIO ACTIVE')) {
+                        this.textContent = '■ CLICK TO ENABLE AUDIO';
+                        this.style.color = 'rgba(255, 255, 255, 0.5)';
+                        stopAmbientMusic();
+                        const muteBtn = document.querySelector('.hud-mute-btn');
+                        if (muteBtn) {
+                            muteBtn.textContent = '✖ SOUND OFF';
+                            muteBtn.style.color = '#ffb703';
+                            muteBtn.style.borderColor = 'rgba(255, 183, 3, 0.2)';
+                        }
+                        audioEnabled = false;
+                        // Re-enable tooltip and append back
+                        document.body.appendChild(cursorTooltip);
+                    }
+                }
+                playClickSound();
+            });
+        }
+
+        const muteToggleBtn = document.querySelector('.hud-mute-btn');
+        if (muteToggleBtn) {
+            muteToggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation(); // prevent document click trigger
+                if (!audioEnabled) {
+                    enableMasterAudio();
+                } else {
+                    if (this.textContent.includes('SOUND OFF')) {
+                        this.textContent = '🔊 SOUND ON';
+                        this.style.color = '#00f5d4';
+                        this.style.borderColor = '#00f5d4';
+                        startAmbientMusic();
+                    } else {
+                        this.textContent = '✖ SOUND OFF';
+                        this.style.color = '#ffb703';
+                        this.style.borderColor = 'rgba(255, 183, 3, 0.2)';
+                        stopAmbientMusic();
+                    }
+                }
+                playClickSound();
+            });
+        }
+
+        // HUD PRELOADER SIMULATION
+        (function () {
+            const preloader = document.getElementById('hudPreloader');
+            const percentEl = document.getElementById('preloaderPercent');
+            const blocks = document.querySelectorAll('.hud-preloader-block');
+            let currentPercent = 0;
+
+            const interval = setInterval(() => {
+                currentPercent += Math.floor(Math.random() * 5) + 3;
+                if (currentPercent >= 100) {
+                    currentPercent = 100;
+                    clearInterval(interval);
+
+                    setTimeout(() => {
+                        preloader.classList.add('fade-out');
+                    }, 400);
+                }
+
+                percentEl.textContent = currentPercent + '%';
+
+                const activeBlocksCount = Math.floor((currentPercent / 100) * blocks.length);
+                blocks.forEach((block, index) => {
+                    if (index < activeBlocksCount) {
+                        block.classList.add('active');
+                    }
+                });
+            }, 80);
+        })();
+
     </script>
 
 </body>
