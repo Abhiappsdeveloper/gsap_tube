@@ -128,7 +128,7 @@
             text-shadow: 0 0 8px rgba(0, 245, 212, 0.5);
         }
 
-        /* Custom Hover Border/Bracket effect for Active links */
+        /* Custom Hover Border/Bracket effect for Navbar links */
         .nav-links a::before {
             content: '[';
             position: absolute;
@@ -136,24 +136,22 @@
             opacity: 0;
             transition: opacity 0.2s, transform 0.2s;
             transform: translateX(4px);
+            top: 4px;
         }
 
-        .nav-links a.active::before {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .nav-links a.active::after {
+        .nav-links a::after {
             content: ']';
-            display: block;
             position: absolute;
             right: -2px;
-            top: 4px;
-            background: none;
-            width: auto;
-            height: auto;
-            opacity: 1;
+            opacity: 0;
             transition: opacity 0.2s, transform 0.2s;
+            transform: translateX(-4px);
+            top: 4px;
+        }
+
+        .nav-links a:hover::before,
+        .nav-links a:hover::after {
+            opacity: 1;
             transform: translateX(0);
         }
 
@@ -262,56 +260,57 @@
         /* STORYTELLING OVERLAY STYLES */
         .story-overlay {
             position: fixed;
-            top: 80px;
-            bottom: 70px;
+            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            width: auto;
-            height: auto;
+            width: 100%;
+            height: 100%;
             z-index: 10;
             pointer-events: none;
             display: flex;
-            justify-content: flex-start;
+            justify-content: center;
             align-items: center;
-            padding-left: 8%;
         }
 
         .story-container {
-            background: rgba(9, 15, 29, 0.76);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-left: 4px solid #00f5d4;
-            border-radius: 16px;
-            padding: 44px;
-            width: 480px;
+            background: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: none;
+            padding: 0;
+            width: 720px;
             max-width: 90%;
             color: white;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            box-shadow: none;
             opacity: 0;
-            transform: translateX(-40px);
+            transform: translateY(20px);
             transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: auto;
+            text-align: center;
         }
 
         .story-container.active {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
 
         .story-container h2 {
-            margin: 0 0 16px 0;
-            font-size: 28px;
-            font-weight: 700;
+            margin: 0 0 20px 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
             color: #ffffff;
-            line-height: 1.25;
-            letter-spacing: -0.5px;
+            line-height: 1.3;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .story-container .story-content {
+            font-family: 'Share Tech Mono', monospace;
             font-size: 15px;
-            line-height: 1.65;
-            margin-bottom: 24px;
+            line-height: 1.8;
+            margin-bottom: 30px;
             color: rgba(255, 255, 255, 0.75);
             font-weight: 300;
         }
@@ -338,21 +337,24 @@
             display: inline-block;
             margin-top: 15px;
             margin-bottom: 15px;
-            padding: 10px 24px;
-            background: rgba(0, 245, 212, 0.1);
+            padding: 10px 28px;
+            background: rgba(0, 245, 212, 0.05);
             border: 1px solid rgba(0, 245, 212, 0.3);
-            border-radius: 20px;
             color: #00f5d4;
+            font-family: 'Share Tech Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
+            font-size: 12px;
+            transition: all 0.2s;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
         }
 
         .story-action:hover {
-            background: #00f5d4;
-            color: #050b14;
-            transform: translateY(-1px);
+            background: rgba(0, 245, 212, 0.2);
+            color: #ffffff;
+            border-color: #00f5d4;
+            text-shadow: 0 0 8px #00f5d4;
         }
 
         /* PROGRESS INDICATOR */
@@ -386,6 +388,7 @@
 
         /* CHAPTER MARKER */
         .chapter-marker {
+            display: none;
             position: fixed;
             left: 48px;
             top: 50%;
@@ -728,6 +731,77 @@
             pointer-events: none;
             z-index: 9998;
         }
+
+        /* Sci-Fi HUD Left Menu & Indicators */
+        .hud-vertical-menu {
+            position: fixed;
+            left: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 999;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            user-select: none;
+            pointer-events: auto;
+            /* Active triggers */
+        }
+
+        .hud-vertical-item {
+            color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            height: 18px;
+            position: relative;
+        }
+
+        .hud-vertical-item:hover {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .hud-vertical-item.active {
+            color: #ffffff;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+
+        .hud-stop-bullet {
+            color: #ffffff;
+            margin-right: 10px;
+            font-size: 9px;
+            display: inline-block;
+            animation: blink-bullet 1.5s infinite ease-in-out;
+        }
+
+        @keyframes blink-bullet {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .hud-left-url {
+            position: fixed;
+            left: 48px;
+            bottom: 90px;
+            z-index: 999;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+        }
     </style>
 
 </head>
@@ -769,6 +843,19 @@
         <path id="hudFramePathSharp" fill="none" stroke="rgba(0, 245, 212, 0.75)" stroke-width="1.2" />
     </svg>
 
+    <!-- FIXED HUD VERTICAL MENU -->
+    <div class="hud-vertical-menu" id="hudVerticalMenu">
+        <div class="hud-vertical-item active" data-stop="0"><span class="hud-stop-bullet">■</span> FUTURE</div>
+        <div class="hud-vertical-item" data-stop="1">INNOVATION</div>
+        <div class="hud-vertical-item" data-stop="2">COLLABORATION</div>
+        <div class="hud-vertical-item" data-stop="3">EXCELLENCE</div>
+        <div class="hud-vertical-item" data-stop="4">PURPOSE</div>
+        <div class="hud-vertical-item" data-stop="5">LEGACY</div>
+    </div>
+
+    <!-- FIXED HUD LEFT BOTTOM URL -->
+    <div class="hud-left-url">WWW.UKONNECTSTAFFING.COM</div>
+
     <!-- FIXED HEADER -->
     <header>
         <div class="header-container">
@@ -777,7 +864,7 @@
                 <a href="#" class="logo">Ukonnect</a>
             </div>
             <nav class="nav-links">
-                <a href="#home" class="active">Home</a>
+                <a href="#home">Home</a>
                 <a href="#services">Services</a>
                 <a href="#process">Process</a>
                 <a href="#benefits">Benefits</a>
@@ -858,83 +945,59 @@
         const storyChapters = [
             {
                 progress: 0,
-                title: "USA Staffing & Workforce Solutions",
-                content: "We connect exceptional talent with America's most ambitious companies — through smart sourcing, seamless compliance, and people-first hiring at every stage.",
-                stat: "PEOPLE. POSITIONS.",
-                detail: "PERFECTLY UKONNECTED",
-                chapter: "HOME",
-                actionText: "Let's Ukonnect!",
+                title: "WE BUILD THE FUTURE OF REAL ESTATE",
+                content: "For over 40 years, Hubtown has created some of India's most innovative real estate developments, spanning across Residential, Commercial and Industrial projects. From the drawing board to reality, across all facets of society.",
+                stat: "",
+                detail: "",
+                chapter: "FUTURE",
+                actionText: "⁙ EXPLORE OUR PROJECTS",
+                actionUrl: "#projects"
+            },
+            {
+                progress: 20,
+                title: "WE LEAD THE WAY IN DEVELOPMENT",
+                content: "At Hubtown we look at the world through a different lens; instead of seeing what is, we see what could be. Each day we seek better ways to design, build and create communities.",
+                stat: "",
+                detail: "",
+                chapter: "INNOVATION",
+                actionText: "⁙ WORK WITH US",
                 actionUrl: "#contact"
             },
             {
-                progress: 12,
-                title: "Our Core Services",
-                content: "End-to-end workforce solutions tailored to scale: Outsourcing Solutions, Payroll & Compliance, Executive Search, and Contract Staffing ready to deploy on demand.",
-                stat: "EXPLORE",
-                detail: "Vetted Contract and Permanent Talent",
-                chapter: "SERVICES",
-                actionText: "Explore Services",
-                actionUrl: "#services"
+                progress: 40,
+                title: "WE WORK WITH A NETWORK OF EXPERTS",
+                content: "We are not just real estate developers. We are inventors, architects, engineers, designers, city planners, safety experts, artists... All coming together to shape the future, for you.",
+                stat: "",
+                detail: "",
+                chapter: "COLLABORATION"
             },
             {
-                progress: 25,
-                title: "Our 4-Step Process",
-                content: "A streamlined, transparent approach to finding your perfect talent match: 01. Discovery of culture & vision, 02. Active Sourcing & Screening, 03. Interview & Placement, 04. Support & Retention.",
-                stat: "01 - 04 STEPS",
-                detail: "Discovery to Day One Support",
-                chapter: "PROCESS"
+                progress: 60,
+                title: "TO BUILD WHAT OTHERS CAN ONLY IMAGINE",
+                content: "We work with experts from all over the world, because there is always something to learn. We aim higher, dream bigger and create better. Always.",
+                stat: "",
+                detail: "",
+                chapter: "EXCELLENCE",
+                actionText: "⁙ DISCOVER OUR VISION",
+                actionUrl: "#vision"
             },
             {
-                progress: 37,
-                title: "Advantages of Ukonnect",
-                content: "Hire with confidence: deep industry expertise, 72-hour shortlist turnaround, full regulatory compliance, 98% client retention, and dedicated account management.",
-                stat: "98% RETAIN",
-                detail: "Average 72hr Shortlist Delivery",
-                chapter: "BENEFITS"
-            },
-            {
-                progress: 50,
-                title: "Empowering Businesses",
-                content: "Ukonnect Staffing USA was built on a simple belief: the right person in the right role changes everything. We blend data-driven sourcing with a genuinely human approach.",
-                stat: "50 STATES",
-                detail: "5+ Years of trusted staffing excellence",
-                chapter: "ABOUT"
-            },
-            {
-                progress: 62,
-                title: "Trusted Talent Solutions",
-                content: "Empowering USA industries with reliable talent. We source and place high-performance professionals in IT & Technology, Finance & Accounting, and Healthcare sectors.",
-                stat: "IT • FINANCE",
-                detail: "Healthcare & Tech Talent Sourcing",
-                chapter: "INDUSTRIES"
-            },
-            {
-                progress: 75,
-                title: "Ukonnect Training Programs",
-                content: "Boost your career with our practitioner-led courses built for USA job market demands: Online Business Analyst, Data Analyst, Python, and Java training.",
-                stat: "WORKSHOPS",
-                detail: "BA, Data Analyst, Python, Java",
-                chapter: "WORKSHOP",
-                actionText: "Enroll Now",
-                actionUrl: "#workshop"
-            },
-            {
-                progress: 87,
-                title: "Your Hiring Journey",
-                content: "A structured timeline for success. Week 1: Job requirements & fit. Week 1-2: Active sourcing & screening. Week 2-3: Interviews & negotiations. Week 4+: Onboarding & payroll support.",
-                stat: "SUCCESS",
-                detail: "From Application to Day One",
-                chapter: "JOURNEY"
+                progress: 80,
+                title: "SHAPE THE LAND WITH PURPOSE",
+                content: "In an ever changing world with increasingly limited resources, we believe it essential to not only build well, but with vision, intention – and purpose. We build to last.",
+                stat: "",
+                detail: "",
+                chapter: "PURPOSE"
             },
             {
                 progress: 96,
-                title: "Partner with Ukonnect Staffing",
-                content: "Join the network of smart businesses across America who rely on Ukonnect for their critical hiring needs. Let's make your perfect match.",
-                stat: "LET'S UKONNECT!",
-                detail: "hello@ukonnectstaffing.com",
-                chapter: "CONTACT",
-                actionText: "Let's Ukonnect!",
-                actionUrl: "mailto:hello@ukonnectstaffing.com"
+                title: "AND DEFINE TOMORROW'S LANDSCAPE",
+                content: "Join us as we continue to shape tomorrow, creating formidable communities, enduring experiences, and places of exceptional value.",
+                stat: "",
+                detail: "",
+                chapter: "LEGACY",
+                actionText: "⁙ EXPLORE OUR PROJECTS",
+                actionUrl: "#projects"
             }
         ];
 
@@ -1464,14 +1527,19 @@
                 chapterMarker.classList.remove('active');
             }
 
-            // Update active state of navbar links based on current chapter
-            const navLinks = document.querySelectorAll('.nav-links a');
-            navLinks.forEach(link => {
-                const href = link.getAttribute('href').substring(1);
-                if (href && currentChapter.chapter.toLowerCase().includes(href.toLowerCase())) {
-                    link.classList.add('active');
+            // Update active state of vertical stop links based on current chapter
+            const verticalItems = document.querySelectorAll('.hud-vertical-menu .hud-vertical-item');
+            verticalItems.forEach((item, index) => {
+                if (storyChapters[index] && storyChapters[index].chapter === currentChapter.chapter) {
+                    item.classList.add('active');
+                    if (!item.querySelector('.hud-stop-bullet')) {
+                        item.innerHTML = `<span class="hud-stop-bullet">■</span> ` + storyChapters[index].chapter;
+                    }
                 } else {
-                    link.classList.remove('active');
+                    item.classList.remove('active');
+                    const bullet = item.querySelector('.hud-stop-bullet');
+                    if (bullet) bullet.remove();
+                    item.textContent = storyChapters[index].chapter;
                 }
             });
         }
@@ -1758,6 +1826,31 @@
             }, 80);
         })();
 
+        // Smooth click-to-scroll for vertical HUD stops
+        document.querySelectorAll('.hud-vertical-menu .hud-vertical-item').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.stopPropagation();
+
+                // Play click sound if audio is enabled
+                if (audioEnabled) {
+                    playClickSound();
+                } else {
+                    enableMasterAudio();
+                }
+
+                const stopIndex = parseInt(this.getAttribute('data-stop'));
+                const targetChapter = storyChapters[stopIndex];
+                if (!targetChapter) return;
+
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                const targetScroll = (targetChapter.progress / 100) * maxScroll;
+
+                window.scrollTo({
+                    top: targetScroll,
+                    behavior: 'smooth'
+                });
+            });
+        });
     </script>
 
 </body>
