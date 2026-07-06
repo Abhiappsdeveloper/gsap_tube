@@ -270,7 +270,9 @@
             pointer-events: none;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-end;
+            padding-bottom: 130px;
+            box-sizing: border-box;
         }
 
         .story-container {
@@ -1282,16 +1284,31 @@
         function initCustomStages() {
             // 1. Reflective Water Plane
             const waterGeom = new THREE.PlaneGeometry(1000, 1000, 32, 32);
-            const waterMat = new THREE.MeshStandardMaterial({
-                color: 0x01132b,
-                roughness: 0.12,
-                metalness: 0.9,
+            const waterMat = new THREE.MeshPhongMaterial({
+                color: 0x020d21,
+                specular: 0x00f5d4,
+                shininess: 90,
                 flatShading: true
             });
             customWater = new THREE.Mesh(waterGeom, waterMat);
             customWater.rotation.x = -Math.PI / 2;
             customWater.position.set(120, -10, 90);
             scene.add(customWater);
+
+            // Add ambient light to illuminate dark canyon mountains
+            const ambLight = new THREE.AmbientLight(0x081630, 1.5);
+            scene.add(ambLight);
+
+            // Add directional light pointing down to highlight water surface ripples
+            const dirLight = new THREE.DirectionalLight(0x00a8ff, 0.8);
+            dirLight.position.set(120, 100, 90);
+            scene.add(dirLight);
+
+            // Add local cyan point light directly under the future cube to project the reflection onto the water
+            const futurePointNode = path.getPointAt(0);
+            const waterReflectLight = new THREE.PointLight(0x00f5d4, 4, 75);
+            waterReflectLight.position.set(futurePointNode.x + 5, -8, futurePointNode.z + 5);
+            scene.add(waterReflectLight);
 
             // 2. Canyon Mountains flanking the camera path
             const mountainGeom = new THREE.ConeGeometry(25, 55, 4);
@@ -1320,7 +1337,7 @@
 
             // 3. Stage 0: FUTURE - Large glowing central cube & rising bubble particles
             const futurePoint = path.getPointAt(0);
-            const cubeGeom = new THREE.BoxGeometry(10, 10, 10);
+            const cubeGeom = new THREE.BoxGeometry(12, 12, 12);
             const cubeMat = new THREE.MeshStandardMaterial({
                 color: 0x00f5d4,
                 emissive: 0x00f5d4,
@@ -1331,7 +1348,7 @@
                 metalness: 0.9
             });
             futureCube = new THREE.Mesh(cubeGeom, cubeMat);
-            futureCube.position.set(futurePoint.x + 5, futurePoint.y + 12, futurePoint.z + 5);
+            futureCube.position.set(futurePoint.x + 5, futurePoint.y + 22, futurePoint.z + 5);
             scene.add(futureCube);
 
             // Rising bubble particles (Mesh Group instead of Point Cloud)
