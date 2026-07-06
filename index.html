@@ -418,10 +418,10 @@
             left: 20px;
             width: calc(100% - 40px);
             height: 60px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            padding: 0 24px;
+            padding: 0;
             box-sizing: border-box;
             z-index: 99999;
             background: transparent;
@@ -433,7 +433,7 @@
         }
 
         .footer-left {
-            width: 180px;
+            width: 250px;
             height: 100%;
             display: flex;
             align-items: center;
@@ -1683,12 +1683,11 @@
             const headerDivider = ` M 0 70 L ${w} 70`;
             const footerDivider = ` M 0 ${h - 60} L ${w} ${h - 60}`;
 
-            // Vertical dividers inside the footer (left sound cell, spacer cell, right chat cell)
-            const cellDiv1 = ` M 180 ${h - 60} L 180 ${h}`;
-            const cellDiv2 = ` M 260 ${h - 60} L 260 ${h}`;
-            const cellDiv3 = ` M ${w - 250} ${h - 60} L ${w - 250} ${h}`;
+            // Vertical dividers inside the footer (left sound cell at 250px, right chat cell at w - 250px)
+            const cellDivLeft = ` M 250 ${h - 60} L 250 ${h}`;
+            const cellDivRight = ` M ${w - 250} ${h - 60} L ${w - 250} ${h}`;
 
-            const d = outerBox + headerDivider + footerDivider + cellDiv1 + cellDiv2 + cellDiv3;
+            const d = outerBox + headerDivider + footerDivider + cellDivLeft + cellDivRight;
 
             glowPath.setAttribute('d', d);
             sharpPath.setAttribute('d', d);
