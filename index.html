@@ -1015,6 +1015,7 @@
         let legacyCubesGroup;
         let customWater;
         let stageMountains = [];
+        let sparkleGroup;
 
         // ===== ORIGINAL CODE (UNTOUCHED) =====
         var Mathutils = {
@@ -1310,30 +1311,46 @@
             waterReflectLight.position.set(futurePointNode.x + 5, -8, futurePointNode.z + 5);
             scene.add(waterReflectLight);
 
-            // 2. Canyon Mountains flanking the camera path
-            const mountainGeom = new THREE.ConeGeometry(25, 55, 4);
-            const mountainMat = new THREE.MeshStandardMaterial({
-                color: 0x030a1c,
-                roughness: 0.95,
-                metalness: 0.05,
-                flatShading: true
+            // 2. Canyon Mountains flanking the camera path (Stretched spheres for smooth organic mountain cliffs)
+            const mountainGeom = new THREE.SphereGeometry(30, 24, 24);
+            const mountainMat = new THREE.MeshPhongMaterial({
+                color: 0x020813,
+                specular: 0x00a8ff,
+                shininess: 35,
+                flatShading: false
             });
             for (let i = 0; i < points.length; i++) {
                 const p = points[i];
                 // left side mountain
                 const mLeft = new THREE.Mesh(mountainGeom, mountainMat);
-                mLeft.position.set(p.x - 45, p.y + 12, p.z - 15);
-                mLeft.rotation.y = Math.random() * Math.PI;
+                mLeft.position.set(p.x - 55, p.y - 12, p.z - 10);
+                mLeft.scale.set(1.8, 3.8, 1.2);
                 scene.add(mLeft);
                 stageMountains.push(mLeft);
 
                 // right side mountain
                 const mRight = new THREE.Mesh(mountainGeom, mountainMat);
-                mRight.position.set(p.x + 45, p.y + 12, p.z + 15);
-                mRight.rotation.y = Math.random() * Math.PI;
+                mRight.position.set(p.x + 55, p.y - 12, p.z + 10);
+                mRight.scale.set(1.8, 3.8, 1.2);
                 scene.add(mRight);
                 stageMountains.push(mRight);
             }
+
+            // Sparkle particles floating near the water level
+            sparkleGroup = new THREE.Group();
+            for (let i = 0; i < 65; i++) {
+                const sparkle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.18, 4, 4),
+                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.85 })
+                );
+                sparkle.position.set(
+                    futurePointNode.x + (Math.random() - 0.5) * 150,
+                    -9 + Math.random() * 8,
+                    futurePointNode.z + (Math.random() - 0.5) * 150
+                );
+                sparkleGroup.add(sparkle);
+            }
+            scene.add(sparkleGroup);
 
             // 3. Stage 0: FUTURE - Large glowing central cube & rising bubble particles
             const futurePoint = path.getPointAt(0);
@@ -1552,13 +1569,18 @@
 
             updateCameraPercentage(currentCameraPercentage);
 
-            // 1. Water Plane Wave Animation
-            if (customWater && customWater.geometry && customWater.geometry.vertices) {
-                const time = Date.now() * 0.0015;
-                customWater.geometry.vertices.forEach((v, idx) => {
-                    v.z = Math.sin(v.x * 0.04 + time) * Math.cos(v.y * 0.04 + time) * 1.8;
+            // 1. Reflective Water Sway Animation
+            if (customWater) {
+                customWater.position.y = -10 + Math.sin(Date.now() * 0.001) * 0.35;
+                customWater.rotation.z = -Math.PI / 2 + Math.cos(Date.now() * 0.0006) * 0.018;
+            }
+
+            // Drift sparkles
+            if (sparkleGroup) {
+                sparkleGroup.children.forEach((sp, idx) => {
+                    sp.position.y += Math.sin(idx + Date.now() * 0.0012) * 0.012;
+                    sp.position.x += Math.cos(idx + Date.now() * 0.001) * 0.008;
                 });
-                customWater.geometry.verticesNeedUpdate = true;
             }
 
             // 2. Stage 0: FUTURE Animation
