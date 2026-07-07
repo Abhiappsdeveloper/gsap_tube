@@ -2010,13 +2010,14 @@
             // Left flank
             const gFlankLeft = flankMountainGeom.clone();
             displaceMountainGeometry(gFlankLeft, 0.8, 142.1);
-            applyGeologicalColors(gFlankLeft, new THREE.Vector3(flankMountainAnchor.x - 42, flankMountainAnchor.y - 20, flankMountainAnchor.z));
+            applyGeologicalColors(gFlankLeft, new THREE.Vector3(flankMountainAnchor.x - 20, flankMountainAnchor.y - 5, flankMountainAnchor.z - 90));
             const flankMountainLeft = new THREE.Mesh(gFlankLeft, flankMountainMat);
-            flankMountainLeft.position.copy(flankMountainAnchor).addScaledVector(heroRight, -42);
-            flankMountainLeft.position.y -= 20;
+            flankMountainLeft.position.copy(flankMountainAnchor).addScaledVector(heroRight, -20);
+            flankMountainLeft.position.z -= 90;
+            flankMountainLeft.position.y -= 5;
             // Higher glacier wall beside hero cube
             flankMountainLeft.scale.set(2.4, 7.5, 1.8);
-            flankMountainLeft.position.y += 40;
+            flankMountainLeft.position.y += 25;
             flankMountainLeft.castShadow = true;
             flankMountainLeft.receiveShadow = true;
             sourcePeaksGroup.add(flankMountainLeft);
@@ -2024,13 +2025,14 @@
             // Right flank
             const gFlankRight = flankMountainGeom.clone();
             displaceMountainGeometry(gFlankRight, 0.8, 315.6);
-            applyGeologicalColors(gFlankRight, new THREE.Vector3(flankMountainAnchor.x + 42, flankMountainAnchor.y - 20, flankMountainAnchor.z));
+            applyGeologicalColors(gFlankRight, new THREE.Vector3(flankMountainAnchor.x + 20, flankMountainAnchor.y - 5, flankMountainAnchor.z - 90));
             const flankMountainRight = new THREE.Mesh(gFlankRight, flankMountainMat);
-            flankMountainRight.position.copy(flankMountainAnchor).addScaledVector(heroRight, 42);
-            flankMountainRight.position.y -= 20;
+            flankMountainRight.position.copy(flankMountainAnchor).addScaledVector(heroRight, 20);
+            flankMountainRight.position.z -= 90;
+            flankMountainRight.position.y -= 5;
             // Higher glacier wall beside hero cube
             flankMountainRight.scale.set(2.4, 7.5, 1.8);
-            flankMountainRight.position.y += 40;
+            flankMountainRight.position.y += 25;
             flankMountainRight.castShadow = true;
             flankMountainRight.receiveShadow = true;
             sourcePeaksGroup.add(flankMountainRight);
