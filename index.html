@@ -1810,13 +1810,14 @@
             sourcePeaksGroup = new THREE.Group();
 
             // Layer 1: Monolith Outer Glass Shell
-            const outerBoxMat = new THREE.MeshPhysicalMaterial({
+            const outerBoxMat = new THREE.MeshStandardMaterial({
                 color: 0x050505,
                 roughness: 0.9,
                 metalness: 0.1,
-                clearcoat: 0.0,
                 transparent: false,
-                opacity: 1.0
+                opacity: 1.0,
+                emissive: 0x00f5d4,
+                emissiveIntensity: 0.15
             });
             const heroBoxGeom = new THREE.BoxGeometry(46, 46, 46, 4, 4, 4);
             const heroBox = new THREE.Mesh(heroBoxGeom, outerBoxMat);
@@ -1829,8 +1830,8 @@
             const coreGeom = new THREE.OctahedronGeometry(18, 0);
             const coreMat = new THREE.MeshStandardMaterial({
                 color: 0x050505,
-                emissive: 0x000000,
-                emissiveIntensity: 0.0
+                emissive: 0x00f5d4,
+                emissiveIntensity: 0.25
             });
             const innerCore = new THREE.Mesh(coreGeom, coreMat);
             innerCore.position.copy(heroBox.position);
@@ -1841,8 +1842,8 @@
             const ringGeom = new THREE.TorusGeometry(26, 1.2, 8, 32);
             const ringMat = new THREE.MeshStandardMaterial({
                 color: 0x050505,
-                emissive: 0x000000,
-                emissiveIntensity: 0.0
+                emissive: 0x00f5d4,
+                emissiveIntensity: 0.12
             });
             const middleRing = new THREE.Mesh(ringGeom, ringMat);
             middleRing.position.copy(heroBox.position);
@@ -2725,14 +2726,17 @@
                         if (child.userData.isCore) {
                             child.rotation.x += 0.015;
                             child.rotation.y += 0.02;
-                            child.material.emissiveIntensity = (2.0 + Math.sin(Date.now() * 0.003) * 0.8) * opacity;
+                            // Pulsing animation breathing between 0.15 and 0.35 over 3 seconds
+                            child.material.emissiveIntensity = (Math.sin(Date.now() * 0.002) * 0.1 + 0.25) * opacity;
                         }
                         if (child.userData.isRing) {
                             child.rotation.z -= 0.01;
                             child.material.opacity = 0.5 * opacity;
+                            child.material.emissiveIntensity = 0.12 * opacity;
                         }
                         if (child.userData.isBox) {
                             child.rotation.y -= 0.01;
+                            child.material.emissiveIntensity = 0.15 * opacity;
                         }
                     });
                 } else {
