@@ -1362,24 +1362,24 @@
                 const worldY = verts[i].y + worldAnchor.y;
 
                 // Horizontal sediment banding (sine layers)
-                const layer = Math.sin(worldY * 0.4) * 0.15 + Math.sin(worldY * 1.5) * 0.05;
+                const layer = Math.sin(worldY * 0.4) * 0.08 + Math.sin(worldY * 1.5) * 0.03;
 
-                // Color transition from light sand (top) to dark wet basalt (bottom near water)
+                // Color transition from deep black (#020202) to dark charcoal (#080a0d)
                 const heightFactor = Math.max(0, Math.min((worldY + 10.0) / 38.0, 1.0));
 
-                const baseColor = new THREE.Color(0x06121f); // Dark wet bottom base
-                const sandColor = new THREE.Color(0xd9b38c); // Warm sand top base
+                const baseColor = new THREE.Color(0x020202);
+                const charcoalColor = new THREE.Color(0x080a0d);
 
-                const col = baseColor.clone().lerp(sandColor, heightFactor);
+                const col = baseColor.clone().lerp(charcoalColor, heightFactor);
                 // Apply sediment stripe modulation
-                col.multiplyScalar(0.85 + layer);
+                col.multiplyScalar(0.9 + layer);
 
-                // Diffuse GI East/West sunlight tinting
+                // Diffuse GI East/West sunlight tinting - very subtle cool highlights
                 const normal = verts[i].clone().normalize();
                 if (normal.x > 0.4) {
-                    col.add(new THREE.Color(0x002c3d)); // Cool ambient blue bounce
+                    col.add(new THREE.Color(0x02060b)); // Very subtle cool dark blue highlight
                 } else if (normal.x < -0.4) {
-                    col.add(new THREE.Color(0x2a1c0d)); // Warm sun bounce
+                    col.add(new THREE.Color(0x010203)); // Very subtle dark grey
                 }
 
                 colors[i] = col;
@@ -1729,6 +1729,15 @@
             sunLight.shadow.camera.bottom = -dRange;
             scene.add(sunLight);
 
+            // Strong back/rim light behind the mountains (icy blue / white, high intensity)
+            const rimDirectionalLight = new THREE.DirectionalLight(0xdcf0fa, 2.5);
+            rimDirectionalLight.position.set(-200, 150, 140);
+            scene.add(rimDirectionalLight);
+
+            // Soft blue ambient bounce light
+            const softBlueBounceLight = new THREE.AmbientLight(0x0c1e36, 0.6);
+            scene.add(softBlueBounceLight);
+
             // Add water reflection light
             const sourcePointNode = path.getPointAt(0);
             const waterReflectLight = new THREE.PointLight(0x00f5d4, 4, 75);
@@ -1738,11 +1747,11 @@
             // 3. Stage 1: FUTURE peaks/mountains
             const mountainGeom = new THREE.SphereGeometry(30, 24, 24);
             const mountainMat = new THREE.MeshPhysicalMaterial({
-                color: 0xffffff,
-                roughness: 0.85,
-                metalness: 0.1,
-                clearcoat: 0.05,
-                clearcoatRoughness: 0.8,
+                color: 0x050505,
+                roughness: 0.9,
+                metalness: 0.05,
+                clearcoat: 0.15,
+                clearcoatRoughness: 0.2,
                 vertexColors: THREE.VertexColors
             });
             mountainMat.onBeforeCompile = rockShaderInjection;
@@ -1755,7 +1764,9 @@
                 applyGeologicalColors(gLeft, new THREE.Vector3(p.x - 55, p.y - 12, p.z - 10));
                 const mLeft = new THREE.Mesh(gLeft, mountainMat);
                 mLeft.position.set(p.x - 55, p.y - 12, p.z - 10);
-                mLeft.scale.set(1.8, 3.8, 1.2);
+                // Taller cinematic mountain height like reference image
+                mLeft.scale.set(1.8, 8.5, 1.4);
+                mLeft.position.y += 45;
                 mLeft.castShadow = true;
                 mLeft.receiveShadow = true;
                 scene.add(mLeft);
@@ -1766,7 +1777,9 @@
                 applyGeologicalColors(gRight, new THREE.Vector3(p.x + 55, p.y - 12, p.z + 10));
                 const mRight = new THREE.Mesh(gRight, mountainMat);
                 mRight.position.set(p.x + 55, p.y - 12, p.z + 10);
-                mRight.scale.set(1.8, 3.8, 1.2);
+                // Taller cinematic mountain height like reference image
+                mRight.scale.set(1.8, 8.5, 1.4);
+                mRight.position.y += 45;
                 mRight.castShadow = true;
                 mRight.receiveShadow = true;
                 scene.add(mRight);
@@ -1842,17 +1855,22 @@
 
             // Flank mountains flanking the monolith
             const flankMountainMat = new THREE.MeshPhysicalMaterial({
-                color: 0xffffff,
-                roughness: 0.85,
-                metalness: 0.1,
-                clearcoat: 0.05,
-                clearcoatRoughness: 0.8,
+                color: 0x050505,
+                roughness: 0.9,
+                metalness: 0.05,
+                clearcoat: 0.15,
+                clearcoatRoughness: 0.2,
                 vertexColors: THREE.VertexColors
             });
             flankMountainMat.onBeforeCompile = rockShaderInjection;
 
             const flankMountainGeom = new THREE.SphereGeometry(34, 20, 20);
             const flankMountainAnchor = heroP1.clone().addScaledVector(heroForward, 240);
+
+            // Stage 0 Rim Light (glowing outline from behind monolith peaks)
+            const monolithRimLight = new THREE.PointLight(0xffffff, 5.0, 150);
+            monolithRimLight.position.set(flankMountainAnchor.x, flankMountainAnchor.y + 40, flankMountainAnchor.z);
+            scene.add(monolithRimLight);
 
             // Left flank
             const gFlankLeft = flankMountainGeom.clone();
@@ -1861,7 +1879,9 @@
             const flankMountainLeft = new THREE.Mesh(gFlankLeft, flankMountainMat);
             flankMountainLeft.position.copy(flankMountainAnchor).addScaledVector(heroRight, -42);
             flankMountainLeft.position.y -= 20;
-            flankMountainLeft.scale.set(1.6, 2.6, 1.1);
+            // Higher glacier wall beside hero cube
+            flankMountainLeft.scale.set(2.4, 7.5, 1.8);
+            flankMountainLeft.position.y += 40;
             flankMountainLeft.castShadow = true;
             flankMountainLeft.receiveShadow = true;
             sourcePeaksGroup.add(flankMountainLeft);
@@ -1873,7 +1893,9 @@
             const flankMountainRight = new THREE.Mesh(gFlankRight, flankMountainMat);
             flankMountainRight.position.copy(flankMountainAnchor).addScaledVector(heroRight, 42);
             flankMountainRight.position.y -= 20;
-            flankMountainRight.scale.set(1.6, 2.6, 1.1);
+            // Higher glacier wall beside hero cube
+            flankMountainRight.scale.set(2.4, 7.5, 1.8);
+            flankMountainRight.position.y += 40;
             flankMountainRight.castShadow = true;
             flankMountainRight.receiveShadow = true;
             sourcePeaksGroup.add(flankMountainRight);
@@ -1905,18 +1927,18 @@
             // Create a local water plane for Future Stage at Y = -9.8 (slightly above customWater to prevent z-fighting but resting at the valley floor)
             const futureWaterGeom = new THREE.PlaneGeometry(600, 600, 32, 32);
             const futureWaterMat = new THREE.MeshPhysicalMaterial({
-                color: 0x00f5d4,
-                roughness: 0.15,
-                metalness: 0.8,
+                color: 0x010814,
+                roughness: 0.1,
+                metalness: 0.9,
                 clearcoat: 1.0,
-                clearcoatRoughness: 0.05,
+                clearcoatRoughness: 0.02,
                 transparent: true,
-                opacity: 0.35,
-                depthWrite: false
+                opacity: 0.85,
+                depthWrite: true
             });
             const futureWaterPlane = new THREE.Mesh(futureWaterGeom, futureWaterMat);
             futureWaterPlane.rotation.x = -Math.PI / 2;
-            futureWaterPlane.position.set(heroViewAnchor.x, -9.8, heroViewAnchor.z);
+            futureWaterPlane.position.set(heroViewAnchor.x, 60.0, heroViewAnchor.z);
             futureWaterPlane.userData.isPlane = true;
             futureWaterPlane.userData.baseZ = futureWaterGeom.vertices.map(v => v.z);
             futureWaterFlow.add(futureWaterPlane);
@@ -1980,19 +2002,20 @@
                 displaceMountainGeometry(geom, 1.2, idx * 54.3);
                 applyGeologicalColors(geom, pos);
 
-                const colorHex = silhouetteColors[idx % silhouetteColors.length];
                 const mat = new THREE.MeshPhysicalMaterial({
-                    color: colorHex,
+                    color: 0x020202,
                     roughness: 0.95,
-                    metalness: 0.1,
-                    clearcoat: 0.0,
+                    metalness: 0.02,
+                    clearcoat: 0.1,
+                    clearcoatRoughness: 0.2,
                     vertexColors: THREE.VertexColors
                 });
                 mat.onBeforeCompile = rockShaderInjection;
 
                 const mesh = new THREE.Mesh(geom, mat);
                 mesh.position.copy(pos);
-                mesh.scale.set(2.8, 4.8, 1.8);
+                mesh.scale.set(4.0, 8.5, 2.5);
+                mesh.position.y += 40;
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
                 futureMountainSilhouettes.add(mesh);
