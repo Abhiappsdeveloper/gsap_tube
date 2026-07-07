@@ -1870,19 +1870,20 @@
 
             // Layer 1: Monolith Outer Glass Shell
             const outerBoxMat = new THREE.MeshPhysicalMaterial({
-                color: 0x1a3a4a,
-                metalness: 0.6,
-                roughness: 0.15,
+                color: 0x2a4a5a,
+                metalness: 0.8,
+                roughness: 0.08,
                 clearcoat: 1.0,
-                clearcoatRoughness: 0.08,
+                clearcoatRoughness: 0.04,
                 transparent: false,
                 opacity: 1.0,
                 map: waveformTex,
                 emissive: 0x00f5d4,
                 emissiveMap: waveformTex,
-                emissiveIntensity: 0.2,
+                emissiveIntensity: 0.35,
                 vertexColors: THREE.NoColors,
-                envMapIntensity: 0.5
+                envMapIntensity: 0.7,
+                specularIntensity: 0.8
             });
             const heroBoxGeom = new THREE.BoxGeometry(46, 46, 46, 4, 4, 4);
             const heroBox = new THREE.Mesh(heroBoxGeom, outerBoxMat);
@@ -2801,8 +2802,8 @@
                         }
                         if (child.userData.isBox) {
                             child.rotation.y -= 0.01;
-                            // Pulsing energy wave effect: base 0.35 in bright regions, modulated by sin wave, fading with opacity
-                            child.material.emissiveIntensity = 0.35 * (0.7 + 0.3 * Math.sin(Date.now() * 0.002)) * opacity;
+                            // Pulsing energy wave effect: base 0.5 in bright regions, breathing with 0.8 + 0.4 * sin, fading with opacity
+                            child.material.emissiveIntensity = 0.5 * (0.8 + 0.4 * Math.sin(Date.now() * 0.002)) * opacity;
                         }
                     });
                 } else {
