@@ -273,6 +273,7 @@
             align-items: flex-end;
             padding-bottom: 130px;
             box-sizing: border-box;
+            transform: translateY(50px);
         }
 
         .story-container {
@@ -300,7 +301,7 @@
         .story-container h2 {
             margin: 0 0 20px 0;
             font-family: 'Orbitron', sans-serif;
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 900;
             color: #ffffff;
             line-height: 1.3;
@@ -310,7 +311,7 @@
 
         .story-container .story-content {
             font-family: 'Share Tech Mono', monospace;
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.8;
             margin-bottom: 30px;
             color: rgba(255, 255, 255, 0.75);
@@ -318,7 +319,7 @@
         }
 
         .story-container .story-stat {
-            font-size: 32px;
+            font-size: 29px;
             color: #ffb703;
             font-weight: 700;
             margin: 20px 0 6px 0;
@@ -327,7 +328,7 @@
         }
 
         .story-container .story-detail {
-            font-size: 13px;
+            font-size: 12px;
             color: #00f5d4;
             font-weight: 500;
             letter-spacing: 0.5px;
@@ -673,6 +674,7 @@
         }
 
         .hud-preloader-container {
+            position: relative;
             display: flex;
             flex-direction: column;
             width: 340px;
@@ -721,6 +723,40 @@
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
+        }
+
+        .hud-preloader-progress {
+            transition: opacity 0.4s ease;
+        }
+
+        .hud-preloader-progress.hide {
+            opacity: 0;
+        }
+
+        .hud-preloader-logo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .hud-preloader-logo.show {
+            opacity: 1;
+            transform: scale(1);
         }
 
         /* Responsive HUD Viewport Frame */
@@ -804,6 +840,143 @@
             color: rgba(255, 255, 255, 0.3);
             text-transform: uppercase;
         }
+
+        /* GLOBAL TEXT SCALE OVERRIDES - slightly smaller, kept legible and responsive */
+        .hud-audio-trigger {
+            font-size: 8px;
+        }
+
+        .hud-audio-trigger::before {
+            font-size: 7px;
+        }
+
+        .logo {
+            font-size: 22px;
+        }
+
+        .nav-links a {
+            font-size: 10px;
+        }
+
+        .btn-signin {
+            font-size: 9.5px;
+        }
+
+        .btn-cta {
+            font-size: 9.5px;
+        }
+
+        .story-container h2 {
+            font-size: 27px;
+        }
+
+        .story-container .story-content {
+            font-size: 12px;
+        }
+
+        .story-container .story-stat {
+            font-size: 25px;
+        }
+
+        .story-container .story-detail {
+            font-size: 10px;
+        }
+
+        .story-action {
+            font-size: 10px;
+        }
+
+        .progress-indicator {
+            font-size: 11px;
+        }
+
+        .chapter-marker {
+            font-size: 11px;
+        }
+
+        .hud-mute-btn {
+            font-size: 9.5px;
+        }
+
+        .footer-center {
+            font-size: 9.5px;
+        }
+
+        .footer-chat-btn {
+            font-size: 9.5px;
+        }
+
+        .hud-cursor-tooltip {
+            font-size: 8.5px;
+        }
+
+        .hud-preloader-percentage {
+            font-size: 9.5px;
+        }
+
+        .hud-preloader-label {
+            font-size: 8.5px;
+        }
+
+        .hud-preloader-logo {
+            font-size: 27px;
+        }
+
+        .hud-vertical-menu {
+            font-size: 11px;
+        }
+
+        .hud-left-url {
+            font-size: 9.5px;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 17px;
+            }
+
+            .btn-cta {
+                font-size: 9.5px;
+            }
+
+            .story-container h2 {
+                font-size: 19px;
+            }
+
+            .story-container .story-content {
+                font-size: 11px;
+            }
+
+            .story-container .story-stat {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 15px;
+            }
+
+            .story-container h2 {
+                font-size: 16px;
+            }
+
+            .story-container .story-content {
+                font-size: 10px;
+            }
+
+            .story-container .story-stat {
+                font-size: 17px;
+            }
+
+            .story-container .story-detail {
+                font-size: 9px;
+            }
+
+            .story-action {
+                font-size: 9px;
+            }
+        }
     </style>
 
 </head>
@@ -812,27 +985,30 @@
     <!-- FIXED PRELOADER -->
     <div class="hud-preloader" id="hudPreloader">
         <div class="hud-preloader-container">
-            <div class="hud-preloader-meta">
-                <span class="hud-preloader-percentage" id="preloaderPercent">0%</span>
+            <div class="hud-preloader-progress" id="preloaderProgress">
+                <div class="hud-preloader-meta">
+                    <span class="hud-preloader-percentage" id="preloaderPercent">0%</span>
+                </div>
+                <div class="hud-preloader-bar">
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                    <div class="hud-preloader-block"></div>
+                </div>
+                <div class="hud-preloader-label">LOADING CONTENT</div>
             </div>
-            <div class="hud-preloader-bar">
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-                <div class="hud-preloader-block"></div>
-            </div>
-            <div class="hud-preloader-label">LOADING CONTENT</div>
+            <div class="hud-preloader-logo" id="preloaderLogo">Ukonnect</div>
         </div>
     </div>
 
@@ -956,7 +1132,7 @@
                 actionUrl: "#projects"
             },
             {
-                progress: 20,
+                progress: 15,
                 title: "WE LEAD THE WAY IN DEVELOPMENT",
                 content: "At Hubtown we look at the world through a different lens; instead of seeing what is, we see what could be. Each day we seek better ways to design, build and create communities.",
                 stat: "",
@@ -966,7 +1142,7 @@
                 actionUrl: "#contact"
             },
             {
-                progress: 40,
+                progress: 36,
                 title: "WE WORK WITH A NETWORK OF EXPERTS",
                 content: "We are not just real estate developers. We are inventors, architects, engineers, designers, city planners, safety experts, artists... All coming together to shape the future, for you.",
                 stat: "",
@@ -974,7 +1150,7 @@
                 chapter: "COLLABORATION"
             },
             {
-                progress: 60,
+                progress: 52,
                 title: "TO BUILD WHAT OTHERS CAN ONLY IMAGINE",
                 content: "We work with experts from all over the world, because there is always something to learn. We aim higher, dream bigger and create better. Always.",
                 stat: "",
@@ -984,7 +1160,7 @@
                 actionUrl: "#vision"
             },
             {
-                progress: 80,
+                progress: 72,
                 title: "SHAPE THE LAND WITH PURPOSE",
                 content: "In an ever changing world with increasingly limited resources, we believe it essential to not only build well, but with vision, intention – and purpose. We build to last.",
                 stat: "",
@@ -992,7 +1168,7 @@
                 chapter: "PURPOSE"
             },
             {
-                progress: 96,
+                progress: 88,
                 title: "AND DEFINE TOMORROW'S LANDSCAPE",
                 content: "Join us as we continue to shape tomorrow, creating formidable communities, enduring experiences, and places of exceptional value.",
                 stat: "",
@@ -1004,17 +1180,17 @@
         ];
 
         // ===== CUSTOM 3D STAGE VARIABLES =====
-        let futureCube;
-        let bubbleParticles;
+        let sourcePeaksGroup;
+        let mistParticles;
         let riverLight;
         let riverLine;
         let riverCurve;
-        let collabGroup;
-        let excellenceGroup;
-        let purposeGroup;
-        let legacyCubesGroup;
+        let canyonGroup;
+        let rapidsGroup;
+        let forestGroup;
+        let deltaGroup;
+        let oceanGroup;
         let customWater;
-        let stageMountains = [];
         let sparkleGroup;
 
         // ===== ORIGINAL CODE (UNTOUCHED) =====
@@ -1043,7 +1219,6 @@
             wh = window.innerHeight;
 
         var composer, params = {
-            exposure: 1.3,
             bloomStrength: .9,
             bloomThreshold: 0,
             bloomRadius: 0
@@ -1063,13 +1238,15 @@
         scene.background = new THREE.Color(0x050b14);
         scene.fog = new THREE.Fog(0x050b14, 0, 100);
 
-        var clock = new THREE.Clock();
-
         //Create a perpsective camera
         var cameraRotationProxyX = 3.14159;
         var cameraRotationProxyY = 0;
 
-        var camera = new THREE.PerspectiveCamera(45, ww / wh, 0.001, 200);
+        // FOV widened 45deg -> 58deg (wide-angle) so more of each stage's composition
+        // fits on screen from the camera's existing path, instead of appearing zoomed
+        // in/cropped. Far plane extended 200 -> 300 so distant mountains/ocean plane
+        // aren't clipped now that more of the scene is visible at once.
+        var camera = new THREE.PerspectiveCamera(58, ww / wh, 0.001, 300);
         camera.rotation.y = cameraRotationProxyX;
         camera.rotation.z = cameraRotationProxyY;
 
@@ -1092,11 +1269,23 @@
         composer.addPass(bloomPass);
 
         //Array of points
+        // Format is [x, z, y] (converted to Vector3(x, y, z) below).
+        // Front section (first 5 points) lingers on an elevated, wide hero view of the
+        // valley before descending — camera pans sideways while staying at roughly the
+        // same height/depth, instead of plunging toward the river immediately.
+        // It then reconnects exactly onto the original canyon/rapids/forest/delta/destination
+        // path (the last 5 points, unchanged) so every later stage keeps its original shape.
+        // Y (3rd value in each tuple) raised across the hero section (points 0-3) for a
+        // higher overlook — enough to see both the peak tops and the water surface
+        // together in frame. Point 4 onward (the reconnect point and everything after
+        // it) is untouched, so the canyon/rapids/forest/delta/destination stages keep
+        // their original shape and placement.
         var points = [
-            [10, 89, 0],
-            [50, 88, 10],
-            [76, 139, 20],
-            [126, 141, 12],
+            [10, 140, 75],      // HERO START — elevated, pulled back for a wide establishing view
+            [-60, 138, 78],     // pan left, staying at the same height/depth
+            [65, 136, 76],      // pan right across the valley (0–~25% of scroll stays in this hero zone)
+            [100, 125, 60],     // begin a gentle descent
+            [126, 141, 12],     // reconnects to the original path (was index 3) — canyon descent begins
             [150, 112, 8],
             [157, 73, 0],
             [180, 44, 5],
@@ -1117,174 +1306,10 @@
         var path = new THREE.CatmullRomCurve3(points);
         path.tension = .5;
 
-        //Create a new geometry with a different radius
-        var geometry = new THREE.TubeGeometry(path, 300, 4, 32, false);
-
-        // Procedural Talent Network Texture
-        var textureCanvas = document.createElement('canvas');
-        textureCanvas.width = 2048;
-        textureCanvas.height = 1024;
-        var ctx = textureCanvas.getContext('2d');
-
-        // Draw background gradient matching website tone
-        var gradient = ctx.createLinearGradient(0, 0, 2048, 0);
-        gradient.addColorStop(0, '#050b14');
-        gradient.addColorStop(0.5, '#0a172a');
-        gradient.addColorStop(1, '#050b14');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 2048, 1024);
-
-        // Draw network grid lines
-        ctx.strokeStyle = 'rgba(0, 245, 212, 0.08)';
-        ctx.lineWidth = 1;
-        var gridX = 128;
-        var gridY = 128;
-        for (var x = 0; x <= 2048; x += gridX) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, 1024);
-            ctx.stroke();
-        }
-        for (var y = 0; y <= 1024; y += gridY) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(2048, y);
-            ctx.stroke();
-        }
-
-        // Generate node coordinates representing people/positions
-        var nodes = [];
-        var numNodes = 75;
-        var seed = 42;
-        function random() {
-            var x = Math.sin(seed++) * 10000;
-            return x - Math.floor(x);
-        }
-
-        for (var i = 0; i < numNodes; i++) {
-            nodes.push({
-                x: random() * 2048,
-                y: random() * 1024,
-                radius: random() * 6 + 3,
-                color: random() > 0.35 ? '#00f5d4' : '#ffb703',
-                type: random() > 0.5 ? 'talent' : 'company'
-            });
-        }
-
-        // Draw connection lines representing "Ukonnecting" people and companies
-        ctx.lineWidth = 1;
-        for (var i = 0; i < nodes.length; i++) {
-            var connectionsCount = 0;
-            for (var j = i + 1; j < nodes.length; j++) {
-                var dx = nodes[i].x - nodes[j].x;
-                var dy = nodes[i].y - nodes[j].y;
-
-                // Wrap around X boundary (since texture repeats)
-                if (dx > 1024) dx -= 2048;
-                if (dx < -1024) dx += 2048;
-
-                var dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 280 && connectionsCount < 3) {
-                    connectionsCount++;
-                    var alpha = (1 - dist / 280) * 0.35;
-                    ctx.strokeStyle = nodes[i].color === '#00f5d4' ? 'rgba(0, 245, 212, ' + alpha + ')' : 'rgba(255, 183, 3, ' + alpha + ')';
-                    ctx.beginPath();
-                    ctx.moveTo(nodes[i].x, nodes[i].y);
-                    ctx.lineTo(nodes[i].x - dx, nodes[i].y - dy);
-                    ctx.stroke();
-                }
-            }
-        }
-
-        // Draw nodes and professional icons/shapes
-        for (var i = 0; i < nodes.length; i++) {
-            var node = nodes[i];
-
-            // Outer glow
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = node.color;
-
-            // Draw core node
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-            ctx.fillStyle = node.color;
-            ctx.fill();
-
-            ctx.shadowBlur = 0; // Reset shadow
-
-            // Draw outer ring
-            ctx.strokeStyle = node.color === '#00f5d4' ? 'rgba(0, 245, 212, 0.25)' : 'rgba(255, 183, 3, 0.25)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, node.radius * 2.2, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Draw clean representation shapes representing 'connections' or 'staffing profiles'
-            if (node.radius > 6) {
-                if (node.type === 'talent') {
-                    // Small user representation (circle and shoulder arc)
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-                    ctx.lineWidth = 1;
-                    // head
-                    ctx.beginPath();
-                    ctx.arc(node.x, node.y - node.radius * 3.5, node.radius * 0.8, 0, Math.PI * 2);
-                    ctx.stroke();
-                    // shoulders
-                    ctx.beginPath();
-                    ctx.arc(node.x, node.y - node.radius * 3.5 + node.radius * 1.8, node.radius * 1.5, Math.PI, 0);
-                    ctx.stroke();
-                } else {
-                    // Small building / company representation (little outline hexagon)
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    for (var k = 0; k < 6; k++) {
-                        var angle = (k * Math.PI) / 3;
-                        var hx = node.x + Math.cos(angle) * (node.radius * 1.5);
-                        var hy = node.y + Math.sin(angle) * (node.radius * 1.5);
-                        if (k === 0) ctx.moveTo(hx, hy);
-                        else ctx.lineTo(hx, hy);
-                    }
-                    ctx.closePath();
-                    ctx.stroke();
-                }
-            }
-        }
-
-        var texture = new THREE.CanvasTexture(textureCanvas);
-        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-        texture.offset.set(0, 0);
-        texture.repeat.set(10, 2);
-
-        // Procedural Bump Map
-        var bumpCanvas = document.createElement('canvas');
-        bumpCanvas.width = 512;
-        bumpCanvas.height = 512;
-        var bCtx = bumpCanvas.getContext('2d');
-        bCtx.fillStyle = '#808080';
-        bCtx.fillRect(0, 0, 512, 512);
-        bCtx.fillStyle = '#ffffff';
-        for (var y = 0; y < 512; y += 16) {
-            bCtx.fillRect(0, y, 512, 4);
-        }
-        var mapHeight = new THREE.CanvasTexture(bumpCanvas);
-        mapHeight.wrapS = mapHeight.wrapT = THREE.RepeatWrapping;
-        mapHeight.offset.set(0, 0);
-        mapHeight.repeat.set(10, 2);
-
-        var material = new THREE.MeshPhongMaterial({
-            side: THREE.BackSide,
-            map: texture,
-            shininess: 20,
-            bumpMap: mapHeight,
-            bumpScale: -.03,
-            specular: 0x0b2349
-        });
-
         // ===== INITIALIZE CUSTOM 3D HUD STAGES =====
         function initCustomStages() {
-            // 1. Reflective Water Plane
-            const waterGeom = new THREE.PlaneGeometry(1000, 1000, 32, 32);
+            // 1. Reflective River/Lake Water Plane
+            const waterGeom = new THREE.PlaneGeometry(1000, 1000, 48, 48);
             const waterMat = new THREE.MeshPhongMaterial({
                 color: 0x020d21,
                 specular: 0x00f5d4,
@@ -1294,9 +1319,10 @@
             customWater = new THREE.Mesh(waterGeom, waterMat);
             customWater.rotation.x = -Math.PI / 2;
             customWater.position.set(120, -10, 90);
+            customWater.userData.baseZ = waterGeom.vertices.map(v => v.z);
             scene.add(customWater);
 
-            // Add ambient light to illuminate dark canyon mountains
+            // Add ambient light to illuminate the dark silhouetted mountains
             const ambLight = new THREE.AmbientLight(0x081630, 1.5);
             scene.add(ambLight);
 
@@ -1305,13 +1331,13 @@
             dirLight.position.set(120, 100, 90);
             scene.add(dirLight);
 
-            // Add local cyan point light directly under the future cube to project the reflection onto the water
-            const futurePointNode = path.getPointAt(0);
+            // Add local cyan point light directly under the source peaks to project the reflection onto the river
+            const sourcePointNode = path.getPointAt(0);
             const waterReflectLight = new THREE.PointLight(0x00f5d4, 4, 75);
-            waterReflectLight.position.set(futurePointNode.x + 5, -8, futurePointNode.z + 5);
+            waterReflectLight.position.set(sourcePointNode.x + 5, -8, sourcePointNode.z + 5);
             scene.add(waterReflectLight);
 
-            // 2. Canyon Mountains flanking the camera path (Stretched spheres for smooth organic mountain cliffs)
+            // 2. Dark silhouetted mountain range flanking the entire valley (Stretched spheres for organic cliffs)
             const mountainGeom = new THREE.SphereGeometry(30, 24, 24);
             const mountainMat = new THREE.MeshPhongMaterial({
                 color: 0x020813,
@@ -1326,17 +1352,15 @@
                 mLeft.position.set(p.x - 55, p.y - 12, p.z - 10);
                 mLeft.scale.set(1.8, 3.8, 1.2);
                 scene.add(mLeft);
-                stageMountains.push(mLeft);
 
                 // right side mountain
                 const mRight = new THREE.Mesh(mountainGeom, mountainMat);
                 mRight.position.set(p.x + 55, p.y - 12, p.z + 10);
                 mRight.scale.set(1.8, 3.8, 1.2);
                 scene.add(mRight);
-                stageMountains.push(mRight);
             }
 
-            // Sparkle particles floating near the water level
+            // Sparkle/mist particles drifting through the air across the whole valley
             sparkleGroup = new THREE.Group();
             for (let i = 0; i < 65; i++) {
                 const sparkle = new THREE.Mesh(
@@ -1344,59 +1368,127 @@
                     new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.85 })
                 );
                 sparkle.position.set(
-                    futurePointNode.x + (Math.random() - 0.5) * 150,
+                    sourcePointNode.x + (Math.random() - 0.5) * 150,
                     -9 + Math.random() * 8,
-                    futurePointNode.z + (Math.random() - 0.5) * 150
+                    sourcePointNode.z + (Math.random() - 0.5) * 150
                 );
                 sparkleGroup.add(sparkle);
             }
             scene.add(sparkleGroup);
 
-            // 3. Stage 0: FUTURE - Large glowing central cube & rising bubble particles
-            const futurePoint = path.getPointAt(0);
-            const cubeGeom = new THREE.BoxGeometry(12, 12, 12);
-            const cubeMat = new THREE.MeshStandardMaterial({
-                color: 0x00f5d4,
-                emissive: 0x00f5d4,
-                emissiveIntensity: 0.6,
-                transparent: true,
-                opacity: 0.9,
-                roughness: 0.1,
-                metalness: 0.9
-            });
-            futureCube = new THREE.Mesh(cubeGeom, cubeMat);
-            futureCube.position.set(futurePoint.x + 5, futurePoint.y + 22, futurePoint.z + 5);
-            scene.add(futureCube);
+            // 3. Stage 0: SOURCE - Central glowing hero box flanked by two dark silhouetted
+            // mountains, with the river running beneath it. Matches the reference composition:
+            // one dominant glowing focal point, centered and elevated, framed symmetrically.
+            // Fixed size (baked into the geometry) instead of animated up over time.
+            //
+            // Positioned using the camera's actual forward/right vectors at 0% scroll (the
+            // same p1/p2 math updateCameraPercentage uses), not raw world X/Z offsets from
+            // the start point. The camera at 0% looks toward its next waypoint (a sideways
+            // pan), not straight along world -Z, so a world-space "+90 forward, +-110 left/
+            // right" offset does not reliably land in front of / flanking the camera — it can
+            // even end up placing one flank behind the camera. Building the offsets from the
+            // camera's real forward/right axes guarantees the box sits dead-center and both
+            // mountains flank it symmetrically in screen space, regardless of the path's
+            // world-space direction of travel at this point.
+            const heroP1 = path.getPointAt(0);
+            const heroP2 = path.getPointAt(0.03);
+            const heroForward = new THREE.Vector3().subVectors(heroP2, heroP1).normalize();
+            const heroRight = new THREE.Vector3().crossVectors(heroForward, new THREE.Vector3(0, 1, 0)).normalize();
+            const heroViewAnchor = heroP1.clone().addScaledVector(heroForward, 90);
+            sourcePeaksGroup = new THREE.Group();
 
-            // Rising bubble particles (Mesh Group instead of Point Cloud)
-            bubbleParticles = new THREE.Group();
+            const heroBoxMat = new THREE.MeshStandardMaterial({
+                color: 0x00d4ff,
+                emissive: 0x00f5d4,
+                emissiveIntensity: 1.5,
+                transparent: true,
+                opacity: 0.85,
+                roughness: 0.15,
+                metalness: 0.4
+            });
+            const heroBoxWireMat = new THREE.MeshBasicMaterial({
+                color: 0x00f5d4,
+                transparent: true,
+                opacity: 0.5,
+                wireframe: true
+            });
+            const heroBoxGeom = new THREE.BoxGeometry(46, 46, 46, 4, 4, 4);
+
+            const heroBox = new THREE.Mesh(heroBoxGeom, heroBoxMat);
+            heroBox.position.set(heroViewAnchor.x, heroViewAnchor.y + 30, heroViewAnchor.z);
+            sourcePeaksGroup.add(heroBox);
+
+            const heroBoxWire = new THREE.Mesh(heroBoxGeom, heroBoxWireMat);
+            heroBoxWire.position.copy(heroBox.position);
+            sourcePeaksGroup.add(heroBoxWire);
+
+            const flankMountainMat = new THREE.MeshStandardMaterial({
+                color: 0x030a12,
+                emissive: 0x001018,
+                emissiveIntensity: 0.08,
+                transparent: true,
+                opacity: 0.95,
+                roughness: 0.9,
+                flatShading: true
+            });
+            const flankMountainGeom = new THREE.SphereGeometry(34, 20, 20);
+
+            // Placed further along the camera's forward axis than the box (240 units vs 90)
+            // with a modest lateral offset (42) so they land right at the frame edges
+            // (verified via camera-space projection: NDC x = +-0.9, comfortably inside the
+            // +-1 visible range) instead of being fully outside the frame the way a flat
+            // +-110 world-space offset at the box's own depth was.
+            const flankMountainAnchor = heroP1.clone().addScaledVector(heroForward, 240);
+
+            const flankMountainLeft = new THREE.Mesh(flankMountainGeom, flankMountainMat);
+            flankMountainLeft.position.copy(flankMountainAnchor).addScaledVector(heroRight, -42);
+            flankMountainLeft.position.y -= 20;
+            flankMountainLeft.scale.set(1.6, 2.6, 1.1);
+            sourcePeaksGroup.add(flankMountainLeft);
+
+            const flankMountainRight = new THREE.Mesh(flankMountainGeom, flankMountainMat);
+            flankMountainRight.position.copy(flankMountainAnchor).addScaledVector(heroRight, 42);
+            flankMountainRight.position.y -= 20;
+            flankMountainRight.scale.set(1.6, 2.6, 1.1);
+            sourcePeaksGroup.add(flankMountainRight);
+
+            scene.add(sourcePeaksGroup);
+
+            // Rising glacier mist near the source (Mesh Group instead of Point Cloud)
+            mistParticles = new THREE.Group();
             for (let i = 0; i < 40; i++) {
                 const bubbleMesh = new THREE.Mesh(
                     new THREE.SphereGeometry(0.3, 4, 4),
                     new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.8 })
                 );
                 bubbleMesh.position.set(
-                    futurePoint.x + (Math.random() - 0.5) * 60,
+                    sourcePointNode.x + (Math.random() - 0.5) * 60,
                     -10 + Math.random() * 40,
-                    futurePoint.z + (Math.random() - 0.5) * 60
+                    sourcePointNode.z + (Math.random() - 0.5) * 60
                 );
-                bubbleParticles.add(bubbleMesh);
+                mistParticles.add(bubbleMesh);
             }
-            scene.add(bubbleParticles);
+            scene.add(mistParticles);
 
-            // 4. Stage 1: INNOVATION - Winding river light channel & moving light
+            // 4. Primary River - flows the entire length of the valley (Descent -> Destination)
             const riverPoints = [];
-            for (let i = 0; i <= 20; i++) {
-                const ratio = 0.18 + (i / 20) * 0.14;
+            for (let i = 0; i <= 60; i++) {
+                const ratio = (i / 60) * 0.96;
                 const node = path.getPointAt(ratio);
                 riverPoints.push(new THREE.Vector3(node.x, node.y - 9.8, node.z));
             }
             riverCurve = new THREE.CatmullRomCurve3(riverPoints);
-            const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 64, 2, 8, false);
-            const riverTubeMat = new THREE.MeshBasicMaterial({
+            // Widened and brightened so the river reads clearly even from the elevated,
+            // pulled-back hero vantage point (not just once the camera is close to it).
+            const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 240, 3.2, 8, false);
+            const riverTubeMat = new THREE.MeshPhongMaterial({
                 color: 0x00a8ff,
+                emissive: 0x00f5d4,
+                emissiveIntensity: 0.45,
+                specular: 0x00f5d4,
+                shininess: 80,
                 transparent: true,
-                opacity: 0.25,
+                opacity: 0.55,
                 wireframe: true
             });
             riverLine = new THREE.Mesh(riverTubeGeom, riverTubeMat);
@@ -1405,110 +1497,204 @@
             riverLight = new THREE.PointLight(0x00f5d4, 2, 45);
             scene.add(riverLight);
 
-            // 5. Stage 2: COLLABORATION - Winding neon fiber ribbon lines
-            collabGroup = new THREE.Group();
-            for (let i = 0; i < 4; i++) {
-                const fiberPoints = [];
-                for (let j = 0; j < 10; j++) {
-                    const ratio = 0.36 + (j / 10) * 0.10;
-                    const node = path.getPointAt(ratio);
-                    fiberPoints.push(new THREE.Vector3(
-                        node.x + Math.sin(j + i) * 6,
-                        node.y + Math.cos(j * 2 + i) * 6,
-                        node.z + (Math.random() - 0.5) * 4
+            // 4b. Stage 2: INNOVATION - Jagged canyon walls flanking the descent into the river
+            canyonGroup = new THREE.Group();
+            const canyonWallMat = new THREE.MeshStandardMaterial({
+                color: 0x061826,
+                emissive: 0x00a8ff,
+                emissiveIntensity: 0.25,
+                roughness: 0.8,
+                flatShading: true
+            });
+            for (let i = 0; i <= 16; i++) {
+                const ratio = 0.15 + (i / 16) * 0.21;
+                const node = path.getPointAt(ratio);
+                [-1, 1].forEach(side => {
+                    const wallGeom = new THREE.ConeGeometry(9 + Math.random() * 5, 26 + Math.random() * 14, 5);
+                    const wall = new THREE.Mesh(wallGeom, canyonWallMat);
+                    wall.position.set(
+                        node.x + side * (26 + Math.random() * 10),
+                        node.y + 4 + Math.random() * 6,
+                        node.z + (Math.random() - 0.5) * 8
+                    );
+                    wall.rotation.y = Math.random() * Math.PI;
+                    canyonGroup.add(wall);
+                });
+            }
+            scene.add(canyonGroup);
+
+            // 5. Stage 3: COLLABORATION - Jagged rapids rocks with white-water spray
+            rapidsGroup = new THREE.Group();
+            for (let i = 0; i < 26; i++) {
+                const ratio = 0.36 + Math.random() * 0.16;
+                const node = path.getPointAt(ratio);
+                const rockGeom = new THREE.IcosahedronGeometry(1.5 + Math.random() * 2.5, 0);
+                const rockMat = new THREE.MeshStandardMaterial({
+                    color: 0x0d1f33,
+                    emissive: 0x00a8ff,
+                    emissiveIntensity: 0.15,
+                    roughness: 0.9,
+                    flatShading: true
+                });
+                const rock = new THREE.Mesh(rockGeom, rockMat);
+                rock.position.set(
+                    node.x + (Math.random() - 0.5) * 14,
+                    node.y - 9 + Math.random() * 2,
+                    node.z + (Math.random() - 0.5) * 14
+                );
+                rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                rapidsGroup.add(rock);
+
+                // White spray particle above each rock
+                const sprayMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.35, 4, 4),
+                    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 })
+                );
+                sprayMesh.position.set(rock.position.x, rock.position.y + 2, rock.position.z);
+                rapidsGroup.add(sprayMesh);
+            }
+            scene.add(rapidsGroup);
+
+            // 6. Stage 4: EXCELLENCE - Forest treeline along the riverbanks
+            forestGroup = new THREE.Group();
+            for (let i = 0; i < 34; i++) {
+                const ratio = 0.52 + (i / 34) * 0.20;
+                const node = path.getPointAt(ratio);
+                const side = i % 2 === 0 ? -1 : 1;
+                const trunkGeom = new THREE.CylinderGeometry(0.4, 0.6, 4, 6);
+                const trunkMat = new THREE.MeshStandardMaterial({ color: 0x142418, roughness: 1 });
+                const trunk = new THREE.Mesh(trunkGeom, trunkMat);
+                const canopyGeom = new THREE.ConeGeometry(3 + Math.random() * 1.5, 9 + Math.random() * 4, 8);
+                const canopyMat = new THREE.MeshStandardMaterial({
+                    color: 0x0a2a1e,
+                    emissive: 0x00302a,
+                    emissiveIntensity: 0.4,
+                    roughness: 0.85
+                });
+                const canopy = new THREE.Mesh(canopyGeom, canopyMat);
+
+                const offsetX = (Math.random() * 12 + 20) * side;
+                trunk.position.set(node.x + offsetX, node.y - 8, node.z + (Math.random() - 0.5) * 10);
+                canopy.position.set(trunk.position.x, trunk.position.y + 7, trunk.position.z);
+
+                forestGroup.add(trunk);
+                forestGroup.add(canopy);
+            }
+            scene.add(forestGroup);
+
+            // 7. Stage 5: PURPOSE - Branching tributary streams merging into the main river
+            deltaGroup = new THREE.Group();
+            const confluencePoint = path.getPointAt(0.80);
+            for (let i = 0; i < 5; i++) {
+                const branchPoints = [];
+                const startAngle = (i / 5) * Math.PI * 2;
+                for (let j = 0; j <= 12; j++) {
+                    const t = j / 12;
+                    const spread = (1 - t) * 26;
+                    branchPoints.push(new THREE.Vector3(
+                        confluencePoint.x + Math.cos(startAngle) * spread,
+                        confluencePoint.y - 9.5 + Math.sin(t * Math.PI) * 1.5,
+                        confluencePoint.z + Math.sin(startAngle) * spread - (t * 30)
                     ));
                 }
-                const fiberCurve = new THREE.CatmullRomCurve3(fiberPoints);
-                const fiberGeom = new THREE.TubeGeometry(fiberCurve, 32, 0.4, 6, false);
-                const fiberMat = new THREE.MeshBasicMaterial({
-                    color: i % 2 === 0 ? 0x00f5d4 : 0x00a8ff,
+                const branchCurve = new THREE.CatmullRomCurve3(branchPoints);
+                const branchGeom = new THREE.TubeGeometry(branchCurve, 24, 1.1, 6, false);
+                const branchMat = new THREE.MeshBasicMaterial({
+                    color: 0x00f5d4,
                     transparent: true,
-                    opacity: 0.6
+                    opacity: 0.4,
+                    wireframe: true
                 });
-                const fiberMesh = new THREE.Mesh(fiberGeom, fiberMat);
-                collabGroup.add(fiberMesh);
+                deltaGroup.add(new THREE.Mesh(branchGeom, branchMat));
             }
-            scene.add(collabGroup);
+            scene.add(deltaGroup);
 
-            // 6. Stage 3: EXCELLENCE - Multi-cube landscape with connector threads
-            excellenceGroup = new THREE.Group();
-            const excellencePoint = path.getPointAt(0.60);
+            // 8. Stage 6: LEGACY - River mouth opening onto a vast, calm horizon
+            oceanGroup = new THREE.Group();
+            const destinationPoint = path.getPointAt(0.96);
+            const oceanPlaneGeom = new THREE.PlaneGeometry(600, 600, 16, 16);
+            const oceanPlaneMat = new THREE.MeshPhongMaterial({
+                color: 0x03182b,
+                specular: 0x00f5d4,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.85,
+                flatShading: true
+            });
+            const oceanPlane = new THREE.Mesh(oceanPlaneGeom, oceanPlaneMat);
+            oceanPlane.rotation.x = -Math.PI / 2;
+            oceanPlane.position.set(destinationPoint.x + 60, -9.9, destinationPoint.z);
+            oceanGroup.add(oceanPlane);
 
-            // Central bright cube
-            const centralExCube = new THREE.Mesh(cubeGeom, cubeMat);
-            centralExCube.position.set(excellencePoint.x, excellencePoint.y + 4, excellencePoint.z);
-            excellenceGroup.add(centralExCube);
+            // Soft horizon glow
+            const horizonGlowGeom = new THREE.PlaneGeometry(500, 120);
+            const horizonGlowMat = new THREE.MeshBasicMaterial({
+                color: 0x00f5d4,
+                transparent: true,
+                opacity: 0.12,
+                side: THREE.DoubleSide
+            });
+            const horizonGlow = new THREE.Mesh(horizonGlowGeom, horizonGlowMat);
+            horizonGlow.position.set(destinationPoint.x + 120, 10, destinationPoint.z);
+            horizonGlow.rotation.y = Math.PI / 2;
+            oceanGroup.add(horizonGlow);
 
-            // Distant cubes
-            for (let i = 0; i < 15; i++) {
-                const distCubeGeom = new THREE.BoxGeometry(4 + Math.random() * 4, 4 + Math.random() * 4, 4 + Math.random() * 4);
-                const distCubeMat = new THREE.MeshStandardMaterial({
-                    color: 0x00a8ff,
-                    emissive: 0x00a8ff,
-                    emissiveIntensity: 0.4,
-                    transparent: true,
-                    opacity: 0.7
+            // Wide, sparse haze particles drifting over the open water
+            for (let i = 0; i < 30; i++) {
+                const hazeMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.5, 4, 4),
+                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.35 })
+                );
+                hazeMesh.userData.isHaze = true;
+                hazeMesh.position.set(
+                    destinationPoint.x + (Math.random() - 0.5) * 160,
+                    -6 + Math.random() * 10,
+                    destinationPoint.z + (Math.random() - 0.5) * 160
+                );
+                oceanGroup.add(hazeMesh);
+            }
+
+            // Glowing "network nodes" scattered across the delta, connected by thin lines —
+            // representing Hubtown's interconnected communities/legacy of built projects.
+            const nodeMat = new THREE.MeshStandardMaterial({
+                color: 0x00f5d4,
+                emissive: 0x00f5d4,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.95
+            });
+            const nodePositions = [];
+            for (let i = 0; i < 14; i++) {
+                const nodePos = new THREE.Vector3(
+                    destinationPoint.x + (Math.random() - 0.5) * 180,
+                    -8.5,
+                    destinationPoint.z + (Math.random() - 0.5) * 180
+                );
+                nodePositions.push(nodePos);
+                const nodeMesh = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8), nodeMat);
+                nodeMesh.userData.isNode = true;
+                nodeMesh.position.copy(nodePos);
+                oceanGroup.add(nodeMesh);
+            }
+            // Connect each node to its nearest neighbor with a thin glowing line
+            const nodeLineMat = new THREE.LineBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.3 });
+            nodePositions.forEach((a, i) => {
+                let nearest = null, nearestDist = Infinity;
+                nodePositions.forEach((b, j) => {
+                    if (i === j) return;
+                    const dist = a.distanceTo(b);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearest = b;
+                    }
                 });
-                const distCube = new THREE.Mesh(distCubeGeom, distCubeMat);
-                distCube.position.set(
-                    excellencePoint.x + (Math.random() - 0.5) * 120,
-                    excellencePoint.y + 20 + (Math.random() - 0.5) * 40,
-                    excellencePoint.z + (Math.random() - 0.5) * 120
-                );
-                excellenceGroup.add(distCube);
-
-                // Add simple connecting thread line (using BufferGeometry)
-                const lineGeom = new THREE.BufferGeometry().setFromPoints([
-                    centralExCube.position,
-                    distCube.position
-                ]);
-                const lineMat = new THREE.LineBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.2 });
-                const line = new THREE.Line(lineGeom, lineMat);
-                excellenceGroup.add(line);
-            }
-            scene.add(excellenceGroup);
-
-            // 7. Stage 4: PURPOSE - Mountain peaks with flying light trails
-            purposeGroup = new THREE.Group();
-            const purposePoint = path.getPointAt(0.80);
-            for (let i = 0; i < 40; i++) {
-                const trailMesh = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.2, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.8 })
-                );
-                trailMesh.position.set(
-                    purposePoint.x + (Math.random() - 0.5) * 80,
-                    purposePoint.y + Math.random() * 40,
-                    purposePoint.z + (Math.random() - 0.5) * 80
-                );
-                purposeGroup.add(trailMesh);
-            }
-            scene.add(purposeGroup);
-
-            // 8. Stage 5: LEGACY - Vast digital grid of cubes
-            legacyCubesGroup = new THREE.Group();
-            const legacyPoint = path.getPointAt(0.96);
-            const gridCubeGeom = new THREE.BoxGeometry(2.5, 2.5, 2.5);
-            for (let x = -8; x <= 8; x++) {
-                for (let z = -8; z <= 8; z++) {
-                    const gridCubeMat = new THREE.MeshStandardMaterial({
-                        color: 0x00f5d4,
-                        emissive: 0x00f5d4,
-                        emissiveIntensity: 0.35,
-                        transparent: true,
-                        opacity: 0.75,
-                        roughness: 0.2
-                    });
-                    const mCube = new THREE.Mesh(gridCubeGeom, gridCubeMat);
-                    mCube.position.set(
-                        legacyPoint.x + x * 9,
-                        legacyPoint.y - 8 + (Math.sin(x) * Math.cos(z) * 2),
-                        legacyPoint.z + z * 9
-                    );
-                    legacyCubesGroup.add(mCube);
+                if (nearest) {
+                    const lineGeom = new THREE.BufferGeometry().setFromPoints([a, nearest]);
+                    oceanGroup.add(new THREE.Line(lineGeom, nodeLineMat));
                 }
-            }
-            scene.add(legacyCubesGroup);
+            });
+
+            scene.add(oceanGroup);
         }
 
         // Initialize custom 3D scenes
@@ -1545,7 +1731,6 @@
                 start: "top top",
                 end: "bottom 100%",
                 scrub: 5,
-                markers: { color: "white" },
                 onUpdate: function (self) {
                     // Update storytelling content based on scroll progress
                     updateStoryContent(self.progress);
@@ -1569,13 +1754,22 @@
 
             updateCameraPercentage(currentCameraPercentage);
 
-            // 1. Reflective Water Sway Animation
+            // 1. Reflective Water Surface - sine-wave vertex displacement for flowing ripples
             if (customWater) {
                 customWater.position.y = -10 + Math.sin(Date.now() * 0.001) * 0.35;
                 customWater.rotation.z = -Math.PI / 2 + Math.cos(Date.now() * 0.0006) * 0.018;
+
+                const verts = customWater.geometry.vertices;
+                const base = customWater.userData.baseZ;
+                const t = Date.now() * 0.0012;
+                for (let i = 0; i < verts.length; i++) {
+                    const v = verts[i];
+                    v.z = base[i] + Math.sin(v.x * 0.08 + t) * 0.6 + Math.cos(v.y * 0.1 + t * 0.8) * 0.4;
+                }
+                customWater.geometry.verticesNeedUpdate = true;
             }
 
-            // Drift sparkles
+            // Drift sparkles/mist through the valley air
             if (sparkleGroup) {
                 sparkleGroup.children.forEach((sp, idx) => {
                     sp.position.y += Math.sin(idx + Date.now() * 0.0012) * 0.012;
@@ -1583,93 +1777,107 @@
                 });
             }
 
-            // 2. Stage 0: FUTURE Animation
-            if (futureCube) {
-                futureCube.rotation.y += 0.008;
-                futureCube.rotation.x += 0.004;
+            // 2. Stage 1: FUTURE Animation - glowing peaks stay as a FIXED, distant hero
+            // focal point through the first 15% of scroll (camera lingers/pans instead of
+            // flying straight at them), then fade out as the descent into the canyon begins.
+            if (sourcePeaksGroup) {
+                sourcePeaksGroup.children.forEach((peak, idx) => {
+                    if (peak.material && peak.material.emissiveIntensity !== undefined) {
+                        peak.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.0006 + idx) * 0.3;
+                    }
+                });
 
-                // Zoom/Scale up cube on initial scroll
-                if (currentCameraPercentage < 0.15) {
-                    const scaleVal = 1 + (currentCameraPercentage / 0.15) * 3.5;
-                    futureCube.scale.set(scaleVal, scaleVal, scaleVal);
-                    futureCube.material.opacity = 0.9;
-                    futureCube.visible = true;
-                } else if (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.22) {
-                    // Break apart/Fade out
-                    const fade = 1 - (currentCameraPercentage - 0.15) / 0.07;
-                    futureCube.material.opacity = Math.max(0, fade);
-                    futureCube.scale.set(4.5, 4.5, 4.5);
-                    futureCube.visible = futureCube.material.opacity > 0;
+                sourcePeaksGroup.scale.set(1, 1, 1);
+
+                if (currentCameraPercentage < 0.22) {
+                    sourcePeaksGroup.visible = true;
+                    // Fade starts at 15% and finishes by 22% (smoothstep easing)
+                    const t = Math.min(Math.max((currentCameraPercentage - 0.15) / (0.22 - 0.15), 0), 1);
+                    const fadeOut = t * t * (3 - 2 * t);
+                    sourcePeaksGroup.children.forEach(peak => {
+                        if (peak.material) peak.material.opacity = Math.max(0, (1 - fadeOut) * 0.9);
+                    });
                 } else {
-                    futureCube.visible = false;
+                    sourcePeaksGroup.visible = false;
                 }
             }
 
-            if (bubbleParticles) {
-                bubbleParticles.visible = (currentCameraPercentage < 0.22);
-                if (bubbleParticles.visible) {
-                    bubbleParticles.children.forEach(v => {
+            if (mistParticles) {
+                mistParticles.visible = (currentCameraPercentage < 0.22);
+                if (mistParticles.visible) {
+                    mistParticles.children.forEach(v => {
                         v.position.y += 0.2;
                         if (v.position.y > 35) v.position.y = -10;
                     });
                 }
             }
 
-            // 3. Stage 1: INNOVATION Animation (Moving River Light)
-            if (riverLight) {
-                if (currentCameraPercentage >= 0.12 && currentCameraPercentage < 0.36) {
-                    riverLight.visible = true;
-                    // Interpolate light position along the river curve
-                    const riverRatio = Mathutils.map(currentCameraPercentage, 0.15, 0.32, 0, 1);
-                    const lightPos = riverCurve.getPointAt(riverRatio);
-                    riverLight.position.copy(lightPos);
-                } else {
-                    riverLight.visible = false;
-                }
+            // 3. Primary River Animation - light travels the full length, speeding up through the rapids
+            if (riverLight && riverCurve) {
+                const journeyRatio = Mathutils.map(currentCameraPercentage, 0, 0.96, 0, 1);
+                const lightPos = riverCurve.getPointAt(Math.min(Math.max(journeyRatio, 0), 1));
+                riverLight.position.copy(lightPos);
+                riverLight.visible = true;
+            }
+            if (riverLine) {
+                const flowSpeed = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.52) ? 0.003 : 0.0012;
+                riverLine.material.emissiveIntensity = 0.35 + Math.sin(Date.now() * flowSpeed) * 0.15;
             }
 
-            // 4. Stage 2: COLLABORATION Animation
-            if (collabGroup) {
-                collabGroup.visible = (currentCameraPercentage >= 0.32 && currentCameraPercentage < 0.52);
-                if (collabGroup.visible) {
-                    collabGroup.rotation.z = Math.sin(Date.now() * 0.001) * 0.08;
-                }
-            }
-
-            // 5. Stage 3: EXCELLENCE Animation
-            if (excellenceGroup) {
-                excellenceGroup.visible = (currentCameraPercentage >= 0.50 && currentCameraPercentage < 0.72);
-                if (excellenceGroup.visible) {
-                    excellenceGroup.children.forEach(child => {
-                        if (child.isMesh) {
-                            child.rotation.y += 0.01;
-                            child.rotation.x += 0.005;
+            // 4. Stage 2: INNOVATION Animation - jagged canyon walls flanking the descent
+            if (canyonGroup) {
+                canyonGroup.visible = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.36);
+                if (canyonGroup.visible) {
+                    canyonGroup.children.forEach((child, idx) => {
+                        if (child.material && child.material.emissiveIntensity !== undefined) {
+                            child.material.emissiveIntensity = 0.25 + Math.sin(idx + Date.now() * 0.001) * 0.1;
                         }
                     });
                 }
             }
 
-            // 6. Stage 4: PURPOSE Animation
-            if (purposeGroup) {
-                purposeGroup.visible = (currentCameraPercentage >= 0.70 && currentCameraPercentage < 0.88);
-                if (purposeGroup.visible) {
-                    const purposePoint = path.getPointAt(0.80);
-                    purposeGroup.children.forEach((v, idx) => {
-                        v.position.x += Math.sin(idx + Date.now() * 0.0015) * 0.12;
-                        v.position.y += Math.cos(idx + Date.now() * 0.0015) * 0.12;
-                        v.position.z -= 0.12;
-                        if (v.position.z < purposePoint.z - 80) v.position.z = purposePoint.z + 80;
+            // 5. Stage 3: COLLABORATION Animation - rapids rocks bob with the white water
+            if (rapidsGroup) {
+                rapidsGroup.visible = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.52);
+                if (rapidsGroup.visible) {
+                    rapidsGroup.children.forEach((child, idx) => {
+                        child.position.y += Math.sin(idx + Date.now() * 0.004) * 0.03;
                     });
                 }
             }
 
-            // 7. Stage 5: LEGACY Animation
-            if (legacyCubesGroup) {
-                legacyCubesGroup.visible = (currentCameraPercentage >= 0.85);
-                if (legacyCubesGroup.visible) {
-                    legacyCubesGroup.children.forEach((cube, idx) => {
-                        cube.rotation.y += 0.005;
-                        cube.position.y += Math.sin(idx + Date.now() * 0.002) * 0.01;
+            // 6. Stage 4: EXCELLENCE Animation - forest treeline swaying gently
+            if (forestGroup) {
+                forestGroup.visible = (currentCameraPercentage >= 0.50 && currentCameraPercentage < 0.72);
+                if (forestGroup.visible) {
+                    forestGroup.children.forEach((child, idx) => {
+                        child.rotation.z = Math.sin(idx + Date.now() * 0.0008) * 0.02;
+                    });
+                }
+            }
+
+            // 7. Stage 5: PURPOSE Animation - tributary streams merging into the main river
+            if (deltaGroup) {
+                deltaGroup.visible = (currentCameraPercentage >= 0.70 && currentCameraPercentage < 0.90);
+                if (deltaGroup.visible) {
+                    deltaGroup.children.forEach((child, idx) => {
+                        child.material.opacity = 0.3 + Math.sin(Date.now() * 0.0015 + idx) * 0.1;
+                    });
+                }
+            }
+
+            // 8. Stage 6: LEGACY Animation - river opens onto a calm, expansive horizon studded
+            // with glowing "network nodes" representing Hubtown's interconnected communities
+            if (oceanGroup) {
+                oceanGroup.visible = (currentCameraPercentage >= 0.85);
+                if (oceanGroup.visible) {
+                    oceanGroup.children.forEach((child, idx) => {
+                        if (child.userData.isHaze) {
+                            child.position.y += Math.sin(idx + Date.now() * 0.0009) * 0.01;
+                        }
+                        if (child.userData.isNode) {
+                            child.material.emissiveIntensity = 0.5 + Math.sin(idx + Date.now() * 0.0012) * 0.3;
+                        }
                     });
                 }
             }
@@ -1734,9 +1942,6 @@
 
         // Initialize HUD frame path coordinates on startup
         updateHUDFrame();
-
-        var lastPlace = 0;
-        var newPlace = 0;
 
         //particle system
         var spikeyTexture = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/spikey.png');
@@ -2138,6 +2343,8 @@
             const preloader = document.getElementById('hudPreloader');
             const percentEl = document.getElementById('preloaderPercent');
             const blocks = document.querySelectorAll('.hud-preloader-block');
+            const progressEl = document.getElementById('preloaderProgress');
+            const logoEl = document.getElementById('preloaderLogo');
             let currentPercent = 0;
 
             const interval = setInterval(() => {
@@ -2147,7 +2354,12 @@
                     clearInterval(interval);
 
                     setTimeout(() => {
-                        preloader.classList.add('fade-out');
+                        progressEl.classList.add('hide');
+                        logoEl.classList.add('show');
+
+                        setTimeout(() => {
+                            preloader.classList.add('fade-out');
+                        }, 1000);
                     }, 400);
                 }
 

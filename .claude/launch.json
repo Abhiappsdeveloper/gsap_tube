@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "static-server",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "C:\\Users\\NS\\Documents\\ABHIJEET\\git\\gsap_tube", "-p", "8081"],
+      "port": 8081
+    }
+  ]
+}
