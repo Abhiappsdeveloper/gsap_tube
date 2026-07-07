@@ -1837,11 +1837,6 @@
             innerCore.userData.isCore = true;
             sourcePeaksGroup.add(innerCore);
 
-            // Monolith Core Light Source (disabled to remove cyan glow at 0% scroll)
-            const monolithGlowLight = new THREE.PointLight(0x00f5d4, 0.0, 350, 1.2);
-            monolithGlowLight.position.copy(heroBox.position);
-            sourcePeaksGroup.add(monolithGlowLight);
-
             // Layer 3: Monolith Torus Ring
             const ringGeom = new THREE.TorusGeometry(26, 1.2, 8, 32);
             const ringMat = new THREE.MeshStandardMaterial({
@@ -2769,6 +2764,9 @@
                 const lightPos = riverCurve.getPointAt(Math.min(Math.max(journeyRatio, 0), 1));
                 riverLight.position.copy(lightPos);
                 riverLight.visible = (currentCameraPercentage >= 0.22);
+            }
+            if (light) {
+                light.intensity = (currentCameraPercentage < 0.22) ? 0.0 : 0.35;
             }
             if (riverLine) {
                 riverLine.visible = (currentCameraPercentage > 0.22);
