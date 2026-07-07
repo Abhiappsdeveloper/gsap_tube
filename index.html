@@ -1811,14 +1811,12 @@
 
             // Layer 1: Monolith Outer Glass Shell
             const outerBoxMat = new THREE.MeshPhysicalMaterial({
-                color: 0x00d4ff,
-                roughness: 0.05,
-                metalness: 0.9,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.01,
-                transparent: true,
-                opacity: 0.45,
-                reflectivity: 0.9
+                color: 0x050505,
+                roughness: 0.9,
+                metalness: 0.1,
+                clearcoat: 0.0,
+                transparent: false,
+                opacity: 1.0
             });
             const heroBoxGeom = new THREE.BoxGeometry(46, 46, 46, 4, 4, 4);
             const heroBox = new THREE.Mesh(heroBoxGeom, outerBoxMat);
@@ -1830,26 +1828,26 @@
             // Layer 2: Monolith Inner Rotating Core
             const coreGeom = new THREE.OctahedronGeometry(18, 0);
             const coreMat = new THREE.MeshStandardMaterial({
-                color: 0x00f5d4,
-                emissive: 0x00f5d4,
-                emissiveIntensity: 2.5
+                color: 0x050505,
+                emissive: 0x000000,
+                emissiveIntensity: 0.0
             });
             const innerCore = new THREE.Mesh(coreGeom, coreMat);
             innerCore.position.copy(heroBox.position);
             innerCore.userData.isCore = true;
             sourcePeaksGroup.add(innerCore);
 
-            // Monolith Core Light Source (glowing blue light illuminating the mountains and water)
-            const monolithGlowLight = new THREE.PointLight(0x00f5d4, 8.0, 350, 1.2);
+            // Monolith Core Light Source (disabled to remove cyan glow at 0% scroll)
+            const monolithGlowLight = new THREE.PointLight(0x00f5d4, 0.0, 350, 1.2);
             monolithGlowLight.position.copy(heroBox.position);
             sourcePeaksGroup.add(monolithGlowLight);
 
             // Layer 3: Monolith Torus Ring
             const ringGeom = new THREE.TorusGeometry(26, 1.2, 8, 32);
             const ringMat = new THREE.MeshStandardMaterial({
-                color: 0x00f5d4,
-                emissive: 0x00f5d4,
-                emissiveIntensity: 1.5
+                color: 0x050505,
+                emissive: 0x000000,
+                emissiveIntensity: 0.0
             });
             const middleRing = new THREE.Mesh(ringGeom, ringMat);
             middleRing.position.copy(heroBox.position);
