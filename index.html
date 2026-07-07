@@ -1837,7 +1837,7 @@
             for (let y = 30; y < 500; y += 45) {
                 ctx.strokeStyle = Math.random() > 0.5 ? '#00f5d4' : '#00d4ff';
                 ctx.lineWidth = 1.5 + Math.random() * 1.5;
-                ctx.globalAlpha = 0.3 + Math.random() * 0.5;
+                ctx.globalAlpha = 0.5 + Math.random() * 0.45;
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 for (let x = 0; x <= 512; x += 16) {
@@ -1849,7 +1849,7 @@
 
                 // Circuit accents (dots and dashes)
                 ctx.fillStyle = '#00f5d4';
-                ctx.globalAlpha = 0.5 + Math.random() * 0.5;
+                ctx.globalAlpha = 0.6 + Math.random() * 0.4;
                 for (let x = 20; x < 500; x += 80) {
                     const amp = 8 + Math.random() * 15;
                     const accentY = y + Math.sin(x * 0.05 + y) * amp;
@@ -1870,20 +1870,20 @@
 
             // Layer 1: Monolith Outer Glass Shell
             const outerBoxMat = new THREE.MeshPhysicalMaterial({
-                color: 0x2a4a5a,
-                metalness: 0.8,
-                roughness: 0.08,
+                color: 0x3a5a7a,
+                metalness: 0.92,
+                roughness: 0.04,
                 clearcoat: 1.0,
-                clearcoatRoughness: 0.04,
+                clearcoatRoughness: 0.02,
                 transparent: false,
                 opacity: 1.0,
                 map: waveformTex,
                 emissive: 0x00f5d4,
                 emissiveMap: waveformTex,
-                emissiveIntensity: 0.35,
+                emissiveIntensity: 0.5,
                 vertexColors: THREE.NoColors,
-                envMapIntensity: 0.7,
-                specularIntensity: 0.8
+                envMapIntensity: 0.95,
+                specularIntensity: 1.0
             });
             const heroBoxGeom = new THREE.BoxGeometry(46, 46, 46, 4, 4, 4);
             const heroBox = new THREE.Mesh(heroBoxGeom, outerBoxMat);
@@ -2802,8 +2802,8 @@
                         }
                         if (child.userData.isBox) {
                             child.rotation.y -= 0.01;
-                            // Pulsing energy wave effect: base 0.5 in bright regions, breathing with 0.8 + 0.4 * sin, fading with opacity
-                            child.material.emissiveIntensity = 0.5 * (0.8 + 0.4 * Math.sin(Date.now() * 0.002)) * opacity;
+                            // Pulsing energy wave effect: base 0.7 in bright regions, breathing with 0.9 + 0.5 * sin, fading with opacity
+                            child.material.emissiveIntensity = 0.7 * (0.9 + 0.5 * Math.sin(Date.now() * 0.002)) * opacity;
                         }
                     });
                 } else {
