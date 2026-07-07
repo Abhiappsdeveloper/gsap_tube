@@ -1809,6 +1809,7 @@
             const heroBox = new THREE.Mesh(heroBoxGeom, outerBoxMat);
             heroBox.position.set(heroViewAnchor.x, heroViewAnchor.y + 30, heroViewAnchor.z);
             heroBox.castShadow = true;
+            heroBox.userData.isBox = true;
             sourcePeaksGroup.add(heroBox);
 
             // Layer 2: Monolith Inner Rotating Core
@@ -2541,6 +2542,9 @@
                         if (child.userData.isRing) {
                             child.rotation.z -= 0.01;
                             child.material.opacity = 0.5 * opacity;
+                        }
+                        if (child.userData.isBox) {
+                            child.rotation.y -= 0.01;
                         }
                     });
                 } else {
