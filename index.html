@@ -1486,13 +1486,13 @@
         //Create an empty scene
         var scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050b14);
-        scene.fog = new THREE.Fog(0x050b14, 0, 400);
+        scene.fog = new THREE.Fog(0x050b14, 0, 800);
 
         //Create a perspective camera
         var cameraRotationProxyX = 3.14159;
         var cameraRotationProxyY = 0;
 
-        var camera = new THREE.PerspectiveCamera(58, ww / wh, 0.001, 400);
+        var camera = new THREE.PerspectiveCamera(58, ww / wh, 0.001, 800);
         camera.rotation.y = cameraRotationProxyX;
         camera.rotation.z = cameraRotationProxyY;
 
@@ -1719,7 +1719,7 @@
             sunLight.shadow.mapSize.width = 1024;
             sunLight.shadow.mapSize.height = 1024;
             sunLight.shadow.camera.near = 0.5;
-            sunLight.shadow.camera.far = 400;
+            sunLight.shadow.camera.far = 800;
             const dRange = 180;
             sunLight.shadow.camera.left = -dRange;
             sunLight.shadow.camera.right = dRange;
@@ -2170,7 +2170,27 @@
             const noiseY = MotionNoise(t + 5, 0.8, 2) * CameraDirector.shakeIntensity * 0.06;
             const noiseZ = MotionNoise(t + 10, 1.5, 2) * CameraDirector.shakeIntensity * 0.04;
 
-            c.position.set(p1.x + noiseX, p1.y + noiseY, p1.z + noiseZ);
+            // Responsive starting offset: fit monolith/cube structure in portrait/landscape with extreme wide framing
+            let startOffset = 0;
+            if (smoothCameraPercent < 0.15) {
+                const decay = Math.pow(1.0 - (smoothCameraPercent / 0.15), 2.0);
+                const targetRadius = 45.0; // bounding radius covering monolith and rings
+                const fovRad = (camera.fov * Math.PI) / 180.0;
+                
+                // Fit sphere vertically & horizontally
+                const fitDistance = targetRadius / (Math.min(1.0, camera.aspect) * Math.tan(fovRad / 2.0));
+                
+                // 90 is the standard lookAt distance.
+                // Pull back by an extreme amount to get 2x-3x the standard view distance (around 220-250 units distance total)
+                const extraPush = Math.max(0, fitDistance - 90.0);
+                startOffset = (extraPush * 2.5 + 130.0) * decay;
+            }
+
+            c.position.set(
+                p1.x + noiseX - tangent.x * startOffset,
+                p1.y + noiseY - tangent.y * startOffset,
+                p1.z + noiseZ - tangent.z * startOffset
+            );
             c.lookAt(p2);
             
             // FPV camera roll
