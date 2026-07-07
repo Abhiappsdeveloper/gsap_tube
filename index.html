@@ -1989,17 +1989,51 @@
             // Future Stage Water Flow and Mountain Silhouettes
             futureWaterFlow = new THREE.Group();
 
+            // Procedural Water Normal Map Canvas
+            const normalCanvas = document.createElement('canvas');
+            normalCanvas.width = 128;
+            normalCanvas.height = 128;
+            const nCtx = normalCanvas.getContext('2d');
+
+            // Draw a neutral normal map base
+            nCtx.fillStyle = '#8080ff';
+            nCtx.fillRect(0, 0, 128, 128);
+
+            // Draw subtle noise/ripples for the normal map
+            const nImgData = nCtx.getImageData(0, 0, 128, 128);
+            const nData = nImgData.data;
+            for (let y = 0; y < 128; y++) {
+                for (let x = 0; x < 128; x++) {
+                    const idx = (y * 128 + x) * 4;
+                    const nx = Math.sin(x * 0.15) * 15;
+                    const ny = Math.cos(y * 0.15) * 15;
+                    nData[idx] = Math.min(255, Math.max(0, 128 + nx));
+                    nData[idx + 1] = Math.min(255, Math.max(0, 128 + ny));
+                    nData[idx + 2] = 255;
+                }
+            }
+            nCtx.putImageData(nImgData, 0, 0);
+
+            const waterNormalMap = new THREE.CanvasTexture(normalCanvas);
+            waterNormalMap.wrapS = THREE.RepeatWrapping;
+            waterNormalMap.wrapT = THREE.RepeatWrapping;
+
             // Create a local water plane for Future Stage at Y = -9.8 (slightly above customWater to prevent z-fighting but resting at the valley floor)
             const futureWaterGeom = new THREE.PlaneGeometry(600, 600, 32, 32);
             const futureWaterMat = new THREE.MeshPhysicalMaterial({
-                color: 0x010814,
-                roughness: 0.1,
-                metalness: 0.9,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.02,
+                color: 0x001a33,
+                roughness: 0.5,
+                metalness: 0.3,
+                clearcoat: 0.6,
+                clearcoatRoughness: 0.3,
                 transparent: true,
                 opacity: 0.85,
-                depthWrite: true
+                depthWrite: true,
+                envMapIntensity: 0.4,
+                emissive: 0x0a4a7a,
+                emissiveIntensity: 0.15,
+                normalMap: waterNormalMap,
+                normalScale: new THREE.Vector2(0.5, 0.5)
             });
             const futureWaterPlane = new THREE.Mesh(futureWaterGeom, futureWaterMat);
             futureWaterPlane.rotation.x = -Math.PI / 2;
@@ -2649,36 +2683,34 @@
                         } else if (mesh.userData.isPlane) {
                             const verts = mesh.geometry.vertices;
                             const base = mesh.userData.baseZ;
-                            const tWave = Date.now() * 0.0012;
-                            const turbulence = 0.35;
+                            const tWave = Date.now();
 
-                            const w1_amp = 0.55 * turbulence;
-                            const w1_freq = 0.07;
-                            const w1_speed = 1.8 * flowSpeedFactor;
-                            const w1_steep = 0.4;
-                            const w1_angle = 0.5;
-
-                            const w2_amp = 0.25 * turbulence;
-                            const w2_freq = 0.14;
-                            const w2_speed = 3.0 * flowSpeedFactor;
-                            const w2_steep = 0.3;
-                            const w2_angle = -0.3;
-
+                            // 1. Irregular Wave displacement
                             for (let i = 0; i < verts.length; i++) {
                                 const v = verts[i];
-                                const ox = v.x;
-                                const oy = v.y;
+                                // Primary wave (Z-direction)
+                                const wave1 = Math.sin(v.x * 0.1 + tWave * 0.002) * 0.3;
+                                // Secondary wave (X-direction)
+                                const wave2 = Math.sin(v.y * 0.08 + tWave * 0.003) * 0.2;
+                                // Tertiary wave (diagonal)
+                                const wave3 = Math.sin((v.x + v.y) * 0.06 + tWave * 0.0015) * 0.15;
 
-                                const d1 = ox * Math.cos(w1_angle) + oy * Math.sin(w1_angle);
-                                const phase1 = d1 * w1_freq + tWave * w1_speed;
-
-                                const d2 = ox * Math.cos(w2_angle) + oy * Math.sin(w2_angle);
-                                const phase2 = d2 * w2_freq + tWave * w2_speed;
-
-                                v.z = base[i] + Math.sin(phase1) * w1_amp + Math.cos(phase2) * w2_amp;
+                                v.z = base[i] + wave1 + wave2 + wave3;
                             }
                             mesh.geometry.verticesNeedUpdate = true;
                             mesh.geometry.computeVertexNormals();
+
+                            // 2. Stage 0 Specific Water normal map and emissive animation
+                            if (currentCameraPercentage < 0.22) {
+                                // Animate water emissive shimmer
+                                mesh.material.emissiveIntensity = (0.15 + Math.sin(Date.now() * 0.002) * 0.08) * (1.0 - currentCameraPercentage / 0.22);
+
+                                // Animate normal map offset for flowing effect
+                                if (mesh.material.normalMap) {
+                                    mesh.material.normalMap.offset.x += 0.0002;
+                                    mesh.material.normalMap.offset.y += 0.00015;
+                                }
+                            }
                         }
                     });
                 }
