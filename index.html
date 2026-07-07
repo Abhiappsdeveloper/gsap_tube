@@ -1192,6 +1192,256 @@
         let oceanGroup;
         let customWater;
         let sparkleGroup;
+        let sunLight;
+        let cinematicPass;
+        let prevFrameTarget;
+        let copyScene, copyCamera, copyMaterial;
+        let lensDustGroup;
+        
+        let spatialFilter = null;
+        let rapidsPanner = null;
+        let rapidsSoundNode = null;
+        let rapidsNoiseSource = null;
+        let spikeyTexture;
+
+        // ===== ENVIRONMENT & CINEMATIC CONTROLLERS =====
+        const WorldPhysicsState = {
+            gravity: -9.8,
+            windVector: new THREE.Vector3(1.0, 0.0, -0.4).normalize(),
+            windSpeed: 1.5,
+            waterFlowSpeed: 2.2,
+            temperature: 15.0, // in Celsius
+            humidity: 0.75,     // 0 to 1
+            timeOfDay: 0.0      // 0.0 to 1.0 (morning to sunset)
+        };
+
+        function MotionNoise(time, scale, octaves = 3) {
+            let value = 0;
+            let frequency = 1.0;
+            let amplitude = 1.0;
+            for (let i = 0; i < octaves; i++) {
+                value += Math.sin(time * frequency * scale) * amplitude;
+                frequency *= 2.0;
+                amplitude *= 0.5;
+            }
+            return value;
+        }
+
+        const CameraDirector = {
+            shotType: "IMAX_REVEAL", // IMAX_REVEAL, FPV_EXPLORATION, NATURE_DOC, WIDE_REVEAL
+            cameraWeight: 1.0,       // Damping weight for lag inertia
+            lensSize: 50.0,          // Virtual focal length in mm
+            focusSubject: new THREE.Vector3(0, 0, 0),
+            shakeIntensity: 0.15,
+            targetFov: 58.0
+        };
+
+        // Cinematic Post-Processing Shader Definition
+        const CinematicShader = {
+            uniforms: {
+                "tDiffuse": { value: null },
+                "tPrev": { value: null },
+                "uTime": { value: 0 },
+                "uExposure": { value: 1.0 },
+                "uContrast": { value: 1.05 },
+                "uChromaticAberration": { value: 0.025 },
+                "uFilmGrain": { value: 0.03 },
+                "uVignette": { value: 0.35 },
+                "uColorGradingTint": { value: new THREE.Color(1.0, 1.0, 1.0) },
+                "uBlendPrev": { value: 0.08 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform sampler2D tPrev;
+                uniform float uTime;
+                uniform float uExposure;
+                uniform float uContrast;
+                uniform float uChromaticAberration;
+                uniform float uFilmGrain;
+                uniform float uVignette;
+                uniform vec3 uColorGradingTint;
+                uniform float uBlendPrev;
+                varying vec2 vUv;
+
+                vec3 ACESFilm(vec3 x) {
+                    float a = 2.51;
+                    float b = 0.03;
+                    float c = 2.43;
+                    float d = 0.59;
+                    float e = 0.14;
+                    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+                }
+
+                float hash(vec2 p) {
+                    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+                }
+
+                void main() {
+                    vec2 uv = vUv;
+                    
+                    // 1. Barrel Distortion
+                    vec2 center = uv - 0.5;
+                    float dist = length(center);
+                    vec2 distortedUv = uv + center * dist * dist * 0.025;
+                    
+                    if (distortedUv.x < 0.0 || distortedUv.x > 1.0 || distortedUv.y < 0.0 || distortedUv.y > 1.0) {
+                        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+                        return;
+                    }
+
+                    // 2. Chromatic Aberration
+                    vec2 chromaticOffset = center * dist * uChromaticAberration * 0.05;
+                    vec4 cr = texture2D(tDiffuse, distortedUv - chromaticOffset);
+                    vec4 cg = texture2D(tDiffuse, distortedUv);
+                    vec4 cb = texture2D(tDiffuse, distortedUv + chromaticOffset);
+                    vec3 rawColor = vec3(cr.r, cg.g, cb.b);
+
+                    // 3. Exposure & Contrast
+                    vec3 color = rawColor * uExposure;
+                    color = pow(color, vec3(uContrast));
+
+                    // 4. ACES Film Tone Mapping
+                    color = ACESFilm(color);
+
+                    // 5. Color Grading Tint
+                    color *= uColorGradingTint;
+
+                    // 6. Vignette
+                    float vignette = smoothstep(0.8, 0.45, dist);
+                    color = mix(color * vignette, color, 1.0 - uVignette);
+
+                    // 7. Subtle Film Grain
+                    float grain = (hash(distortedUv * uTime) - 0.5) * uFilmGrain;
+                    color += vec3(grain);
+
+                    // 8. Temporal Blend (Frame Memory)
+                    vec3 prevColor = texture2D(tPrev, distortedUv).rgb;
+                    vec3 finalColor = mix(color, prevColor, uBlendPrev);
+
+                    gl_FragColor = vec4(finalColor, 1.0);
+                }
+            `
+        };
+
+        // ===== PROCEDURAL GEOLOGY AND COLORING UTILITIES =====
+        function displaceMountainGeometry(geom, scaleFactor, seed) {
+            const verts = geom.vertices;
+            for (let i = 0; i < verts.length; i++) {
+                const v = verts[i];
+                // Macro-scale landscape shape (low-frequency FBM)
+                const macro = MotionNoise(v.x * 0.05 + seed, v.z * 0.05, 3) * 12.0 * scaleFactor;
+                // Medium-scale erosion details (fractures & crags)
+                const med = MotionNoise(v.x * 0.15 + seed * 2.1, v.z * 0.15, 2) * 3.5 * scaleFactor;
+                // Micro-scale texture displacement
+                const micro = MotionNoise(v.x * 0.5 + seed * 3.7, v.y * 0.5, 1) * 0.6 * scaleFactor;
+                
+                const norm = v.clone().normalize();
+                v.addScaledVector(norm, macro + med + micro);
+            }
+            geom.verticesNeedUpdate = true;
+            geom.computeFaceNormals();
+            geom.computeVertexNormals();
+        }
+
+        function applyGeologicalColors(geom, worldAnchor) {
+            const faces = geom.faces;
+            const verts = geom.vertices;
+            const colors = [];
+            
+            for (let i = 0; i < verts.length; i++) {
+                // Compute absolute world position of vertex for coherent sediment lines
+                const worldY = verts[i].y + worldAnchor.y;
+                
+                // Horizontal sediment banding (sine layers)
+                const layer = Math.sin(worldY * 0.4) * 0.15 + Math.sin(worldY * 1.5) * 0.05;
+                
+                // Color transition from light sand (top) to dark wet basalt (bottom near water)
+                const heightFactor = Math.max(0, Math.min((worldY + 10.0) / 38.0, 1.0));
+                
+                const baseColor = new THREE.Color(0x06121f); // Dark wet bottom base
+                const sandColor = new THREE.Color(0xd9b38c); // Warm sand top base
+                
+                const col = baseColor.clone().lerp(sandColor, heightFactor);
+                // Apply sediment stripe modulation
+                col.multiplyScalar(0.85 + layer);
+                
+                // Diffuse GI East/West sunlight tinting
+                const normal = verts[i].clone().normalize();
+                if (normal.x > 0.4) {
+                    col.add(new THREE.Color(0x002c3d)); // Cool ambient blue bounce
+                } else if (normal.x < -0.4) {
+                    col.add(new THREE.Color(0x2a1c0d)); // Warm sun bounce
+                }
+                
+                colors[i] = col;
+            }
+            
+            // Assign face vertex colors
+            for (let i = 0; i < faces.length; i++) {
+                const f = faces[i];
+                f.vertexColors[0] = colors[f.a];
+                f.vertexColors[1] = colors[f.b];
+                f.vertexColors[2] = colors[f.c];
+            }
+            geom.colorsNeedUpdate = true;
+        }
+
+        function displaceCanyonWallGeometry(geom, seed) {
+            const verts = geom.vertices;
+            for (let i = 0; i < verts.length; i++) {
+                const v = verts[i];
+                // Deep cracks and collapsed cliff face modeling
+                const crack = Math.sin(v.y * 0.4 + seed) * Math.cos(v.x * 0.4) * 2.8;
+                const collapse = MotionNoise(v.x * 0.12, v.z * 0.12, 2) * 2.2;
+                v.x += crack + collapse;
+                v.z += (Math.random() - 0.5) * 0.6;
+            }
+            geom.verticesNeedUpdate = true;
+            geom.computeFaceNormals();
+            geom.computeVertexNormals();
+        }
+
+        const rockShaderInjection = function(shader) {
+            shader.vertexShader = `
+                varying vec3 vWorldPos;
+                \${shader.vertexShader}
+            `.replace(
+                '#include <worldpos_vertex>',
+                `
+                #include <worldpos_vertex>
+                vWorldPos = worldPosition.xyz;
+                `
+            );
+
+            shader.fragmentShader = `
+                varying vec3 vWorldPos;
+                \${shader.fragmentShader}
+            `.replace(
+                '#include <color_fragment>',
+                `
+                #include <color_fragment>
+                // Layer horizontal strata details (sedimentary bands) in fragment shader
+                float band = sin(vWorldPos.y * 0.6) * 0.12 + sin(vWorldPos.y * 2.2) * 0.04;
+                diffuseColor.rgb *= (0.9 + band);
+                `
+            ).replace(
+                '#include <roughnessmap_fragment>',
+                `
+                #include <roughnessmap_fragment>
+                // Calculate wetness based on proximity to water and world humidity
+                float heightFactor = clamp((vWorldPos.y + 10.0) / 12.0, 0.0, 1.0);
+                float wetness = (1.0 - heightFactor) * 0.85 * (0.65 + 0.35 * ${WorldPhysicsState.humidity});
+                roughnessFactor = mix(roughnessFactor, 0.04, wetness);
+                `
+            );
+        };
 
         // ===== ORIGINAL CODE (UNTOUCHED) =====
         var Mathutils = {
@@ -1227,31 +1477,22 @@
         //Create a WebGL renderer
         var renderer = new THREE.WebGLRenderer({
             canvas: document.querySelector("canvas"),
-            antialias: true,
-            shadowMapEnabled: true,
-            shadowMapType: THREE.PCFSoftShadowMap
+            antialias: true
         });
         renderer.setSize(ww, wh);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         //Create an empty scene
         var scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050b14);
-        // Far distance raised 100 -> 350: several stage elements now sit well past the old
-        // fog(0,100) falloff (hero peaks/mountains ~96-244 units out, delta/tributary streams
-        // ~170 units out during Purpose). Since the fog color matches the background color
-        // exactly, anything beyond the far value renders as pure background - i.e. invisible.
-        // That was silently erasing/washing out multiple stages, not just the hero shot.
-        scene.fog = new THREE.Fog(0x050b14, 0, 350);
+        scene.fog = new THREE.Fog(0x050b14, 0, 400);
 
-        //Create a perpsective camera
+        //Create a perspective camera
         var cameraRotationProxyX = 3.14159;
         var cameraRotationProxyY = 0;
 
-        // FOV widened 45deg -> 58deg (wide-angle) so more of each stage's composition
-        // fits on screen from the camera's existing path, instead of appearing zoomed
-        // in/cropped. Far plane extended 200 -> 300 so distant mountains/ocean plane
-        // aren't clipped now that more of the scene is visible at once.
-        var camera = new THREE.PerspectiveCamera(58, ww / wh, 0.001, 300);
+        var camera = new THREE.PerspectiveCamera(58, ww / wh, 0.001, 400);
         camera.rotation.y = cameraRotationProxyX;
         camera.rotation.z = cameraRotationProxyY;
 
@@ -1261,17 +1502,64 @@
         c.add(camera);
         scene.add(c);
 
-        //set up render pass
+        // Lens Dust Motes (Parallax layer 1 - extremely close to camera lens)
+        lensDustGroup = new THREE.Group();
+        c.add(lensDustGroup);
+        for (let i = 0; i < 60; i++) {
+            const dust = new THREE.Mesh(
+                new THREE.SphereGeometry(0.04 + Math.random() * 0.06, 4, 4),
+                new THREE.MeshBasicMaterial({
+                    color: 0x00f5d4,
+                    transparent: true,
+                    opacity: 0.15 + Math.random() * 0.35,
+                    blending: THREE.AdditiveBlending
+                })
+            );
+            // Placed close in front of camera (Z between -2 and -18)
+            dust.position.set(
+                (Math.random() - 0.5) * 16,
+                (Math.random() - 0.5) * 12,
+                -2 - Math.random() * 16
+            );
+            dust.userData.speedX = (Math.random() - 0.5) * 0.01;
+            dust.userData.speedY = (Math.random() - 0.5) * 0.01;
+            dust.userData.speedZ = 0.005 + Math.random() * 0.01;
+            lensDustGroup.add(dust);
+        }
+
+        // Set up post-processing targets
+        prevFrameTarget = new THREE.WebGLRenderTarget(ww, wh, {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            format: THREE.RGBAFormat
+        });
+
+        copyScene = new THREE.Scene();
+        copyCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        copyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.Texture() });
+        var copyQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), copyMaterial);
+        copyScene.add(copyQuad);
+
+        //set up render passes
         var renderScene = new THREE.RenderPass(scene, camera);
         var bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.renderToScreen = true;
+        bloomPass.renderToScreen = false;
         bloomPass.threshold = params.bloomThreshold;
         bloomPass.strength = params.bloomStrength;
         bloomPass.radius = params.bloomRadius;
+
+        cinematicPass = new THREE.ShaderPass(CinematicShader);
+        cinematicPass.renderToScreen = false;
+
+        var copyPass = new THREE.ShaderPass(THREE.CopyShader);
+        copyPass.renderToScreen = true;
+
         composer = new THREE.EffectComposer(renderer);
         composer.setSize(window.innerWidth, window.innerHeight);
         composer.addPass(renderScene);
         composer.addPass(bloomPass);
+        composer.addPass(cinematicPass);
+        composer.addPass(copyPass);
 
         //Array of points
         // Format is [x, z, y] (converted to Vector3(x, y, z) below).
@@ -1313,55 +1601,172 @@
 
         // ===== INITIALIZE CUSTOM 3D HUD STAGES =====
         function initCustomStages() {
-            // 1. Reflective River/Lake Water Plane
+            // Preload texture
+            spikeyTexture = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/spikey.png');
+
+            // 1. Stage 3: COLLABORATION - Jagged rapids rocks (created first for proximity weight precalculation)
+            rapidsGroup = new THREE.Group();
+            const rockMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                roughness: 0.85,
+                metalness: 0.2,
+                clearcoat: 0.05,
+                vertexColors: THREE.VertexColors
+            });
+            rockMat.onBeforeCompile = rockShaderInjection;
+
+            for (let i = 0; i < 26; i++) {
+                const ratio = 0.36 + Math.random() * 0.16;
+                const node = path.getPointAt(ratio);
+                const rockGeom = new THREE.IcosahedronGeometry(1.5 + Math.random() * 2.5, 0);
+                displaceMountainGeometry(rockGeom, 0.6, i * 42.1);
+                
+                const pos = new THREE.Vector3(
+                    node.x + (Math.random() - 0.5) * 14,
+                    node.y - 9 + Math.random() * 2,
+                    node.z + (Math.random() - 0.5) * 14
+                );
+                applyGeologicalColors(rockGeom, pos);
+
+                const rock = new THREE.Mesh(rockGeom, rockMat);
+                rock.position.copy(pos);
+                rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                rock.castShadow = true;
+                rock.receiveShadow = true;
+                rapidsGroup.add(rock);
+
+                // CPU-animated rapids splash particles
+                var splashGeom = new THREE.Geometry();
+                for (let k = 0; k < 8; k++) {
+                    splashGeom.vertices.push(new THREE.Vector3(
+                        (Math.random() - 0.5) * 2,
+                        2 + Math.random() * 1.5,
+                        (Math.random() - 0.5) * 2
+                    ));
+                }
+                var splashMat = new THREE.PointsMaterial({
+                    color: 0xffffff,
+                    size: 0.6,
+                    map: spikeyTexture,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending
+                });
+                var splashParticles = new THREE.Points(splashGeom, splashMat);
+                splashParticles.position.copy(rock.position);
+                splashParticles.userData.isSplash = true;
+                rapidsGroup.add(splashParticles);
+            }
+            scene.add(rapidsGroup);
+
+            // 2. Reflective River/Lake Water Plane with Proximity Foam & Ripple Weights
             const waterGeom = new THREE.PlaneGeometry(1000, 1000, 48, 48);
-            const waterMat = new THREE.MeshPhongMaterial({
-                color: 0x020d21,
-                specular: 0x00f5d4,
-                shininess: 90,
-                flatShading: true
+            const waterColors = [];
+            for (let i = 0; i < waterGeom.vertices.length; i++) {
+                waterColors.push(new THREE.Color(0x020d21));
+            }
+            waterGeom.colors = waterColors;
+
+            const waterMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                roughness: 0.15,
+                metalness: 0.8,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.05,
+                transparent: true,
+                opacity: 0.65,
+                vertexColors: THREE.VertexColors
             });
             customWater = new THREE.Mesh(waterGeom, waterMat);
             customWater.rotation.x = -Math.PI / 2;
             customWater.position.set(120, -10, 90);
             customWater.userData.baseZ = waterGeom.vertices.map(v => v.z);
+            
+            // Proximity Precomputation
+            const rockWeights = [];
+            const verts = waterGeom.vertices;
+            for (let i = 0; i < verts.length; i++) {
+                const v = verts[i];
+                // convert plane coordinate to world space
+                const worldV = new THREE.Vector3(v.x + 120, -10, v.y + 90);
+                let minDist = Infinity;
+                let nearestRock = null;
+                rapidsGroup.children.forEach(rock => {
+                    if (!rock.userData.isSplash) {
+                        const dist = worldV.distanceTo(rock.position);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            nearestRock = rock.position;
+                        }
+                    }
+                });
+                rockWeights.push({
+                    dist: minDist,
+                    rockPos: nearestRock ? nearestRock.clone() : null
+                });
+            }
+            customWater.userData.rockWeights = rockWeights;
             scene.add(customWater);
 
-            // Add ambient light to illuminate the dark silhouetted mountains
-            const ambLight = new THREE.AmbientLight(0x081630, 1.5);
+            // Add ambient light for Global Illumination
+            const ambLight = new THREE.AmbientLight(0x081630, 1.2);
             scene.add(ambLight);
 
-            // Add directional light pointing down to highlight water surface ripples
-            const dirLight = new THREE.DirectionalLight(0x00a8ff, 0.8);
-            dirLight.position.set(120, 100, 90);
-            scene.add(dirLight);
+            // Add main sun directional light
+            sunLight = new THREE.DirectionalLight(0xfff4e0, 1.0);
+            sunLight.position.set(120, 150, 90);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 400;
+            const dRange = 180;
+            sunLight.shadow.camera.left = -dRange;
+            sunLight.shadow.camera.right = dRange;
+            sunLight.shadow.camera.top = dRange;
+            sunLight.shadow.camera.bottom = -dRange;
+            scene.add(sunLight);
 
-            // Add local cyan point light directly under the source peaks to project the reflection onto the river
+            // Add water reflection light
             const sourcePointNode = path.getPointAt(0);
             const waterReflectLight = new THREE.PointLight(0x00f5d4, 4, 75);
             waterReflectLight.position.set(sourcePointNode.x + 5, -8, sourcePointNode.z + 5);
             scene.add(waterReflectLight);
 
-            // 2. Dark silhouetted mountain range flanking the entire valley (Stretched spheres for organic cliffs)
+            // 3. Stage 1: FUTURE peaks/mountains
             const mountainGeom = new THREE.SphereGeometry(30, 24, 24);
-            const mountainMat = new THREE.MeshPhongMaterial({
-                color: 0x020813,
-                specular: 0x00a8ff,
-                shininess: 35,
-                flatShading: false
+            const mountainMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                roughness: 0.85,
+                metalness: 0.1,
+                clearcoat: 0.05,
+                clearcoatRoughness: 0.8,
+                vertexColors: THREE.VertexColors
             });
+            mountainMat.onBeforeCompile = rockShaderInjection;
+
             for (let i = 0; i < points.length; i++) {
                 const p = points[i];
                 // left side mountain
-                const mLeft = new THREE.Mesh(mountainGeom, mountainMat);
+                const gLeft = mountainGeom.clone();
+                displaceMountainGeometry(gLeft, 1.0, i * 17.3);
+                applyGeologicalColors(gLeft, new THREE.Vector3(p.x - 55, p.y - 12, p.z - 10));
+                const mLeft = new THREE.Mesh(gLeft, mountainMat);
                 mLeft.position.set(p.x - 55, p.y - 12, p.z - 10);
                 mLeft.scale.set(1.8, 3.8, 1.2);
+                mLeft.castShadow = true;
+                mLeft.receiveShadow = true;
                 scene.add(mLeft);
 
                 // right side mountain
-                const mRight = new THREE.Mesh(mountainGeom, mountainMat);
+                const gRight = mountainGeom.clone();
+                displaceMountainGeometry(gRight, 1.0, i * 29.7 + 10.5);
+                applyGeologicalColors(gRight, new THREE.Vector3(p.x + 55, p.y - 12, p.z + 10));
+                const mRight = new THREE.Mesh(gRight, mountainMat);
                 mRight.position.set(p.x + 55, p.y - 12, p.z + 10);
                 mRight.scale.set(1.8, 3.8, 1.2);
+                mRight.castShadow = true;
+                mRight.receiveShadow = true;
                 scene.add(mRight);
             }
 
@@ -1381,20 +1786,7 @@
             }
             scene.add(sparkleGroup);
 
-            // 3. Stage 0: SOURCE - Central glowing hero box flanked by two dark silhouetted
-            // mountains, with the river running beneath it. Matches the reference composition:
-            // one dominant glowing focal point, centered and elevated, framed symmetrically.
-            // Fixed size (baked into the geometry) instead of animated up over time.
-            //
-            // Positioned using the camera's actual forward/right vectors at 0% scroll (the
-            // same p1/p2 math updateCameraPercentage uses), not raw world X/Z offsets from
-            // the start point. The camera at 0% looks toward its next waypoint (a sideways
-            // pan), not straight along world -Z, so a world-space "+90 forward, +-110 left/
-            // right" offset does not reliably land in front of / flanking the camera — it can
-            // even end up placing one flank behind the camera. Building the offsets from the
-            // camera's real forward/right axes guarantees the box sits dead-center and both
-            // mountains flank it symmetrically in screen space, regardless of the path's
-            // world-space direction of travel at this point.
+            // 4. Stage 0: SOURCE - Central glowing hero box flanked by two dark silhouetted
             const heroP1 = path.getPointAt(0);
             const heroP2 = path.getPointAt(0.03);
             const heroForward = new THREE.Vector3().subVectors(heroP2, heroP1).normalize();
@@ -1402,80 +1794,108 @@
             const heroViewAnchor = heroP1.clone().addScaledVector(heroForward, 90);
             sourcePeaksGroup = new THREE.Group();
 
-            const heroBoxMat = new THREE.MeshStandardMaterial({
+            // Layer 1: Monolith Outer Glass Shell
+            const outerBoxMat = new THREE.MeshPhysicalMaterial({
                 color: 0x00d4ff,
-                emissive: 0x00f5d4,
-                emissiveIntensity: 1.5,
+                roughness: 0.05,
+                metalness: 0.9,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.01,
                 transparent: true,
-                opacity: 0.85,
-                roughness: 0.15,
-                metalness: 0.4
-            });
-            const heroBoxWireMat = new THREE.MeshBasicMaterial({
-                color: 0x00f5d4,
-                transparent: true,
-                opacity: 0.5,
-                wireframe: true
+                opacity: 0.45,
+                reflectivity: 0.9
             });
             const heroBoxGeom = new THREE.BoxGeometry(46, 46, 46, 4, 4, 4);
-
-            const heroBox = new THREE.Mesh(heroBoxGeom, heroBoxMat);
+            const heroBox = new THREE.Mesh(heroBoxGeom, outerBoxMat);
             heroBox.position.set(heroViewAnchor.x, heroViewAnchor.y + 30, heroViewAnchor.z);
+            heroBox.castShadow = true;
             sourcePeaksGroup.add(heroBox);
 
-            const heroBoxWire = new THREE.Mesh(heroBoxGeom, heroBoxWireMat);
-            heroBoxWire.position.copy(heroBox.position);
-            sourcePeaksGroup.add(heroBoxWire);
-
-            const flankMountainMat = new THREE.MeshStandardMaterial({
-                color: 0x030a12,
-                emissive: 0x001018,
-                emissiveIntensity: 0.08,
-                transparent: true,
-                opacity: 0.95,
-                roughness: 0.9,
-                flatShading: true
+            // Layer 2: Monolith Inner Rotating Core
+            const coreGeom = new THREE.OctahedronGeometry(18, 0);
+            const coreMat = new THREE.MeshStandardMaterial({
+                color: 0x00f5d4,
+                emissive: 0x00f5d4,
+                emissiveIntensity: 2.5
             });
-            const flankMountainGeom = new THREE.SphereGeometry(34, 20, 20);
+            const innerCore = new THREE.Mesh(coreGeom, coreMat);
+            innerCore.position.copy(heroBox.position);
+            innerCore.userData.isCore = true;
+            sourcePeaksGroup.add(innerCore);
 
-            // Placed further along the camera's forward axis than the box (240 units vs 90)
-            // with a modest lateral offset (42) so they land right at the frame edges
-            // (verified via camera-space projection: NDC x = +-0.9, comfortably inside the
-            // +-1 visible range) instead of being fully outside the frame the way a flat
-            // +-110 world-space offset at the box's own depth was.
+            // Layer 3: Monolith Torus Ring
+            const ringGeom = new THREE.TorusGeometry(26, 1.2, 8, 32);
+            const ringMat = new THREE.MeshStandardMaterial({
+                color: 0x00f5d4,
+                emissive: 0x00f5d4,
+                emissiveIntensity: 1.5
+            });
+            const middleRing = new THREE.Mesh(ringGeom, ringMat);
+            middleRing.position.copy(heroBox.position);
+            middleRing.rotation.x = Math.PI / 2;
+            middleRing.userData.isRing = true;
+            sourcePeaksGroup.add(middleRing);
+
+            // Flank mountains flanking the monolith
+            const flankMountainMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                roughness: 0.85,
+                metalness: 0.1,
+                clearcoat: 0.05,
+                clearcoatRoughness: 0.8,
+                vertexColors: THREE.VertexColors
+            });
+            flankMountainMat.onBeforeCompile = rockShaderInjection;
+
+            const flankMountainGeom = new THREE.SphereGeometry(34, 20, 20);
             const flankMountainAnchor = heroP1.clone().addScaledVector(heroForward, 240);
 
-            const flankMountainLeft = new THREE.Mesh(flankMountainGeom, flankMountainMat);
+            // Left flank
+            const gFlankLeft = flankMountainGeom.clone();
+            displaceMountainGeometry(gFlankLeft, 0.8, 142.1);
+            applyGeologicalColors(gFlankLeft, new THREE.Vector3(flankMountainAnchor.x - 42, flankMountainAnchor.y - 20, flankMountainAnchor.z));
+            const flankMountainLeft = new THREE.Mesh(gFlankLeft, flankMountainMat);
             flankMountainLeft.position.copy(flankMountainAnchor).addScaledVector(heroRight, -42);
             flankMountainLeft.position.y -= 20;
             flankMountainLeft.scale.set(1.6, 2.6, 1.1);
+            flankMountainLeft.castShadow = true;
+            flankMountainLeft.receiveShadow = true;
             sourcePeaksGroup.add(flankMountainLeft);
 
-            const flankMountainRight = new THREE.Mesh(flankMountainGeom, flankMountainMat);
+            // Right flank
+            const gFlankRight = flankMountainGeom.clone();
+            displaceMountainGeometry(gFlankRight, 0.8, 315.6);
+            applyGeologicalColors(gFlankRight, new THREE.Vector3(flankMountainAnchor.x + 42, flankMountainAnchor.y - 20, flankMountainAnchor.z));
+            const flankMountainRight = new THREE.Mesh(gFlankRight, flankMountainMat);
             flankMountainRight.position.copy(flankMountainAnchor).addScaledVector(heroRight, 42);
             flankMountainRight.position.y -= 20;
             flankMountainRight.scale.set(1.6, 2.6, 1.1);
+            flankMountainRight.castShadow = true;
+            flankMountainRight.receiveShadow = true;
             sourcePeaksGroup.add(flankMountainRight);
 
             scene.add(sourcePeaksGroup);
 
-            // Rising glacier mist near the source (Mesh Group instead of Point Cloud)
-            mistParticles = new THREE.Group();
-            for (let i = 0; i < 40; i++) {
-                const bubbleMesh = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.3, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.8 })
-                );
-                bubbleMesh.position.set(
-                    sourcePointNode.x + (Math.random() - 0.5) * 60,
-                    -10 + Math.random() * 40,
-                    sourcePointNode.z + (Math.random() - 0.5) * 60
-                );
-                mistParticles.add(bubbleMesh);
+            // Rising glacier mist near the source (Points for GPU optimization)
+            var mistGeom = new THREE.Geometry();
+            for (let i = 0; i < 150; i++) {
+                var pX = sourcePointNode.x + (Math.random() - 0.5) * 80;
+                var pY = -10 + Math.random() * 35;
+                var pZ = sourcePointNode.z + (Math.random() - 0.5) * 80;
+                mistGeom.vertices.push(new THREE.Vector3(pX, pY, pZ));
             }
+            var mistMat = new THREE.PointsMaterial({
+                color: 0x00f5d4,
+                size: 1.5,
+                map: spikeyTexture,
+                transparent: true,
+                opacity: 0.35,
+                blending: THREE.AdditiveBlending
+            });
+            mistParticles = new THREE.Points(mistGeom, mistMat);
             scene.add(mistParticles);
 
-            // 4. Primary River - flows the entire length of the valley (Descent -> Destination)
+            // 5. Primary River - flows the entire length of the valley
             const riverPoints = [];
             for (let i = 0; i <= 60; i++) {
                 const ratio = (i / 60) * 0.96;
@@ -1483,111 +1903,118 @@
                 riverPoints.push(new THREE.Vector3(node.x, node.y - 9.8, node.z));
             }
             riverCurve = new THREE.CatmullRomCurve3(riverPoints);
-            // Widened and brightened so the river reads clearly even from the elevated,
-            // pulled-back hero vantage point (not just once the camera is close to it).
             const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 240, 3.2, 8, false);
-            const riverTubeMat = new THREE.MeshPhongMaterial({
+            const riverTubeMat = new THREE.MeshPhysicalMaterial({
                 color: 0x00a8ff,
                 emissive: 0x00f5d4,
                 emissiveIntensity: 0.45,
-                specular: 0x00f5d4,
-                shininess: 80,
+                roughness: 0.15,
+                metalness: 0.8,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.05,
                 transparent: true,
                 opacity: 0.55,
                 wireframe: true
             });
             riverLine = new THREE.Mesh(riverTubeGeom, riverTubeMat);
+            riverLine.receiveShadow = true;
             scene.add(riverLine);
 
-            riverLight = new THREE.PointLight(0x00f5d4, 2, 45);
+            riverLight = new THREE.PointLight(0x00f5d4, 2, 120);
             scene.add(riverLight);
 
-            // 4b. Stage 2: INNOVATION - Jagged canyon walls flanking the descent into the river
+            // 6. Stage 2: INNOVATION - Jagged canyon walls flanking the descent into the river
             canyonGroup = new THREE.Group();
-            const canyonWallMat = new THREE.MeshStandardMaterial({
-                color: 0x061826,
-                emissive: 0x00a8ff,
-                emissiveIntensity: 0.25,
-                roughness: 0.8,
-                flatShading: true
+            const canyonWallMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                roughness: 0.9,
+                metalness: 0.15,
+                clearcoat: 0.0,
+                vertexColors: THREE.VertexColors
             });
+            canyonWallMat.onBeforeCompile = rockShaderInjection;
+
             for (let i = 0; i <= 16; i++) {
                 const ratio = 0.15 + (i / 16) * 0.21;
                 const node = path.getPointAt(ratio);
                 [-1, 1].forEach(side => {
                     const wallGeom = new THREE.ConeGeometry(9 + Math.random() * 5, 26 + Math.random() * 14, 5);
-                    const wall = new THREE.Mesh(wallGeom, canyonWallMat);
-                    wall.position.set(
+                    displaceCanyonWallGeometry(wallGeom, i * 37.4);
+                    
+                    const pos = new THREE.Vector3(
                         node.x + side * (26 + Math.random() * 10),
                         node.y + 4 + Math.random() * 6,
                         node.z + (Math.random() - 0.5) * 8
                     );
+                    applyGeologicalColors(wallGeom, pos);
+
+                    const wall = new THREE.Mesh(wallGeom, canyonWallMat);
+                    wall.position.copy(pos);
                     wall.rotation.y = Math.random() * Math.PI;
+                    wall.castShadow = true;
+                    wall.receiveShadow = true;
                     canyonGroup.add(wall);
                 });
             }
             scene.add(canyonGroup);
 
-            // 5. Stage 3: COLLABORATION - Jagged rapids rocks with white-water spray
-            rapidsGroup = new THREE.Group();
-            for (let i = 0; i < 26; i++) {
-                const ratio = 0.36 + Math.random() * 0.16;
-                const node = path.getPointAt(ratio);
-                const rockGeom = new THREE.IcosahedronGeometry(1.5 + Math.random() * 2.5, 0);
-                const rockMat = new THREE.MeshStandardMaterial({
-                    color: 0x0d1f33,
-                    emissive: 0x00a8ff,
-                    emissiveIntensity: 0.15,
-                    roughness: 0.9,
-                    flatShading: true
-                });
-                const rock = new THREE.Mesh(rockGeom, rockMat);
-                rock.position.set(
-                    node.x + (Math.random() - 0.5) * 14,
-                    node.y - 9 + Math.random() * 2,
-                    node.z + (Math.random() - 0.5) * 14
-                );
-                rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-                rapidsGroup.add(rock);
-
-                // White spray particle above each rock
-                const sprayMesh = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.35, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 })
-                );
-                sprayMesh.position.set(rock.position.x, rock.position.y + 2, rock.position.z);
-                rapidsGroup.add(sprayMesh);
-            }
-            scene.add(rapidsGroup);
-
-            // 6. Stage 4: EXCELLENCE - Forest treeline along the riverbanks
+            // 7. Stage 4: EXCELLENCE - Forest treeline along the riverbanks (Biological Diversity)
             forestGroup = new THREE.Group();
             for (let i = 0; i < 34; i++) {
                 const ratio = 0.52 + (i / 34) * 0.20;
                 const node = path.getPointAt(ratio);
                 const side = i % 2 === 0 ? -1 : 1;
-                const trunkGeom = new THREE.CylinderGeometry(0.4, 0.6, 4, 6);
-                const trunkMat = new THREE.MeshStandardMaterial({ color: 0x142418, roughness: 1 });
-                const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-                const canopyGeom = new THREE.ConeGeometry(3 + Math.random() * 1.5, 9 + Math.random() * 4, 8);
-                const canopyMat = new THREE.MeshStandardMaterial({
-                    color: 0x0a2a1e,
-                    emissive: 0x00302a,
-                    emissiveIntensity: 0.4,
-                    roughness: 0.85
-                });
-                const canopy = new THREE.Mesh(canopyGeom, canopyMat);
+                
+                const type = i % 5;
+                if (type === 4) {
+                    // Dead tree trunk
+                    const trunkGeom = new THREE.CylinderGeometry(0.3, 0.5, 6, 6);
+                    displaceCanyonWallGeometry(trunkGeom, i * 19.3);
+                    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x181008, roughness: 1.0 });
+                    const trunk = new THREE.Mesh(trunkGeom, trunkMat);
+                    trunk.position.set(node.x + (Math.random() * 12 + 20) * side, node.y - 8, node.z + (Math.random() - 0.5) * 10);
+                    trunk.rotation.z = (Math.random() - 0.5) * 0.4;
+                    trunk.castShadow = true;
+                    forestGroup.add(trunk);
+                } else {
+                    // Live trees of varying sizes
+                    const isYoung = (type === 3);
+                    const scale = isYoung ? 0.5 : (0.8 + Math.random() * 0.4);
+                    
+                    const trunkGeom = new THREE.CylinderGeometry(0.4 * scale, 0.6 * scale, 4 * scale, 6);
+                    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x142418, roughness: 1 });
+                    const trunk = new THREE.Mesh(trunkGeom, trunkMat);
+                    
+                    const canopyGeom = new THREE.ConeGeometry(3 * scale, 9 * scale, 8);
+                    const canopyMat = new THREE.MeshPhysicalMaterial({
+                        color: 0x0a2a1e,
+                        emissive: 0x001815,
+                        emissiveIntensity: 0.4,
+                        roughness: 0.85,
+                        clearcoat: 0.1
+                    });
+                    const canopy = new THREE.Mesh(canopyGeom, canopyMat);
 
-                const offsetX = (Math.random() * 12 + 20) * side;
-                trunk.position.set(node.x + offsetX, node.y - 8, node.z + (Math.random() - 0.5) * 10);
-                canopy.position.set(trunk.position.x, trunk.position.y + 7, trunk.position.z);
+                    const offsetX = (Math.random() * 12 + 20) * side;
+                    trunk.position.set(node.x + offsetX, node.y - 8, node.z + (Math.random() - 0.5) * 10);
+                    canopy.position.set(trunk.position.x, trunk.position.y + 7 * scale, trunk.position.z);
+                    
+                    trunk.castShadow = true;
+                    canopy.castShadow = true;
+                    canopy.receiveShadow = true;
+                    
+                    canopy.userData.isCanopy = true;
+                    canopy.userData.baseX = canopy.position.x;
+                    canopy.userData.baseZ = canopy.position.z;
+                    canopy.userData.stiffness = 1.2 - scale;
 
-                forestGroup.add(trunk);
-                forestGroup.add(canopy);
+                    forestGroup.add(trunk);
+                    forestGroup.add(canopy);
+                }
             }
             scene.add(forestGroup);
 
-            // 7. Stage 5: PURPOSE - Branching tributary streams merging into the main river
+            // 8. Stage 5: PURPOSE - Branching streams
             deltaGroup = new THREE.Group();
             const confluencePoint = path.getPointAt(0.80);
             for (let i = 0; i < 5; i++) {
@@ -1614,24 +2041,25 @@
             }
             scene.add(deltaGroup);
 
-            // 8. Stage 6: LEGACY - River mouth opening onto a vast, calm horizon
+            // 9. Stage 6: LEGACY - River mouth and holographic community towers
             oceanGroup = new THREE.Group();
             const destinationPoint = path.getPointAt(0.96);
             const oceanPlaneGeom = new THREE.PlaneGeometry(600, 600, 16, 16);
-            const oceanPlaneMat = new THREE.MeshPhongMaterial({
-                color: 0x03182b,
-                specular: 0x00f5d4,
-                shininess: 100,
+            const oceanPlaneMat = new THREE.MeshPhysicalMaterial({
+                color: 0x021222,
+                roughness: 0.1,
+                metalness: 0.2,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.02,
                 transparent: true,
-                opacity: 0.85,
-                flatShading: true
+                opacity: 0.85
             });
             const oceanPlane = new THREE.Mesh(oceanPlaneGeom, oceanPlaneMat);
             oceanPlane.rotation.x = -Math.PI / 2;
             oceanPlane.position.set(destinationPoint.x + 60, -9.9, destinationPoint.z);
+            oceanPlane.receiveShadow = true;
             oceanGroup.add(oceanPlane);
 
-            // Soft horizon glow
             const horizonGlowGeom = new THREE.PlaneGeometry(500, 120);
             const horizonGlowMat = new THREE.MeshBasicMaterial({
                 color: 0x00f5d4,
@@ -1644,7 +2072,6 @@
             horizonGlow.rotation.y = Math.PI / 2;
             oceanGroup.add(horizonGlow);
 
-            // Wide, sparse haze particles drifting over the open water
             for (let i = 0; i < 30; i++) {
                 const hazeMesh = new THREE.Mesh(
                     new THREE.SphereGeometry(0.5, 4, 4),
@@ -1659,12 +2086,11 @@
                 oceanGroup.add(hazeMesh);
             }
 
-            // Glowing "network nodes" scattered across the delta, connected by thin lines —
-            // representing Hubtown's interconnected communities/legacy of built projects.
+            // Holographic Towers (represent networks)
             const nodeMat = new THREE.MeshStandardMaterial({
                 color: 0x00f5d4,
                 emissive: 0x00f5d4,
-                emissiveIntensity: 0.6,
+                emissiveIntensity: 0.8,
                 transparent: true,
                 opacity: 0.95
             });
@@ -1676,12 +2102,18 @@
                     destinationPoint.z + (Math.random() - 0.5) * 180
                 );
                 nodePositions.push(nodePos);
-                const nodeMesh = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8), nodeMat);
+                
+                const towerGeom = new THREE.CylinderGeometry(0.2, 0.8, 4, 6);
+                const towerMesh = new THREE.Mesh(towerGeom, nodeMat);
+                towerMesh.position.copy(nodePos).add(new THREE.Vector3(0, -2, 0));
+                oceanGroup.add(towerMesh);
+                
+                const crystalGeom = new THREE.OctahedronGeometry(1.2, 0);
+                const nodeMesh = new THREE.Mesh(crystalGeom, nodeMat);
                 nodeMesh.userData.isNode = true;
                 nodeMesh.position.copy(nodePos);
                 oceanGroup.add(nodeMesh);
             }
-            // Connect each node to its nearest neighbor with a thin glowing line
             const nodeLineMat = new THREE.LineBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.3 });
             nodePositions.forEach((a, i) => {
                 let nearest = null, nearestDist = Infinity;
@@ -1706,17 +2138,237 @@
         initCustomStages();
 
         //Create a point light in our scene
-        var light = new THREE.PointLight(0xfff4e0, .35, 4, 0);
+        //Create a camera point light in our scene
+        var light = new THREE.PointLight(0xfff4e0, .35, 120, 1.0); // Increased distance range to 120 units for canyon illumination
         light.castShadow = true;
         scene.add(light);
 
-        function updateCameraPercentage(percentage) {
-            p1 = path.getPointAt(percentage);
-            p2 = path.getPointAt(percentage + 0.03);
+        let lastCameraPercentage = 0;
+        let smoothCameraPercent = 0;
+        let cameraRotationZ = 0;
 
-            c.position.set(p1.x, p1.y, p1.z);
+        function updateCameraPercentage(percentage) {
+            // 1. Drone Inertia & Damping Physics
+            const weight = CameraDirector.cameraWeight; 
+            smoothCameraPercent += (percentage - smoothCameraPercent) * (0.05 * weight);
+            smoothCameraPercent = Math.max(0, Math.min(smoothCameraPercent, 0.96));
+
+            p1 = path.getPointAt(smoothCameraPercent);
+            const lookAheadPct = Math.min(smoothCameraPercent + 0.03, 1.0);
+            p2 = path.getPointAt(lookAheadPct);
+
+            // 2. Virtual Camera Operator AI & predictive banking
+            const tangent = path.getTangentAt(smoothCameraPercent).normalize();
+            const nextTangent = path.getTangentAt(Math.min(smoothCameraPercent + 0.015, 1.0)).normalize();
+            const yawChange = tangent.x * nextTangent.z - tangent.z * nextTangent.x;
+            const targetBank = -yawChange * 5.0; 
+            cameraRotationZ += (targetBank - cameraRotationZ) * 0.08;
+
+            // 3. Handheld Operator Breathing & Micro-Vibration
+            const t = Date.now() * 0.001;
+            const noiseX = MotionNoise(t, 1.2, 2) * CameraDirector.shakeIntensity * 0.06;
+            const noiseY = MotionNoise(t + 5, 0.8, 2) * CameraDirector.shakeIntensity * 0.06;
+            const noiseZ = MotionNoise(t + 10, 1.5, 2) * CameraDirector.shakeIntensity * 0.04;
+
+            c.position.set(p1.x + noiseX, p1.y + noiseY, p1.z + noiseZ);
             c.lookAt(p2);
+            
+            // FPV camera roll
+            camera.rotation.z = cameraRotationZ;
+            
+            // Follow-light position
             light.position.set(p2.x, p2.y, p2.z);
+
+            // 4. Velocity-based FOV (Lens breathing)
+            const velocity = Math.abs(smoothCameraPercent - lastCameraPercentage);
+            lastCameraPercentage = smoothCameraPercent;
+            
+            const targetFov = CameraDirector.targetFov + velocity * 150.0;
+            camera.fov += (targetFov - camera.fov) * 0.1;
+            camera.updateProjectionMatrix();
+        }
+
+        // Environment State transition controller
+        function updateCameraDirectorState(pct) {
+            if (pct < 0.20) {
+                CameraDirector.shotType = "IMAX_REVEAL";
+                CameraDirector.cameraWeight = 0.55; 
+                CameraDirector.shakeIntensity = 0.05; 
+                CameraDirector.targetFov = 58.0;
+            } else if (pct < 0.52) {
+                CameraDirector.shotType = "FPV_EXPLORATION";
+                CameraDirector.cameraWeight = 1.0; 
+                CameraDirector.shakeIntensity = 0.35; 
+                CameraDirector.targetFov = 64.0;
+            } else if (pct < 0.75) {
+                CameraDirector.shotType = "NATURE_DOC";
+                CameraDirector.cameraWeight = 0.7;
+                CameraDirector.shakeIntensity = 0.12;
+                CameraDirector.targetFov = 52.0; 
+            } else {
+                CameraDirector.shotType = "WIDE_REVEAL";
+                CameraDirector.cameraWeight = 0.4; 
+                CameraDirector.shakeIntensity = 0.03; 
+                CameraDirector.targetFov = 58.0;
+            }
+        }
+
+        function updateCinematicDirector(pct) {
+            let sunColor, skyColor, fogColor, tintColor, exposure, contrast, bloomThreshold, bloomStrength;
+            
+            if (pct < 0.20) {
+                let t = Mathutils.map(pct, 0, 0.20, 0, 1);
+                sunColor = new THREE.Color(0x00d4ff).lerp(new THREE.Color(0x00f5d4), t);
+                skyColor = new THREE.Color(0x081630);
+                fogColor = new THREE.Color(0x050b14).lerp(new THREE.Color(0x0a1824), t);
+                tintColor = new THREE.Color(0.85, 0.95, 1.05).lerp(new THREE.Color(0.9, 1.0, 1.0), t);
+                exposure = Mathutils.map(pct, 0, 0.20, 1.4, 1.1);
+                contrast = 1.08;
+                bloomStrength = 1.2;
+                bloomThreshold = 0.1;
+                WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0, 0.20, 0.0, 0.2);
+            } else if (pct < 0.50) {
+                let t = Mathutils.map(pct, 0.20, 0.50, 0, 1);
+                sunColor = new THREE.Color(0x00f5d4).lerp(new THREE.Color(0xffb703), t);
+                skyColor = new THREE.Color(0x0d1f33);
+                fogColor = new THREE.Color(0x0a1824).lerp(new THREE.Color(0x16120f), t);
+                tintColor = new THREE.Color(0.9, 1.0, 1.0).lerp(new THREE.Color(1.08, 0.95, 0.85), t);
+                exposure = 1.0;
+                contrast = 1.12; 
+                bloomStrength = 0.8;
+                bloomThreshold = 0.2;
+                WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.20, 0.50, 0.2, 0.5);
+            } else if (pct < 0.75) {
+                let t = Mathutils.map(pct, 0.50, 0.75, 0, 1);
+                sunColor = new THREE.Color(0xffb703).lerp(new THREE.Color(0x00f5d4), t);
+                skyColor = new THREE.Color(0x0a1c1a);
+                fogColor = new THREE.Color(0x16120f).lerp(new THREE.Color(0x0a1410), t);
+                tintColor = new THREE.Color(1.08, 0.95, 0.85).lerp(new THREE.Color(0.95, 1.05, 0.95), t);
+                exposure = 1.1;
+                contrast = 1.05; 
+                bloomStrength = 0.9;
+                bloomThreshold = 0.15;
+                WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.50, 0.75, 0.5, 0.7);
+            } else {
+                let t = Mathutils.map(pct, 0.75, 0.96, 0, 1);
+                sunColor = new THREE.Color(0x00f5d4).lerp(new THREE.Color(0xffb703), t);
+                skyColor = new THREE.Color(0x180b20);
+                fogColor = new THREE.Color(0x0a1410).lerp(new THREE.Color(0x25141e), t);
+                tintColor = new THREE.Color(0.95, 1.05, 0.95).lerp(new THREE.Color(1.12, 0.9, 1.02), t);
+                exposure = Mathutils.map(pct, 0.75, 0.96, 1.0, 1.3); 
+                contrast = 1.08;
+                bloomStrength = Mathutils.map(pct, 0.75, 0.96, 0.9, 1.5); 
+                bloomThreshold = 0.05;
+                WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.75, 0.96, 0.7, 1.0);
+            }
+
+            scene.fog.color.copy(fogColor);
+            renderer.setClearColor(fogColor);
+            
+            if (sunLight) {
+                sunLight.color.copy(sunColor);
+                let angle = WorldPhysicsState.timeOfDay * Math.PI - Math.PI / 4;
+                sunLight.position.set(Math.cos(angle) * 150, 120, Math.sin(angle) * 150);
+            }
+            
+            if (cinematicPass) {
+                cinematicPass.uniforms.uExposure.value = exposure;
+                cinematicPass.uniforms.uContrast.value = contrast;
+                cinematicPass.uniforms.uColorGradingTint.value.copy(tintColor);
+            }
+            
+            if (bloomPass) {
+                bloomPass.strength = bloomStrength;
+                bloomPass.threshold = bloomThreshold;
+            }
+        }
+
+        function updateStageTransitions(pct) {
+            // Stage 2 (canyon)
+            if (canyonGroup) {
+                let opacity = 1.0;
+                if (pct < 0.15) opacity = Mathutils.map(pct, 0.10, 0.15, 0, 1);
+                else if (pct > 0.33) opacity = Mathutils.map(pct, 0.33, 0.38, 1, 0);
+                canyonGroup.visible = (opacity > 0);
+                canyonGroup.children.forEach(child => {
+                    if (child.material) {
+                        child.material.transparent = true;
+                        child.material.opacity = opacity;
+                        child.material.emissiveIntensity = (0.15 + Math.sin(Date.now() * 0.001) * 0.05) * opacity;
+                    }
+                });
+            }
+
+            // Stage 3 (rapids)
+            if (rapidsGroup) {
+                let opacity = 1.0;
+                if (pct < 0.22) opacity = Mathutils.map(pct, 0.17, 0.22, 0, 1);
+                else if (pct > 0.48) opacity = Mathutils.map(pct, 0.48, 0.52, 1, 0);
+                rapidsGroup.visible = (opacity > 0);
+                rapidsGroup.children.forEach((child, idx) => {
+                    if (child.material) {
+                        child.material.transparent = true;
+                        child.material.opacity = opacity;
+                    }
+                    if (!child.userData.isSplash) {
+                        child.position.y += Math.sin(idx + Date.now() * 0.004) * 0.02;
+                    } else {
+                        child.geometry.vertices.forEach(v => {
+                            v.y += 0.12;
+                            v.x += (Math.random() - 0.5) * 0.15;
+                            if (v.y > 4.5) {
+                                v.y = 2.0;
+                            }
+                        });
+                        child.geometry.verticesNeedUpdate = true;
+                    }
+                });
+            }
+
+            // Stage 4 (forest)
+            if (forestGroup) {
+                let opacity = 1.0;
+                if (pct < 0.50) opacity = Mathutils.map(pct, 0.45, 0.50, 0, 1);
+                else if (pct > 0.68) opacity = Mathutils.map(pct, 0.68, 0.72, 1, 0);
+                forestGroup.visible = (opacity > 0);
+                forestGroup.children.forEach(child => {
+                    if (child.material) {
+                        child.material.transparent = true;
+                        child.material.opacity = opacity;
+                    }
+                });
+            }
+
+            // Stage 5 (delta)
+            if (deltaGroup) {
+                let opacity = 1.0;
+                if (pct < 0.70) opacity = Mathutils.map(pct, 0.65, 0.70, 0, 1);
+                else if (pct > 0.85) opacity = Mathutils.map(pct, 0.85, 0.90, 1, 0);
+                deltaGroup.visible = (opacity > 0);
+                deltaGroup.children.forEach(child => {
+                    if (child.material) {
+                        child.material.transparent = true;
+                        child.material.opacity = (0.3 + Math.sin(Date.now() * 0.0015) * 0.1) * opacity;
+                    }
+                });
+            }
+
+            // Stage 6 (ocean/legacy)
+            if (oceanGroup) {
+                let opacity = 1.0;
+                if (pct < 0.85) opacity = Mathutils.map(pct, 0.80, 0.85, 0, 1);
+                oceanGroup.visible = (opacity > 0);
+                oceanGroup.children.forEach((child, idx) => {
+                    if (child.material) {
+                        child.material.transparent = true;
+                        child.material.opacity = opacity;
+                        if (child.userData.isNode) {
+                            child.material.emissiveIntensity = (0.5 + Math.sin(idx + Date.now() * 0.0012) * 0.3) * opacity;
+                            child.position.y += Math.sin(idx + Date.now() * 0.001) * 0.01;
+                        }
+                    }
+                });
+            }
         }
 
         var cameraTargetPercentage = 0;
@@ -1737,7 +2389,6 @@
                 end: "bottom 100%",
                 scrub: 5,
                 onUpdate: function (self) {
-                    // Update storytelling content based on scroll progress
                     updateStoryContent(self.progress);
                 }
             }
@@ -1754,53 +2405,123 @@
         function render() {
             currentCameraPercentage = cameraTargetPercentage;
 
-            camera.rotation.y += (cameraRotationProxyX - camera.rotation.y) / 15;
-            camera.rotation.x += (cameraRotationProxyY - camera.rotation.x) / 15;
+            // Update Director Controllers
+            updateCameraDirectorState(currentCameraPercentage);
+            updateCinematicDirector(currentCameraPercentage);
 
+            // Update Camera Position & Physics
             updateCameraPercentage(currentCameraPercentage);
 
-            // 1. Reflective Water Surface - sine-wave vertex displacement for flowing ripples
+            // 1. Gerstner Wave Water Surface ripples + Proximity Foam
             if (customWater) {
-                customWater.position.y = -10 + Math.sin(Date.now() * 0.001) * 0.35;
-                customWater.rotation.z = -Math.PI / 2 + Math.cos(Date.now() * 0.0006) * 0.018;
+                customWater.position.y = -10 + Math.sin(Date.now() * 0.0008) * 0.25;
+                customWater.rotation.z = -Math.PI / 2 + Math.cos(Date.now() * 0.0005) * 0.012;
 
                 const verts = customWater.geometry.vertices;
                 const base = customWater.userData.baseZ;
+                const rockWeights = customWater.userData.rockWeights;
                 const t = Date.now() * 0.0012;
+                
+                let turbulence = 1.0;
+                if (currentCameraPercentage < 0.15) {
+                    turbulence = 0.35; 
+                } else if (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.52) {
+                    turbulence = 1.6;  
+                } else if (currentCameraPercentage >= 0.52 && currentCameraPercentage < 0.85) {
+                    turbulence = 0.8;  
+                } else {
+                    turbulence = 0.45; 
+                }
+
+                const w1_amp = 0.55 * turbulence;
+                const w1_freq = 0.07;
+                const w1_speed = 1.8;
+                const w1_steep = 0.4;
+                const w1_angle = 0.5;
+
+                const w2_amp = 0.25 * turbulence;
+                const w2_freq = 0.14;
+                const w2_speed = 3.0;
+                const w2_steep = 0.3;
+                const w2_angle = -0.3;
+
                 for (let i = 0; i < verts.length; i++) {
                     const v = verts[i];
-                    v.z = base[i] + Math.sin(v.x * 0.08 + t) * 0.6 + Math.cos(v.y * 0.1 + t * 0.8) * 0.4;
+                    const ox = v.x;
+                    const oy = v.y;
+                    
+                    const d1 = ox * Math.cos(w1_angle) + oy * Math.sin(w1_angle);
+                    const phase1 = d1 * w1_freq + t * w1_speed;
+                    
+                    const d2 = ox * Math.cos(w2_angle) + oy * Math.sin(w2_angle);
+                    const phase2 = d2 * w2_freq + t * w2_speed;
+                    
+                    v.z = base[i] + Math.sin(phase1) * w1_amp + Math.cos(phase2) * w2_amp;
+                    v.x = ox - Math.cos(w1_angle) * Math.cos(phase1) * w1_amp * w1_steep;
+                    v.y = oy - Math.sin(w1_angle) * Math.cos(phase1) * w1_amp * w1_steep;
+
+                    // Concentric Circular Ripples and Foam around Rapids Rocks
+                    const weight = rockWeights[i];
+                    if (weight.rockPos && weight.dist < 28.0) {
+                        const distFactor = Math.max(0, Math.min(1.0 - weight.dist / 28.0, 1.0));
+                        // Add ripple displacement terms
+                        v.z += Math.sin(weight.dist * 0.8 - t * 6.0) * 0.45 * distFactor;
+                        // Animate white foam intensities
+                        const foamIntensity = (0.35 + 0.65 * Math.sin(weight.dist * 1.5 - t * 4.0)) * distFactor;
+                        customWater.geometry.colors[i].setRGB(
+                            0.02 + foamIntensity * 0.98,
+                            0.08 + foamIntensity * 0.92,
+                            0.20 + foamIntensity * 0.80
+                        );
+                    } else {
+                        customWater.geometry.colors[i].setHex(0x020d21);
+                    }
                 }
                 customWater.geometry.verticesNeedUpdate = true;
+                customWater.geometry.colorsNeedUpdate = true;
+                customWater.geometry.computeVertexNormals();
             }
 
-            // Drift sparkles/mist through the valley air
+            // Drift sparkles/mist through the valley air in wind direction
             if (sparkleGroup) {
+                const windShiftX = WorldPhysicsState.windVector.x * WorldPhysicsState.windSpeed * 0.01;
+                const windShiftZ = WorldPhysicsState.windVector.z * WorldPhysicsState.windSpeed * 0.01;
                 sparkleGroup.children.forEach((sp, idx) => {
                     sp.position.y += Math.sin(idx + Date.now() * 0.0012) * 0.012;
-                    sp.position.x += Math.cos(idx + Date.now() * 0.001) * 0.008;
+                    sp.position.x += Math.cos(idx + Date.now() * 0.001) * 0.008 + windShiftX;
+                    sp.position.z += windShiftZ;
+                    
+                    // Boundary recycling
+                    if (Math.abs(sp.position.x) > 300 || Math.abs(sp.position.z) > 300) {
+                        sp.position.x = (Math.random() - 0.5) * 150;
+                        sp.position.z = (Math.random() - 0.5) * 150;
+                    }
                 });
             }
 
-            // 2. Stage 1: FUTURE Animation - glowing peaks stay as a FIXED, distant hero
-            // focal point through the first 15% of scroll (camera lingers/pans instead of
-            // flying straight at them), then fade out as the descent into the canyon begins.
+            // 2. Stage 1: FUTURE Monolith rotations
             if (sourcePeaksGroup) {
-                sourcePeaksGroup.children.forEach((peak, idx) => {
-                    if (peak.material && peak.material.emissiveIntensity !== undefined) {
-                        peak.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.0006 + idx) * 0.3;
-                    }
-                });
-
                 sourcePeaksGroup.scale.set(1, 1, 1);
-
                 if (currentCameraPercentage < 0.22) {
                     sourcePeaksGroup.visible = true;
-                    // Fade starts at 15% and finishes by 22% (smoothstep easing)
-                    const t = Math.min(Math.max((currentCameraPercentage - 0.15) / (0.22 - 0.15), 0), 1);
-                    const fadeOut = t * t * (3 - 2 * t);
-                    sourcePeaksGroup.children.forEach(peak => {
-                        if (peak.material) peak.material.opacity = Math.max(0, (1 - fadeOut) * 0.9);
+                    let opacity = 1.0;
+                    if (currentCameraPercentage > 0.15) {
+                        opacity = Mathutils.map(currentCameraPercentage, 0.15, 0.22, 1, 0);
+                    }
+                    sourcePeaksGroup.children.forEach(child => {
+                        if (child.material) {
+                            child.material.transparent = true;
+                            child.material.opacity = opacity;
+                        }
+                        if (child.userData.isCore) {
+                            child.rotation.x += 0.015;
+                            child.rotation.y += 0.02;
+                            child.material.emissiveIntensity = (2.0 + Math.sin(Date.now() * 0.003) * 0.8) * opacity;
+                        }
+                        if (child.userData.isRing) {
+                            child.rotation.z -= 0.01;
+                            child.material.opacity = 0.5 * opacity;
+                        }
                     });
                 } else {
                     sourcePeaksGroup.visible = false;
@@ -1810,14 +2531,22 @@
             if (mistParticles) {
                 mistParticles.visible = (currentCameraPercentage < 0.22);
                 if (mistParticles.visible) {
-                    mistParticles.children.forEach(v => {
-                        v.position.y += 0.2;
-                        if (v.position.y > 35) v.position.y = -10;
+                    const windShiftX = WorldPhysicsState.windVector.x * WorldPhysicsState.windSpeed * 0.05;
+                    const windShiftZ = WorldPhysicsState.windVector.z * WorldPhysicsState.windSpeed * 0.05;
+                    mistParticles.geometry.vertices.forEach(v => {
+                        v.y += 0.08;
+                        v.x += windShiftX;
+                        v.z += windShiftZ;
+                        if (v.y > 25) {
+                            v.y = -10;
+                            v.x = (Math.random() - 0.5) * 80;
+                        }
                     });
+                    mistParticles.geometry.verticesNeedUpdate = true;
                 }
             }
 
-            // 3. Primary River Animation - light travels the full length, speeding up through the rapids
+            // 3. Primary River Animation - light travels the full length
             if (riverLight && riverCurve) {
                 const journeyRatio = Mathutils.map(currentCameraPercentage, 0, 0.96, 0, 1);
                 const lightPos = riverCurve.getPointAt(Math.min(Math.max(journeyRatio, 0), 1));
@@ -1829,69 +2558,86 @@
                 riverLine.material.emissiveIntensity = 0.35 + Math.sin(Date.now() * flowSpeed) * 0.15;
             }
 
-            // 4. Stage 2: INNOVATION Animation - jagged canyon walls flanking the descent
-            if (canyonGroup) {
-                canyonGroup.visible = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.36);
-                if (canyonGroup.visible) {
-                    canyonGroup.children.forEach((child, idx) => {
-                        if (child.material && child.material.emissiveIntensity !== undefined) {
-                            child.material.emissiveIntensity = 0.25 + Math.sin(idx + Date.now() * 0.001) * 0.1;
-                        }
-                    });
-                }
+            // Manage Stage Opacities and Swapping (Fading canyon, forest sway, rapids bob)
+            updateStageTransitions(currentCameraPercentage);
+
+            // Wind sway on forest canopies
+            if (forestGroup && forestGroup.visible) {
+                const t = Date.now() * 0.001;
+                forestGroup.children.forEach((child, idx) => {
+                    if (child.userData.isCanopy) {
+                        const swayFreq = 0.8 + (idx % 3) * 0.2;
+                        const swayAmp = 0.12 * WorldPhysicsState.windSpeed * (child.userData.stiffness || 1.0);
+                        const sway = MotionNoise(t * swayFreq + idx, 1.0, 2) * swayAmp;
+                        child.position.x = child.userData.baseX + sway + WorldPhysicsState.windVector.x * swayAmp;
+                        child.position.z = child.userData.baseZ + WorldPhysicsState.windVector.z * swayAmp;
+                        child.rotation.z = sway * 0.2;
+                    }
+                });
             }
 
-            // 5. Stage 3: COLLABORATION Animation - rapids rocks bob with the white water
-            if (rapidsGroup) {
-                rapidsGroup.visible = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.52);
-                if (rapidsGroup.visible) {
-                    rapidsGroup.children.forEach((child, idx) => {
-                        child.position.y += Math.sin(idx + Date.now() * 0.004) * 0.03;
-                    });
-                }
+            // Slowly animate Lens Dust particles close to camera
+            if (lensDustGroup) {
+                lensDustGroup.children.forEach(dust => {
+                    dust.position.x += dust.userData.speedX;
+                    dust.position.y += dust.userData.speedY;
+                    dust.position.z += dust.userData.speedZ;
+                    
+                    // Recycle dust motes when they get too close or far
+                    if (dust.position.z > -1.0) {
+                        dust.position.z = -18 - Math.random() * 4;
+                        dust.position.x = (Math.random() - 0.5) * 16;
+                        dust.position.y = (Math.random() - 0.5) * 12;
+                    }
+                });
             }
 
-            // 6. Stage 4: EXCELLENCE Animation - forest treeline swaying gently
-            if (forestGroup) {
-                forestGroup.visible = (currentCameraPercentage >= 0.50 && currentCameraPercentage < 0.72);
-                if (forestGroup.visible) {
-                    forestGroup.children.forEach((child, idx) => {
-                        child.rotation.z = Math.sin(idx + Date.now() * 0.0008) * 0.02;
-                    });
-                }
-            }
-
-            // 7. Stage 5: PURPOSE Animation - tributary streams merging into the main river
-            if (deltaGroup) {
-                deltaGroup.visible = (currentCameraPercentage >= 0.70 && currentCameraPercentage < 0.90);
-                if (deltaGroup.visible) {
-                    deltaGroup.children.forEach((child, idx) => {
-                        child.material.opacity = 0.3 + Math.sin(Date.now() * 0.0015 + idx) * 0.1;
-                    });
-                }
-            }
-
-            // 8. Stage 6: LEGACY Animation - river opens onto a calm, expansive horizon studded
-            // with glowing "network nodes" representing Hubtown's interconnected communities
-            if (oceanGroup) {
-                oceanGroup.visible = (currentCameraPercentage >= 0.85);
-                if (oceanGroup.visible) {
-                    oceanGroup.children.forEach((child, idx) => {
-                        if (child.userData.isHaze) {
-                            child.position.y += Math.sin(idx + Date.now() * 0.0009) * 0.01;
-                        }
-                        if (child.userData.isNode) {
-                            child.material.emissiveIntensity = 0.5 + Math.sin(idx + Date.now() * 0.0012) * 0.3;
-                        }
-                    });
-                }
-            }
-
+            // Starfields slow rotation
             particleSystem1.rotation.y += 0.00002;
             particleSystem2.rotation.x += 0.00005;
             particleSystem3.rotation.z += 0.00001;
 
+            // Post-processing passes and temporal frame copying
+            if (cinematicPass) {
+                cinematicPass.uniforms.tPrev.value = prevFrameTarget.texture;
+                cinematicPass.uniforms.uTime.value = Date.now() * 0.001;
+            }
+            
             composer.render();
+
+            // Copy composer read buffer containing the final frame into prevFrameTarget for the next frame
+            if (copyMaterial.map !== composer.readBuffer.texture) {
+                copyMaterial.map = composer.readBuffer.texture;
+                copyMaterial.needsUpdate = true;
+            }
+            renderer.render(copyScene, copyCamera, prevFrameTarget);
+
+            // Dynamic Spatial Audio Listener & Occlusion updates
+            if (audioCtx && audioCtx.state === 'running') {
+                const listener = audioCtx.listener;
+                const camWorldPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+                if (listener.positionX) {
+                    listener.positionX.setValueAtTime(camWorldPos.x, audioCtx.currentTime);
+                    listener.positionY.setValueAtTime(camWorldPos.y, audioCtx.currentTime);
+                    listener.positionZ.setValueAtTime(camWorldPos.z, audioCtx.currentTime);
+                } else {
+                    listener.setPosition(camWorldPos.x, camWorldPos.y, camWorldPos.z);
+                }
+
+                // Canyon Occlusion low-pass filter
+                if (spatialFilter) {
+                    let filterFreq = Mathutils.map(camWorldPos.y, 0, 75, 450, 20000);
+                    spatialFilter.frequency.setValueAtTime(filterFreq, audioCtx.currentTime);
+                }
+
+                // Rapids Proximity Volume fading
+                if (rapidsSoundNode && rapidsPanner) {
+                    const rapidsPos = path.getPointAt(0.45);
+                    const dist = camWorldPos.distanceTo(rapidsPos);
+                    const vol = Math.max(0, 1 - dist / 110) * 0.12;
+                    rapidsSoundNode.gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                }
+            }
 
             requestAnimationFrame(render);
         }
@@ -1949,7 +2695,6 @@
         updateHUDFrame();
 
         //particle system
-        var spikeyTexture = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/spikey.png');
 
         var particleCount = 6800,
             particles1 = new THREE.Geometry(),
@@ -2148,7 +2893,14 @@
                 audioCtx.resume();
             }
 
-            // Low deep spacey drone
+            // 1. Occlusion Low-Pass Filter
+            spatialFilter = audioCtx.createBiquadFilter();
+            spatialFilter.type = 'lowpass';
+            spatialFilter.frequency.setValueAtTime(20000, audioCtx.currentTime);
+            spatialFilter.Q.value = 1.0;
+            spatialFilter.connect(audioCtx.destination);
+
+            // 2. Low deep spacey drone
             const osc1 = audioCtx.createOscillator();
             const osc2 = audioCtx.createOscillator();
             const filter = audioCtx.createBiquadFilter();
@@ -2178,7 +2930,7 @@
             osc1.connect(filter);
             osc2.connect(filter);
             filter.connect(ambientGain);
-            ambientGain.connect(audioCtx.destination);
+            ambientGain.connect(spatialFilter);
 
             osc1.start();
             osc2.start();
@@ -2186,7 +2938,54 @@
 
             ambientOscs = [osc1, osc2, lfo];
 
-            // Ambient randomized melody (Am7 pentatonic scale)
+            // 3. Pink-noise Generator for rapids water sounds
+            const bufferSize = audioCtx.sampleRate * 2;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            let b0, b1, b2, b3, b4, b5, b6;
+            b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                output[i] *= 0.12; // scale volume
+                b6 = white * 0.115926;
+            }
+
+            rapidsNoiseSource = audioCtx.createBufferSource();
+            rapidsNoiseSource.buffer = noiseBuffer;
+            rapidsNoiseSource.loop = true;
+
+            rapidsSoundNode = audioCtx.createGain();
+            rapidsSoundNode.gain.setValueAtTime(0, audioCtx.currentTime);
+
+            rapidsPanner = audioCtx.createPanner();
+            rapidsPanner.panningModel = 'HRTF';
+            rapidsPanner.distanceModel = 'inverse';
+            rapidsPanner.refDistance = 10;
+            rapidsPanner.maxDistance = 150;
+            rapidsPanner.coneOuterGain = 0.5;
+
+            const rapidsPos = path.getPointAt(0.45);
+            if (rapidsPanner.positionX) {
+                rapidsPanner.positionX.setValueAtTime(rapidsPos.x, audioCtx.currentTime);
+                rapidsPanner.positionY.setValueAtTime(rapidsPos.y - 8, audioCtx.currentTime);
+                rapidsPanner.positionZ.setValueAtTime(rapidsPos.z, audioCtx.currentTime);
+            } else {
+                rapidsPanner.setPosition(rapidsPos.x, rapidsPos.y - 8, rapidsPos.z);
+            }
+
+            rapidsNoiseSource.connect(rapidsSoundNode);
+            rapidsSoundNode.connect(rapidsPanner);
+            rapidsPanner.connect(spatialFilter);
+            rapidsNoiseSource.start();
+
+            // 4. Ambient randomized melody (Am7 pentatonic scale)
             const notes = [220, 261.63, 329.63, 392.00, 440, 523.25];
             melodyInterval = setInterval(() => {
                 if (audioCtx.state === 'suspended') return;
@@ -2207,12 +3006,12 @@
                 feedback.gain.value = 0.4;
 
                 osc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                gainNode.connect(spatialFilter);
 
                 gainNode.connect(delay);
                 delay.connect(feedback);
                 feedback.connect(delay);
-                delay.connect(audioCtx.destination);
+                delay.connect(spatialFilter);
 
                 osc.start();
                 osc.stop(audioCtx.currentTime + 2.6);
@@ -2228,6 +3027,11 @@
                         ambientOscs.forEach(o => { try { o.stop(); } catch (e) { } });
                         ambientOscs = [];
                     }, 600);
+                } catch (e) { }
+            }
+            if (rapidsNoiseSource) {
+                try {
+                    rapidsNoiseSource.stop();
                 } catch (e) { }
             }
             if (melodyInterval) {
