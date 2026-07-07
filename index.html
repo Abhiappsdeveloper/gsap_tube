@@ -1236,7 +1236,12 @@
         //Create an empty scene
         var scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050b14);
-        scene.fog = new THREE.Fog(0x050b14, 0, 100);
+        // Far distance raised 100 -> 350: several stage elements now sit well past the old
+        // fog(0,100) falloff (hero peaks/mountains ~96-244 units out, delta/tributary streams
+        // ~170 units out during Purpose). Since the fog color matches the background color
+        // exactly, anything beyond the far value renders as pure background - i.e. invisible.
+        // That was silently erasing/washing out multiple stages, not just the hero shot.
+        scene.fog = new THREE.Fog(0x050b14, 0, 350);
 
         //Create a perpsective camera
         var cameraRotationProxyX = 3.14159;
