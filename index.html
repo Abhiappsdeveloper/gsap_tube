@@ -1710,12 +1710,12 @@
             customWater.userData.rockWeights = rockWeights;
             scene.add(customWater);
 
-            // Add ambient light for Global Illumination
-            const ambLight = new THREE.AmbientLight(0x081630, 1.2);
+            // Add ambient light for Global Illumination (darkened ambient to fit volcanic black look)
+            const ambLight = new THREE.AmbientLight(0x081630, 0.05);
             scene.add(ambLight);
 
-            // Add main sun directional light
-            sunLight = new THREE.DirectionalLight(0xfff4e0, 1.0);
+            // Add main sun directional light (disabled warm sunlight)
+            sunLight = new THREE.DirectionalLight(0xfff4e0, 0.0);
             sunLight.position.set(120, 150, 90);
             sunLight.castShadow = true;
             sunLight.shadow.mapSize.width = 1024;
@@ -1729,13 +1729,13 @@
             sunLight.shadow.camera.bottom = -dRange;
             scene.add(sunLight);
 
-            // Strong back/rim light behind the mountains (icy blue / white, high intensity)
-            const rimDirectionalLight = new THREE.DirectionalLight(0xdcf0fa, 2.5);
+            // Strong back/rim light behind the mountains (disabled white rim directional light)
+            const rimDirectionalLight = new THREE.DirectionalLight(0xdcf0fa, 0.0);
             rimDirectionalLight.position.set(-200, 150, 140);
             scene.add(rimDirectionalLight);
 
-            // Soft blue ambient bounce light
-            const softBlueBounceLight = new THREE.AmbientLight(0x0c1e36, 0.6);
+            // Soft blue ambient bounce light (disabled soft blue bounce)
+            const softBlueBounceLight = new THREE.AmbientLight(0x0c1e36, 0.0);
             scene.add(softBlueBounceLight);
 
             // Add water reflection light (disabled/removed bright glow below herobox)
@@ -1839,6 +1839,11 @@
             innerCore.userData.isCore = true;
             sourcePeaksGroup.add(innerCore);
 
+            // Monolith Core Light Source (glowing blue light illuminating the mountains and water)
+            const monolithGlowLight = new THREE.PointLight(0x00f5d4, 8.0, 350, 1.2);
+            monolithGlowLight.position.copy(heroBox.position);
+            sourcePeaksGroup.add(monolithGlowLight);
+
             // Layer 3: Monolith Torus Ring
             const ringGeom = new THREE.TorusGeometry(26, 1.2, 8, 32);
             const ringMat = new THREE.MeshStandardMaterial({
@@ -1867,8 +1872,8 @@
             const flankMountainGeom = new THREE.SphereGeometry(34, 20, 20);
             const flankMountainAnchor = heroP1.clone().addScaledVector(heroForward, 240);
 
-            // Stage 0 Rim Light (glowing outline from behind monolith peaks)
-            const monolithRimLight = new THREE.PointLight(0xffffff, 5.0, 150);
+            // Stage 0 Rim Light (disabled white point light behind monolith peaks)
+            const monolithRimLight = new THREE.PointLight(0xffffff, 0.0, 150);
             monolithRimLight.position.set(flankMountainAnchor.x, flankMountainAnchor.y + 40, flankMountainAnchor.z);
             scene.add(monolithRimLight);
 
@@ -2765,7 +2770,7 @@
                 const journeyRatio = Mathutils.map(currentCameraPercentage, 0, 0.96, 0, 1);
                 const lightPos = riverCurve.getPointAt(Math.min(Math.max(journeyRatio, 0), 1));
                 riverLight.position.copy(lightPos);
-                riverLight.visible = true;
+                riverLight.visible = (currentCameraPercentage >= 0.22);
             }
             if (riverLine) {
                 riverLine.visible = (currentCameraPercentage > 0.22);
