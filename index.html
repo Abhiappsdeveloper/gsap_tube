@@ -1809,15 +1809,80 @@
             const heroViewAnchor = heroP1.clone().addScaledVector(heroForward, 90);
             sourcePeaksGroup = new THREE.Group();
 
+            // Procedural Waveform/Circuit Texture for Herobox
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            // Base layer: Smooth dark teal gradient
+            const grad = ctx.createLinearGradient(0, 0, 0, 512);
+            grad.addColorStop(0, '#1a3a4a');
+            grad.addColorStop(1, '#0f2a38');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Noise/grain overlay
+            const imgData = ctx.getImageData(0, 0, 512, 512);
+            const data = imgData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const noise = (Math.random() - 0.5) * 8;
+                data[i] = Math.min(255, Math.max(0, data[i] + noise));
+                data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+                data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            // Waveform and circuit patterns
+            for (let y = 30; y < 500; y += 45) {
+                ctx.strokeStyle = Math.random() > 0.5 ? '#00f5d4' : '#00d4ff';
+                ctx.lineWidth = 1.5 + Math.random() * 1.5;
+                ctx.globalAlpha = 0.3 + Math.random() * 0.5;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                for (let x = 0; x <= 512; x += 16) {
+                    const amp = 8 + Math.random() * 15;
+                    const waveY = y + Math.sin(x * 0.05 + y) * amp + (Math.random() - 0.5) * 3;
+                    ctx.lineTo(x, waveY);
+                }
+                ctx.stroke();
+
+                // Circuit accents (dots and dashes)
+                ctx.fillStyle = '#00f5d4';
+                ctx.globalAlpha = 0.5 + Math.random() * 0.5;
+                for (let x = 20; x < 500; x += 80) {
+                    const amp = 8 + Math.random() * 15;
+                    const accentY = y + Math.sin(x * 0.05 + y) * amp;
+                    if (Math.random() > 0.5) {
+                        ctx.beginPath();
+                        ctx.arc(x, accentY, 2 + Math.random() * 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(x, accentY - 1, 8, 2);
+                    }
+                }
+            }
+            ctx.globalAlpha = 1.0;
+
+            const waveformTex = new THREE.CanvasTexture(canvas);
+            waveformTex.wrapS = THREE.RepeatWrapping;
+            waveformTex.wrapT = THREE.RepeatWrapping;
+
             // Layer 1: Monolith Outer Glass Shell
-            const outerBoxMat = new THREE.MeshStandardMaterial({
-                color: 0x050505,
-                roughness: 0.9,
-                metalness: 0.1,
+            const outerBoxMat = new THREE.MeshPhysicalMaterial({
+                color: 0x1a3a4a,
+                metalness: 0.6,
+                roughness: 0.15,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.08,
                 transparent: false,
                 opacity: 1.0,
+                map: waveformTex,
                 emissive: 0x00f5d4,
-                emissiveIntensity: 0.15
+                emissiveMap: waveformTex,
+                emissiveIntensity: 0.2,
+                vertexColors: THREE.NoColors,
+                envMapIntensity: 0.5
             });
             const heroBoxGeom = new THREE.BoxGeometry(46, 46, 46, 4, 4, 4);
             const heroBox = new THREE.Mesh(heroBoxGeom, outerBoxMat);
@@ -2736,7 +2801,8 @@
                         }
                         if (child.userData.isBox) {
                             child.rotation.y -= 0.01;
-                            child.material.emissiveIntensity = 0.15 * opacity;
+                            // Pulsing energy wave effect: base 0.35 in bright regions, modulated by sin wave, fading with opacity
+                            child.material.emissiveIntensity = 0.35 * (0.7 + 0.3 * Math.sin(Date.now() * 0.002)) * opacity;
                         }
                     });
                 } else {
