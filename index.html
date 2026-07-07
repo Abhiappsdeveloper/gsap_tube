@@ -1738,9 +1738,9 @@
             const softBlueBounceLight = new THREE.AmbientLight(0x0c1e36, 0.6);
             scene.add(softBlueBounceLight);
 
-            // Add water reflection light
+            // Add water reflection light (disabled/removed bright glow below herobox)
             const sourcePointNode = path.getPointAt(0);
-            const waterReflectLight = new THREE.PointLight(0x00f5d4, 4, 75);
+            const waterReflectLight = new THREE.PointLight(0x00f5d4, 0.0, 75);
             waterReflectLight.position.set(sourcePointNode.x + 5, -8, sourcePointNode.z + 5);
             scene.add(waterReflectLight);
 
@@ -1915,7 +1915,7 @@
                 size: 1.5,
                 map: spikeyTexture,
                 transparent: true,
-                opacity: 0.35,
+                opacity: 0.0, // Disabled mist under monolith
                 blending: THREE.AdditiveBlending
             });
             mistParticles = new THREE.Points(mistGeom, mistMat);
@@ -1943,8 +1943,8 @@
             futureWaterPlane.userData.baseZ = futureWaterGeom.vertices.map(v => v.z);
             futureWaterFlow.add(futureWaterPlane);
 
-            // Create flowing stream tubes that follow the valley path in Stage 0 (first 22%)
-            const numStreams = 4;
+            // Create flowing stream tubes that follow the valley path in Stage 0 (first 22% - disabled for dark obsidian water look)
+            const numStreams = 0;
             const maxSpread = 18;
             const streamMat = new THREE.MeshPhysicalMaterial({
                 color: 0x00f5d4,
