@@ -977,11 +977,212 @@
                 font-size: 9px;
             }
         }
+
+        /* ===== INTERACTIVE SCOREBOARD STYLES ===== */
+        .scoreboard-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 12000;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scoreboard-container {
+            background: linear-gradient(135deg, rgba(0, 245, 212, 0.1), rgba(0, 168, 255, 0.1));
+            border: 2px solid rgba(0, 245, 212, 0.4);
+            border-radius: 12px;
+            padding: 40px 60px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 40px rgba(0, 245, 212, 0.3), inset 0 0 40px rgba(0, 245, 212, 0.1);
+            pointer-events: auto;
+            cursor: pointer;
+            transform: scale(0.5) translateY(-100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: 'Orbitron', sans-serif;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .scoreboard-container.active {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .scoreboard-label {
+            font-size: 14px;
+            color: #00f5d4;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: block;
+        }
+
+        .scoreboard-score {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f5d4, #00a8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            line-height: 1;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 20px rgba(0, 245, 212, 0.5);
+        }
+
+        .scoreboard-text {
+            font-size: 18px;
+            color: #f8fafc;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            font-family: 'Share Tech Mono', monospace;
+            max-width: 400px;
+            word-wrap: break-word;
+            line-height: 1.5;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scoreboard-hint {
+            font-size: 11px;
+            color: rgba(0, 245, 212, 0.6);
+            margin-top: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .scoreboard-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            background: radial-gradient(circle, rgba(0, 245, 212, 0.2), transparent);
+            pointer-events: none;
+            animation: scoreboard-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scoreboard-pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 245, 212, 0.3), inset 0 0 20px rgba(0, 245, 212, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 245, 212, 0.5), inset 0 0 40px rgba(0, 245, 212, 0.2);
+            }
+        }
+
+        .score-number {
+            display: inline-block;
+            animation: scoreNumberBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes scoreNumberBounce {
+            0% {
+                transform: translateY(-30px) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(5px);
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Letter Animation for Buttons */
+        .btn-letter-animating {
+            pointer-events: none;
+        }
+
+        .btn-letter-char {
+            display: inline-block;
+            min-width: 0.6ch;
+        }
+
+        .scoreboard-background-blur {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 11, 20, 0.3);
+            z-index: 11999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .scoreboard-background-blur.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 768px) {
+            .scoreboard-container {
+                padding: 30px 40px;
+                min-width: 250px;
+            }
+
+            .scoreboard-score {
+                font-size: 52px;
+            }
+
+            .scoreboard-text {
+                font-size: 14px;
+                min-height: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .scoreboard-container {
+                padding: 20px 30px;
+                min-width: 200px;
+            }
+
+            .scoreboard-score {
+                font-size: 42px;
+            }
+
+            .scoreboard-text {
+                font-size: 12px;
+                min-height: 40px;
+            }
+        }
     </style>
 
 </head>
 
 <body>
+    <!-- ===== INTERACTIVE SCOREBOARD OVERLAY ===== -->
+    <div class="scoreboard-background-blur" id="scoreboardBackdrop"></div>
+    <div class="scoreboard-overlay" id="scoreboardOverlay">
+        <div class="scoreboard-container" id="scoreboardContainer">
+            <div class="scoreboard-glow"></div>
+            <span class="scoreboard-label">TEXT CAPTURED</span>
+            <div class="scoreboard-score" id="scoreboardScore">
+                <span class="score-number">+</span><span class="score-number" id="scoreValue">0</span>
+            </div>
+            <div class="scoreboard-text" id="scoreboardText">Click any text...</div>
+            <div class="scoreboard-hint">[ Click to dismiss ]</div>
+        </div>
+    </div>
+
     <!-- FIXED PRELOADER -->
     <div class="hud-preloader" id="hudPreloader">
         <div class="hud-preloader-container">
@@ -3855,6 +4056,107 @@
             }, 80);
         })();
 
+        // ===== UNIVERSAL TEXT LETTER ANIMATION =====
+        function animateButtonLetters(element) {
+            if (!element || element.classList.contains('btn-letter-animating')) return;
+
+            // Store original HTML to restore later if needed
+            const originalHTML = element.innerHTML;
+
+            // Get clean text content - extract only letters, numbers, and spaces
+            let textContent = element.textContent || '';
+
+            // Remove special characters but keep spaces
+            const cleanText = textContent.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+
+            if (!cleanText || cleanText.length === 0) return;
+
+            // Split into individual characters
+            const chars = cleanText.split('');
+
+            // Build HTML with span for each character
+            let newHTML = '';
+            chars.forEach((char, idx) => {
+                if (char === ' ') {
+                    newHTML += '<span class="btn-letter-char" data-index="' + idx + '" style="margin-right: 0.2em;">&nbsp;</span>';
+                } else {
+                    newHTML += '<span class="btn-letter-char" data-index="' + idx + '">' + char + '</span>';
+                }
+            });
+
+            // Replace element content
+            element.innerHTML = newHTML;
+
+            // Add animation class to prevent conflicts
+            element.classList.add('btn-letter-animating');
+
+            // Animate each character with improved timing
+            chars.forEach((targetChar, index) => {
+                const charEl = element.querySelector(`[data-index="${index}"]`);
+                if (!charEl || targetChar === ' ') return;
+
+                const targetCode = targetChar.toUpperCase().charCodeAt(0);
+                const startCode = 'A'.charCodeAt(0);
+                const charRange = Math.max(1, targetCode - startCode);
+
+                let step = 0;
+                const steps = Math.max(8, Math.ceil(charRange * 0.8));
+                const stepDuration = 40; // milliseconds per step
+                const delayBetweenChars = 35; // stagger delay
+
+                const animate = () => {
+                    if (step <= steps) {
+                        const progress = step / steps;
+                        const currentCode = Math.floor(startCode + charRange * progress);
+                        charEl.textContent = String.fromCharCode(currentCode);
+                        step++;
+                        setTimeout(animate, stepDuration);
+                    } else {
+                        charEl.textContent = targetChar;
+                    }
+                };
+
+                // Start animation with stagger delay
+                setTimeout(animate, index * delayBetweenChars);
+            });
+
+            // Remove animation class after completion
+            const totalDuration = (chars.length * 35) + (Math.max(8, Math.ceil((chars[0]?.charCodeAt(0) || 65) - 65) * 0.8) * 40) + 300;
+            setTimeout(() => {
+                element.classList.remove('btn-letter-animating');
+            }, totalDuration);
+        }
+
+        // Add UNIVERSAL click listener to ALL text elements for letter animation
+        document.addEventListener('click', function(e) {
+            let element = e.target;
+
+            // Get all possible selector matches for text elements
+            const textSelectors = [
+                'a', 'button', 'span', 'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                '[role="button"]', '[role="link"]', '.hud-vertical-item', '.story-action',
+                '.story-container', '.nav-links', '.footer-chat-btn', '.hud-mute-btn',
+                '.story-content', '.story-detail', '.story-stat', '.footer-center',
+                '.logo', '.clickable', '.btn-cta', '.btn-signin'
+            ].join(', ');
+
+            // Find the closest element that matches text selectors
+            let textElement = element.closest(textSelectors);
+
+            // Only animate if not already animating and has text content
+            if (textElement && !textElement.classList.contains('btn-letter-animating') && textElement.textContent.trim().length > 0) {
+                // Exclude certain elements that shouldn't animate
+                const excludeSelectors = '.hud-preloader, .scoreboard, .vignette, .experience, .scrollTarget, .hud-frame-svg, .hud-cursor-tooltip, .chapter-marker, .progress-indicator, .progress-bar, .progress-fill, canvas';
+
+                const shouldExclude = textElement.matches(excludeSelectors) ||
+                    textElement.closest(excludeSelectors);
+
+                if (!shouldExclude) {
+                    animateButtonLetters(textElement);
+                }
+            }
+        });
+
         // Smooth click-to-scroll for vertical HUD stops
         document.querySelectorAll('.hud-vertical-menu .hud-vertical-item').forEach(item => {
             item.addEventListener('click', function (e) {
@@ -3879,6 +4181,140 @@
                     behavior: 'smooth'
                 });
             });
+        });
+
+        // ===== INTERACTIVE SCOREBOARD SYSTEM =====
+        const scoreboardState = {
+            isVisible: false,
+            hideTimeout: null
+        };
+
+        const scoreboardElements = {
+            overlay: document.getElementById('scoreboardOverlay'),
+            container: document.getElementById('scoreboardContainer'),
+            backdrop: document.getElementById('scoreboardBackdrop'),
+            score: document.getElementById('scoreValue'),
+            text: document.getElementById('scoreboardText'),
+            scoreDisplay: document.getElementById('scoreboardScore')
+        };
+
+        // Calculate score based on text length and complexity
+        function calculateScore(text) {
+            const cleanText = text.trim();
+            const length = cleanText.length;
+            const wordCount = cleanText.split(/\s+/).length;
+            const score = Math.min(999, Math.floor(length * 0.5 + wordCount * 5));
+            return score;
+        }
+
+        // Animate number change with individual digit animations
+        function animateScoreNumber(newScore) {
+            const scoreElem = document.getElementById('scoreValue');
+            const oldScore = parseInt(scoreElem.textContent) || 0;
+
+            if (oldScore === newScore) return;
+
+            // Clear and rebuild with animation
+            scoreElem.style.animation = 'none';
+            scoreElem.offsetHeight; // Trigger reflow
+            scoreElem.textContent = newScore;
+            scoreElem.style.animation = 'scoreNumberBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        }
+
+        // Show scoreboard with animation
+        function showScoreboard(text) {
+            if (!text || text.trim().length === 0) return;
+
+            const cleanText = text.trim().substring(0, 100); // Limit to 100 chars
+            const score = calculateScore(cleanText);
+
+            // Update scoreboard content
+            scoreboardElements.text.textContent = cleanText;
+            animateScoreNumber(score);
+
+            // Show with animation
+            scoreboardElements.backdrop.classList.add('active');
+            scoreboardElements.container.classList.add('active');
+
+            scoreboardState.isVisible = true;
+
+            // Clear previous timeout
+            if (scoreboardState.hideTimeout) {
+                clearTimeout(scoreboardState.hideTimeout);
+            }
+
+            // Auto-hide after 4 seconds
+            scoreboardState.hideTimeout = setTimeout(() => {
+                hideScoreboard();
+            }, 4000);
+        }
+
+        // Hide scoreboard with animation
+        function hideScoreboard() {
+            scoreboardElements.backdrop.classList.remove('active');
+            scoreboardElements.container.classList.remove('active');
+            scoreboardState.isVisible = false;
+
+            if (scoreboardState.hideTimeout) {
+                clearTimeout(scoreboardState.hideTimeout);
+                scoreboardState.hideTimeout = null;
+            }
+        }
+
+        // Dismiss on backdrop click
+        scoreboardElements.backdrop.addEventListener('click', hideScoreboard);
+
+        // Dismiss on container click
+        scoreboardElements.container.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideScoreboard();
+        });
+
+        // Global text selection and click handler
+        document.addEventListener('click', (e) => {
+            // Get the element that was clicked
+            const target = e.target;
+
+            // Skip if clicking on interactive elements or scoreboard
+            const skipSelectors = [
+                'button', 'a', 'input', 'textarea', 'select',
+                '.btn-signin', '.btn-cta', '.story-action', '.nav-links a',
+                '.hud-audio-trigger', '.hud-mute-btn', '.footer-chat-btn',
+                '.footer-center', '#scoreboardContainer', '.scoreboard-overlay'
+            ];
+
+            for (let selector of skipSelectors) {
+                if (target.matches(selector) || target.closest(selector)) {
+                    return;
+                }
+            }
+
+            // Get selected text or element text content
+            const selection = window.getSelection().toString().trim();
+            let textToCapture = selection;
+
+            // If no selection, try to get text from clicked element or nearby text node
+            if (!textToCapture) {
+                // Look for text in the clicked element or its children
+                if (target.nodeType === Node.TEXT_NODE) {
+                    textToCapture = target.textContent;
+                } else if (target.textContent) {
+                    // Get text from element, preferring shorter, meaningful content
+                    textToCapture = target.textContent;
+                }
+            }
+
+            // Show scoreboard if we have text
+            if (textToCapture) {
+                showScoreboard(textToCapture);
+            }
+        });
+
+        // Allow keyboard dismissal
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Escape' || e.key === 'Esc') && scoreboardState.isVisible) {
+                hideScoreboard();
+            }
         });
     </script>
 
