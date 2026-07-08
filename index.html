@@ -3307,7 +3307,7 @@
                     const rapidsPos = path.getPointAt(0.45);
                     const dist = camWorldPos.distanceTo(rapidsPos);
                     const vol = Math.max(0, 1 - dist / 110) * 0.12;
-                    rapidsSoundNode.gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                    rapidsSoundNode.gain.setValueAtTime(vol, audioCtx.currentTime);
                 }
             }
 
