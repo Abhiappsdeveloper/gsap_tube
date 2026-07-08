@@ -4221,32 +4221,9 @@
             scoreElem.style.animation = 'scoreNumberBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
         }
 
-        // Show scoreboard with animation
+        // Show scoreboard with animation - DISABLED
         function showScoreboard(text) {
-            if (!text || text.trim().length === 0) return;
-
-            const cleanText = text.trim().substring(0, 100); // Limit to 100 chars
-            const score = calculateScore(cleanText);
-
-            // Update scoreboard content
-            scoreboardElements.text.textContent = cleanText;
-            animateScoreNumber(score);
-
-            // Show with animation
-            scoreboardElements.backdrop.classList.add('active');
-            scoreboardElements.container.classList.add('active');
-
-            scoreboardState.isVisible = true;
-
-            // Clear previous timeout
-            if (scoreboardState.hideTimeout) {
-                clearTimeout(scoreboardState.hideTimeout);
-            }
-
-            // Auto-hide after 4 seconds
-            scoreboardState.hideTimeout = setTimeout(() => {
-                hideScoreboard();
-            }, 4000);
+            return; // Completely disabled - no scoreboard
         }
 
         // Hide scoreboard with animation
