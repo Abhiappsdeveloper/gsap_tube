@@ -2320,6 +2320,65 @@
             futureWaterPlane.userData.baseZ = futureWaterGeom.vertices.map(v => v.z);
             futureWaterFlow.add(futureWaterPlane);
 
+            // Bright water light surface layer (glow overlay) - creates shining effect
+            const waterGlowGeom = new THREE.PlaneGeometry(600, 600, 16, 16);
+            const waterGlowMat = new THREE.MeshBasicMaterial({
+                color: 0x00d4ff,
+                transparent: true,
+                opacity: 0.25,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                emissive: 0x00d4ff,
+                emissiveIntensity: 0.65
+            });
+            const futureWaterGlow = new THREE.Mesh(waterGlowGeom, waterGlowMat);
+            futureWaterGlow.rotation.x = -Math.PI / 2;
+            futureWaterGlow.position.set(heroViewAnchor.x, 60.05, heroViewAnchor.z); // Slightly above water
+            futureWaterGlow.userData.isWaterGlow = true;
+            futureWaterGlow.userData.baseZ = waterGlowGeom.vertices.map(v => v.z);
+            futureWaterFlow.add(futureWaterGlow);
+
+            // Dark water surface with internal light - creates depth
+            const darkWaterSurfaceGeom = new THREE.PlaneGeometry(600, 600, 20, 20);
+            const darkWaterSurfaceMat = new THREE.MeshPhysicalMaterial({
+                color: 0x000d1f,
+                emissive: 0x004080,
+                emissiveIntensity: 0.35,
+                roughness: 0.85,
+                metalness: 0.05,
+                transparent: true,
+                opacity: 0.4,
+                blending: THREE.NormalBlending,
+                depthWrite: false
+            });
+            const darkWaterSurface = new THREE.Mesh(darkWaterSurfaceGeom, darkWaterSurfaceMat);
+            darkWaterSurface.rotation.x = -Math.PI / 2;
+            darkWaterSurface.position.set(heroViewAnchor.x, 60.02, heroViewAnchor.z); // Mid-layer
+            darkWaterSurface.userData.isDarkWaterSurface = true;
+            darkWaterSurface.userData.baseZ = darkWaterSurfaceGeom.vertices.map(v => v.z);
+            futureWaterFlow.add(darkWaterSurface);
+
+            // Very dark water depth layer - adds significant darkness
+            const deepDarkWaterGeom = new THREE.PlaneGeometry(650, 650, 12, 12);
+            const deepDarkWaterMat = new THREE.MeshBasicMaterial({
+                color: 0x000408,
+                transparent: true,
+                opacity: 0.55,
+                blending: THREE.NormalBlending,
+                depthWrite: false
+            });
+            const deepDarkWater = new THREE.Mesh(deepDarkWaterGeom, deepDarkWaterMat);
+            deepDarkWater.rotation.x = -Math.PI / 2;
+            deepDarkWater.position.set(heroViewAnchor.x, 60.00, heroViewAnchor.z); // Base layer
+            deepDarkWater.userData.isDeepDarkWater = true;
+            futureWaterFlow.add(deepDarkWater);
+
+            // Add a water light point light for reflection enhancement
+            const waterGlowLight = new THREE.PointLight(0x00d4ff, 1.5, 250);
+            waterGlowLight.position.set(heroViewAnchor.x, 65, heroViewAnchor.z);
+            waterGlowLight.userData.isWaterLight = true;
+            futureWaterFlow.add(waterGlowLight);
+
             // Create flowing stream tubes that follow the valley path in Stage 0 (first 22% - disabled for dark obsidian water look)
             const numStreams = 0;
             const maxSpread = 18;
@@ -3223,6 +3282,44 @@
                                 // Fade flowing texture visibility as scroll progresses out of Stage 0
                                 mesh.material.opacity = 0.85 * stageFade;
                             }
+                        } else if (mesh.userData.isWaterGlow) {
+                            // Bright water light surface glow animation
+                            const verts = mesh.geometry.vertices;
+                            const base = mesh.userData.baseZ;
+                            const tWave = Date.now();
+
+                            // Wave displacement for glow layer
+                            for (let i = 0; i < verts.length; i++) {
+                                const v = verts[i];
+                                const glowWave = Math.sin(v.x * 0.08 + tWave * 0.0025) * 0.25;
+                                const glowWave2 = Math.sin(v.y * 0.1 + tWave * 0.002) * 0.2;
+                                v.z = base[i] + glowWave + glowWave2;
+                            }
+                            mesh.geometry.verticesNeedUpdate = true;
+
+                            // Pulsing glow effect - creates shining shimmer
+                            const glowPulse = 0.4 + Math.sin(Date.now() * 0.003) * 0.2 + Math.sin(Date.now() * 0.0045) * 0.15;
+                            mesh.material.emissiveIntensity = glowPulse * stageFade;
+                            mesh.material.opacity = (0.15 + Math.cos(Date.now() * 0.0035) * 0.08) * stageFade;
+                        } else if (mesh.userData.isDarkWaterSurface) {
+                            // Dark water surface with internal light animation
+                            const verts = mesh.geometry.vertices;
+                            const base = mesh.userData.baseZ;
+                            const tWave = Date.now();
+
+                            // Slower wave displacement for dark layer
+                            for (let i = 0; i < verts.length; i++) {
+                                const v = verts[i];
+                                const darkWave = Math.sin(v.x * 0.12 + tWave * 0.0015) * 0.2;
+                                const darkWave2 = Math.sin(v.y * 0.06 + tWave * 0.0018) * 0.15;
+                                v.z = base[i] + darkWave + darkWave2;
+                            }
+                            mesh.geometry.verticesNeedUpdate = true;
+
+                            // Counter-pulse to glow - creates depth effect (dark when glow is bright)
+                            const darkPulse = 0.25 + Math.sin(Date.now() * 0.003 + Math.PI) * 0.15;
+                            mesh.material.emissiveIntensity = darkPulse * stageFade;
+                            mesh.material.opacity = (0.25 + Math.sin(Date.now() * 0.0025) * 0.1) * stageFade;
                         } else if (mesh.userData.isMoleculeGroup) {
                             // Herobox light influence on water molecule particles
                             let lightInfluence = 0;
