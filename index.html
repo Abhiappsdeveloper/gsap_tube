@@ -1334,8 +1334,8 @@
             },
             {
                 progress: 15,
-                title: "WE LEAD THE WAY IN DEVELOPMENT",
-                content: "At Hubtown we look at the world through a different lens; instead of seeing what is, we see what could be. Each day we seek better ways to design, build and create communities.",
+                title: "PLUNGING INTO THE CRYSTALLINE ABYSS",
+                content: "Descending into canyon depths with jagged walls. A hero monolith emerges from the canyon floor. Flowing water cascades down crystalline cliffs. Glowing molecular particles dance in the atmosphere.",
                 stat: "",
                 detail: "",
                 chapter: "INNOVATION",
@@ -1931,6 +1931,39 @@
                 rapidsGroup.add(splashParticles);
             }
             scene.add(rapidsGroup);
+
+            // Add bright glowing flowing parallel lines to COLLABORATION stage - enhanced glow
+            const parallelLineMat = new THREE.LineBasicMaterial({
+                color: 0x00e8ff,
+                transparent: true,
+                opacity: 1.0,
+                linewidth: 4,
+                fog: false
+            });
+
+            // Create multiple flowing parallel lines with enhanced brightness
+            const flowingLinesContainer = new THREE.Group();
+            for (let p = 0; p < 14; p++) {
+                const lineGeom = new THREE.BufferGeometry();
+                const linePoints = [];
+                for (let l = 0; l < 100; l++) {
+                    const t = l / 100;
+                    linePoints.push(new THREE.Vector3(
+                        -50 + t * 100 + Math.sin(t * Math.PI * 2 + p * 0.4) * 5,
+                        -8 + Math.cos(t * Math.PI + p * 0.25) * 7,
+                        -40 + p * 6 + Math.sin(t * Math.PI * 1.5 + p * 0.2) * 4
+                    ));
+                }
+                lineGeom.setFromPoints(linePoints);
+                const line = new THREE.Line(lineGeom, parallelLineMat);
+                flowingLinesContainer.add(line);
+            }
+            rapidsGroup.add(flowingLinesContainer);
+
+            // Add point light to illuminate the landscape from water (light source below)
+            const collaborationLight = new THREE.PointLight(0x00a8ff, 2.0, 150);
+            collaborationLight.position.set(60, -15, 60);
+            rapidsGroup.add(collaborationLight);
 
             // 2. Reflective River/Lake Water Plane with Proximity Foam & Ripple Weights
             const waterGeom = new THREE.PlaneGeometry(1000, 1000, 48, 48);
@@ -2554,6 +2587,52 @@
             }
             scene.add(canyonGroup);
 
+            // Add simple glowing flowing river element - no shader injection
+            const simpleRiverMat = new THREE.MeshBasicMaterial({
+                color: 0x00d4ff,
+                emissive: 0x0088ff,
+                transparent: true,
+                opacity: 0.7
+            });
+
+            // Create flowing river shape using simple cylinders
+            const riverContainer = new THREE.Group();
+            for (let i = 0; i < 6; i++) {
+                const riverPart = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1.2, 1.0, 6, 8),
+                    simpleRiverMat
+                );
+                riverPart.position.set(
+                    Math.sin(i * 0.5) * 8,
+                    -5 - i * 1.2,
+                    i * 2 - 5
+                );
+                riverPart.rotation.z = Math.sin(i) * 0.2;
+                riverContainer.add(riverPart);
+            }
+            canyonGroup.add(riverContainer);
+
+            // Add glowing line edges
+            const glowLineMat = new THREE.LineBasicMaterial({
+                color: 0x00f5d4,
+                transparent: true,
+                opacity: 0.8,
+                linewidth: 1
+            });
+            const glowLineGeom = new THREE.BufferGeometry();
+            const glowPoints = [];
+            for (let j = 0; j < 60; j++) {
+                const u = j / 60;
+                glowPoints.push(new THREE.Vector3(
+                    Math.sin(u * Math.PI * 2) * 8,
+                    -4 - u * 10,
+                    u * 12 - 6
+                ));
+            }
+            glowLineGeom.setFromPoints(glowPoints);
+            const glowLine = new THREE.Line(glowLineGeom, glowLineMat);
+            canyonGroup.add(glowLine);
+
             // 7. Stage 4: EXCELLENCE - Forest treeline along the riverbanks (Biological Diversity)
             forestGroup = new THREE.Group();
             for (let i = 0; i < 34; i++) {
@@ -2609,6 +2688,70 @@
                 }
             }
             scene.add(forestGroup);
+
+            // Add glowing structures and flowing lines to EXCELLENCE stage
+            const excellenceStructureMat = new THREE.MeshBasicMaterial({
+                color: 0x00d4ff,
+                emissive: 0x0088ff,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            // Create glowing cyan rectangular structures (buildings/vision)
+            const excellenceContainer = new THREE.Group();
+            const structurePositions = [
+                { x: -35, y: -5, z: 40, scale: 1.8 },
+                { x: 0, y: -6, z: 50, scale: 1.2 },
+                { x: 35, y: -5, z: 45, scale: 1.5 },
+                { x: -20, y: -8, z: 55, scale: 0.8 },
+                { x: 25, y: -7, z: 52, scale: 0.9 }
+            ];
+
+            structurePositions.forEach(pos => {
+                const structGeom = new THREE.BoxGeometry(
+                    4 * pos.scale,
+                    8 * pos.scale,
+                    4 * pos.scale
+                );
+                const structure = new THREE.Mesh(structGeom, excellenceStructureMat);
+                structure.position.set(pos.x, pos.y, pos.z);
+                excellenceContainer.add(structure);
+            });
+            forestGroup.add(excellenceContainer);
+
+            // Add flowing lines across the landscape
+            const excellenceLineMat = new THREE.LineBasicMaterial({
+                color: 0x00e8ff,
+                transparent: true,
+                opacity: 0.85,
+                linewidth: 2,
+                fog: false
+            });
+
+            const excellenceLinesContainer = new THREE.Group();
+            for (let e = 0; e < 10; e++) {
+                const lineGeom = new THREE.BufferGeometry();
+                const linePoints = [];
+                for (let l = 0; l < 100; l++) {
+                    const t = l / 100;
+                    linePoints.push(new THREE.Vector3(
+                        -60 + t * 120 + Math.sin(t * Math.PI + e * 0.4) * 6,
+                        -10 + Math.cos(t * Math.PI * 1.5 + e * 0.3) * 3,
+                        30 + e * 4 + Math.sin(t * Math.PI * 2 + e * 0.2) * 5
+                    ));
+                }
+                lineGeom.setFromPoints(linePoints);
+                const line = new THREE.Line(lineGeom, excellenceLineMat);
+                excellenceLinesContainer.add(line);
+            }
+            forestGroup.add(excellenceLinesContainer);
+
+            // Add point lights from the glowing structures to illuminate landscape
+            structurePositions.forEach(pos => {
+                const structLight = new THREE.PointLight(0x0088ff, 1.5, 120);
+                structLight.position.set(pos.x, pos.y + 5, pos.z);
+                forestGroup.add(structLight);
+            });
 
             // 8. Stage 5: PURPOSE - Branching streams
             deltaGroup = new THREE.Group();
