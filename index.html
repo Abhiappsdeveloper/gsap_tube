@@ -2634,58 +2634,7 @@
 
             // 7. Stage 4: EXCELLENCE - Forest treeline along the riverbanks (Biological Diversity)
             forestGroup = new THREE.Group();
-            for (let i = 0; i < 34; i++) {
-                const ratio = 0.52 + (i / 34) * 0.20;
-                const node = path.getPointAt(ratio);
-                const side = i % 2 === 0 ? -1 : 1;
-
-                const type = i % 5;
-                if (type === 4) {
-                    // Dead tree trunk
-                    const trunkGeom = new THREE.CylinderGeometry(0.3, 0.5, 6, 6);
-                    displaceCanyonWallGeometry(trunkGeom, i * 19.3);
-                    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x181008, roughness: 1.0 });
-                    const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-                    trunk.position.set(node.x + (Math.random() * 12 + 20) * side, node.y - 8, node.z + (Math.random() - 0.5) * 10);
-                    trunk.rotation.z = (Math.random() - 0.5) * 0.4;
-                    trunk.castShadow = true;
-                    forestGroup.add(trunk);
-                } else {
-                    // Live trees of varying sizes
-                    const isYoung = (type === 3);
-                    const scale = isYoung ? 0.5 : (0.8 + Math.random() * 0.4);
-
-                    const trunkGeom = new THREE.CylinderGeometry(0.4 * scale, 0.6 * scale, 4 * scale, 6);
-                    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x142418, roughness: 1 });
-                    const trunk = new THREE.Mesh(trunkGeom, trunkMat);
-
-                    const canopyGeom = new THREE.ConeGeometry(3 * scale, 9 * scale, 8);
-                    const canopyMat = new THREE.MeshPhysicalMaterial({
-                        color: 0x0a2a1e,
-                        emissive: 0x001815,
-                        emissiveIntensity: 0.4,
-                        roughness: 0.85,
-                        clearcoat: 0.1
-                    });
-                    const canopy = new THREE.Mesh(canopyGeom, canopyMat);
-
-                    const offsetX = (Math.random() * 12 + 20) * side;
-                    trunk.position.set(node.x + offsetX, node.y - 8, node.z + (Math.random() - 0.5) * 10);
-                    canopy.position.set(trunk.position.x, trunk.position.y + 7 * scale, trunk.position.z);
-
-                    trunk.castShadow = true;
-                    canopy.castShadow = true;
-                    canopy.receiveShadow = true;
-
-                    canopy.userData.isCanopy = true;
-                    canopy.userData.baseX = canopy.position.x;
-                    canopy.userData.baseZ = canopy.position.z;
-                    canopy.userData.stiffness = 1.2 - scale;
-
-                    forestGroup.add(trunk);
-                    forestGroup.add(canopy);
-                }
-            }
+            // All trees removed - forestGroup now only contains structures and lines (see below)
             scene.add(forestGroup);
 
             // Add glowing structures and flowing lines to EXCELLENCE stage
@@ -3166,7 +3115,7 @@
                 skyColor = new THREE.Color(0x0d1f33);
                 fogColor = new THREE.Color(0x0a1824).lerp(new THREE.Color(0x16120f), t);
                 tintColor = new THREE.Color(0.9, 1.0, 1.0).lerp(new THREE.Color(1.08, 0.95, 0.85), t);
-                exposure = 1.25;
+                exposure = 1.45;
                 contrast = 1.12;
                 bloomStrength = 0.8;
                 bloomThreshold = 0.2;
@@ -3177,7 +3126,7 @@
                 skyColor = new THREE.Color(0x0a1c1a);
                 fogColor = new THREE.Color(0x16120f).lerp(new THREE.Color(0x0a1410), t);
                 tintColor = new THREE.Color(1.08, 0.95, 0.85).lerp(new THREE.Color(0.95, 1.05, 0.95), t);
-                exposure = 1.35;
+                exposure = 1.55;
                 contrast = 1.05;
                 bloomStrength = 0.9;
                 bloomThreshold = 0.15;
@@ -3188,7 +3137,7 @@
                 skyColor = new THREE.Color(0x180b20);
                 fogColor = new THREE.Color(0x0a1410).lerp(new THREE.Color(0x25141e), t);
                 tintColor = new THREE.Color(0.95, 1.05, 0.95).lerp(new THREE.Color(1.12, 0.9, 1.02), t);
-                exposure = Mathutils.map(pct, 0.75, 0.96, 1.25, 1.55);
+                exposure = Mathutils.map(pct, 0.75, 0.96, 1.45, 1.75);
                 contrast = 1.08;
                 bloomStrength = Mathutils.map(pct, 0.75, 0.96, 0.9, 1.5);
                 bloomThreshold = 0.05;
