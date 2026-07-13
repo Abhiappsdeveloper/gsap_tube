@@ -1777,16 +1777,16 @@
         // it) is untouched, so the canyon/rapids/forest/delta/destination stages keep
         // their original shape and placement.
         var points = [
-            [10, 140, 75],      // HERO START — elevated, pulled back for a wide establishing view
-            [-60, 138, 78],     // pan left, staying at the same height/depth
-            [65, 136, 76],      // pan right across the valley (0–~25% of scroll stays in this hero zone)
-            [100, 125, 60],     // begin a gentle descent
-            [126, 141, 12],     // reconnects to the original path (was index 3) — canyon descent begins
-            [150, 112, 8],
-            [157, 73, 0],
-            [180, 44, 5],
-            [207, 35, 10],
-            [232, 36, 0]
+            [10, 140, 12],      // HERO START — flat elevation on land (changed from 75)
+            [-60, 138, 12],     // pan left, staying on flat ground (changed from 78)
+            [65, 136, 12],      // pan right across flat valley (changed from 76)
+            [100, 125, 12],     // smooth transition at flat elevation (changed from 60)
+            [126, 141, 12],     // INNOVATION stage — flat water flow on land
+            [150, 112, 12],     // COLLABORATION stage — flat water flow on land
+            [157, 73, 12],      // CANYON stage — flat water flow on land
+            [180, 44, 12],      // EXCELLENCE stage — flat water flow on land
+            [207, 35, 12],      // PURPOSE stage — flat water flow on land
+            [232, 36, 12]       // LEGACY stage — flat water flow on land
         ];
 
         var p1, p2;
@@ -1972,7 +1972,30 @@
             }
             waterGeom.colors = waterColors;
 
+            // Create a dynamic water flow texture
+            const waterCanvas = document.createElement('canvas');
+            waterCanvas.width = 256;
+            waterCanvas.height = 256;
+            const waterCtx = waterCanvas.getContext('2d');
+
+            // Draw flowing water pattern
+            waterCtx.fillStyle = '#020d21';
+            waterCtx.fillRect(0, 0, 256, 256);
+            waterCtx.strokeStyle = '#00a8ff';
+            waterCtx.lineWidth = 2;
+            for (let i = 0; i < 256; i += 32) {
+                waterCtx.beginPath();
+                waterCtx.moveTo(0, i);
+                waterCtx.lineTo(256, i);
+                waterCtx.stroke();
+            }
+
+            const waterFlowTexture = new THREE.CanvasTexture(waterCanvas);
+            waterFlowTexture.wrapS = THREE.RepeatWrapping;
+            waterFlowTexture.wrapT = THREE.RepeatWrapping;
+
             const waterMat = new THREE.MeshPhysicalMaterial({
+                map: waterFlowTexture,
                 color: 0xffffff,
                 roughness: 0.15,
                 metalness: 0.8,
@@ -1982,6 +2005,9 @@
                 opacity: 0.65,
                 vertexColors: THREE.VertexColors
             });
+            // Initialize texture offset for horizontal flow animation
+            if (!waterMat.userData) waterMat.userData = {};
+            waterMat.userData.flowOffset = 0;
             customWater = new THREE.Mesh(waterGeom, waterMat);
             customWater.rotation.x = -Math.PI / 2;
             customWater.position.set(120, -10, 90);
@@ -3347,16 +3373,16 @@
 
                             // 2. Stage 0 Specific Water normal map and emissive animation
                             if (currentCameraPercentage < 0.22) {
-                                // Animate flowing liquid-line texture scroll (horizontal flow + slow vertical variation)
+                                // Animate flowing liquid-line texture scroll (horizontal flow + upward vertical flow)
                                 if (mesh.material.map) {
                                     mesh.material.map.offset.x += 0.0005;
-                                    mesh.material.map.offset.y += 0.0002;
+                                    mesh.material.map.offset.y -= 0.0002;
                                 }
 
                                 // Animate normal map offset for flowing effect
                                 if (mesh.material.normalMap) {
                                     mesh.material.normalMap.offset.x += 0.0002;
-                                    mesh.material.normalMap.offset.y += 0.00015;
+                                    mesh.material.normalMap.offset.y -= 0.00015;
                                 }
 
                                 // Herobox light influence on flowing water glow
@@ -3500,22 +3526,22 @@
                     const ox = v.x;
                     const oy = v.y;
 
-                    const d1 = ox * Math.cos(w1_angle) + oy * Math.sin(w1_angle);
-                    const phase1 = d1 * w1_freq + t * w1_speed;
+                    // Keep Z (height) constant - NO vertical falling motion
+                    // Only add gentle ripple waves that don't create the appearance of downward flow
+                    const gentleRipple1 = Math.sin(oy * 0.06 + t * 0.8) * 0.15;
+                    const gentleRipple2 = Math.cos(ox * 0.05 + t * 0.6) * 0.12;
+                    v.z = base[i] + gentleRipple1 + gentleRipple2;
 
-                    const d2 = ox * Math.cos(w2_angle) + oy * Math.sin(w2_angle);
-                    const phase2 = d2 * w2_freq + t * w2_speed;
-
-                    v.z = base[i] + Math.sin(phase1) * w1_amp + Math.cos(phase2) * w2_amp;
-                    v.x = ox - Math.cos(w1_angle) * Math.cos(phase1) * w1_amp * w1_steep;
-                    v.y = oy - Math.sin(w1_angle) * Math.cos(phase1) * w1_amp * w1_steep;
+                    // Keep X and Y at original position - water stays on the surface, doesn't move vertices
+                    v.x = ox;
+                    v.y = oy;
 
                     // Concentric Circular Ripples and Foam around Rapids Rocks
                     const weight = rockWeights[i];
                     if (weight.rockPos && weight.dist < 28.0) {
                         const distFactor = Math.max(0, Math.min(1.0 - weight.dist / 28.0, 1.0));
-                        // Add ripple displacement terms
-                        v.z += Math.sin(weight.dist * 0.8 - t * 6.0) * 0.45 * distFactor;
+                        // Add ripple displacement terms (vertical only, no horizontal)
+                        v.z += Math.sin(weight.dist * 0.8 - t * 6.0) * 0.35 * distFactor;
                         // Animate white foam intensities
                         const foamIntensity = (0.35 + 0.65 * Math.sin(weight.dist * 1.5 - t * 4.0)) * distFactor;
                         customWater.geometry.colors[i].setRGB(
@@ -3530,6 +3556,23 @@
                 customWater.geometry.verticesNeedUpdate = true;
                 customWater.geometry.colorsNeedUpdate = true;
                 customWater.geometry.computeVertexNormals();
+
+                // Animate water texture to show flowing motion along the surface
+                if (customWater.material.map) {
+                    // Horizontal flow (Y direction along the path)
+                    customWater.material.map.offset.y -= 0.0008;
+                    if (customWater.material.map.offset.y < -1.0) {
+                        customWater.material.map.offset.y += 1.0;
+                    }
+                }
+
+                // Add horizontal flow visual effect via emissive color modulation
+                // to enhance the sense of water moving along the land
+                if (currentCameraPercentage >= 0.22 && currentCameraPercentage < 0.65) {
+                    const flowPulse = 0.3 + Math.sin(Date.now() * 0.003 + currentCameraPercentage) * 0.2;
+                    customWater.material.emissiveIntensity = flowPulse * 0.15;
+                    customWater.material.emissive.setHex(0x0066cc);
+                }
             }
 
             // Drift sparkles/mist through the valley air in wind direction
