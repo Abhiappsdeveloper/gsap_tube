@@ -1565,22 +1565,22 @@
                 // Horizontal sediment banding (sine layers)
                 const layer = Math.sin(worldY * 0.4) * 0.08 + Math.sin(worldY * 1.5) * 0.03;
 
-                // Color transition from deep black (#020202) to dark charcoal (#080a0d)
+                // Color transition from deep ocean blue (#001a3d) to brighter blue (#003366)
                 const heightFactor = Math.max(0, Math.min((worldY + 10.0) / 38.0, 1.0));
 
-                const baseColor = new THREE.Color(0x020202);
-                const charcoalColor = new THREE.Color(0x080a0d);
+                const baseColor = new THREE.Color(0x001a3d);
+                const brightBlueColor = new THREE.Color(0x003366);
 
-                const col = baseColor.clone().lerp(charcoalColor, heightFactor);
+                const col = baseColor.clone().lerp(brightBlueColor, heightFactor);
                 // Apply sediment stripe modulation
                 col.multiplyScalar(0.9 + layer);
 
-                // Diffuse GI East/West sunlight tinting - very subtle cool highlights
+                // Diffuse GI East/West sunlight tinting - bright blue highlights
                 const normal = verts[i].clone().normalize();
                 if (normal.x > 0.4) {
-                    col.add(new THREE.Color(0x02060b)); // Very subtle cool dark blue highlight
+                    col.add(new THREE.Color(0x0055cc)); // Bright cyan-blue highlight
                 } else if (normal.x < -0.4) {
-                    col.add(new THREE.Color(0x010203)); // Very subtle dark grey
+                    col.add(new THREE.Color(0x001f4d)); // Deep blue shadow
                 }
 
                 colors[i] = col;
@@ -1712,7 +1712,7 @@
             const dust = new THREE.Mesh(
                 new THREE.SphereGeometry(0.04 + Math.random() * 0.06, 4, 4),
                 new THREE.MeshBasicMaterial({
-                    color: 0x00f5d4,
+                    color: 0x0099ff,
                     transparent: true,
                     opacity: 0.15 + Math.random() * 0.35,
                     blending: THREE.AdditiveBlending
@@ -2043,7 +2043,7 @@
 
             // Add water reflection light (disabled/removed bright glow below herobox)
             const sourcePointNode = path.getPointAt(0);
-            const waterReflectLight = new THREE.PointLight(0x00f5d4, 0.0, 75);
+            const waterReflectLight = new THREE.PointLight(0x0099ff, 0.0, 75);
             waterReflectLight.position.set(sourcePointNode.x + 5, -8, sourcePointNode.z + 5);
             scene.add(waterReflectLight);
 
@@ -2093,7 +2093,7 @@
             for (let i = 0; i < 65; i++) {
                 const sparkle = new THREE.Mesh(
                     new THREE.SphereGeometry(0.18, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.85 })
+                    new THREE.MeshBasicMaterial({ color: 0x0099ff, transparent: true, opacity: 0.85 })
                 );
                 sparkle.position.set(
                     sourcePointNode.x + (Math.random() - 0.5) * 150,
@@ -2181,7 +2181,7 @@
                 transparent: false,
                 opacity: 1.0,
                 map: waveformTex,
-                emissive: 0x00f5d4,
+                emissive: 0x0099ff,
                 emissiveMap: waveformTex,
                 emissiveIntensity: 0.5,
                 vertexColors: THREE.NoColors,
@@ -2199,7 +2199,7 @@
             const coreGeom = new THREE.OctahedronGeometry(18, 0);
             const coreMat = new THREE.MeshStandardMaterial({
                 color: 0x050505,
-                emissive: 0x00f5d4,
+                emissive: 0x0099ff,
                 emissiveIntensity: 0.25
             });
             const innerCore = new THREE.Mesh(coreGeom, coreMat);
@@ -2211,7 +2211,7 @@
             const ringGeom = new THREE.TorusGeometry(26, 1.2, 8, 32);
             const ringMat = new THREE.MeshStandardMaterial({
                 color: 0x050505,
-                emissive: 0x00f5d4,
+                emissive: 0x0099ff,
                 emissiveIntensity: 0.12
             });
             const middleRing = new THREE.Mesh(ringGeom, ringMat);
@@ -2281,7 +2281,7 @@
                 mistGeom.vertices.push(new THREE.Vector3(pX, pY, pZ));
             }
             var mistMat = new THREE.PointsMaterial({
-                color: 0x00f5d4,
+                color: 0x0099ff,
                 size: 1.5,
                 map: spikeyTexture,
                 transparent: true,
@@ -2415,7 +2415,7 @@
             const numStreams = 0;
             const maxSpread = 18;
             const streamMat = new THREE.MeshPhysicalMaterial({
-                color: 0x00f5d4,
+                color: 0x0099ff,
                 roughness: 0.2,
                 metalness: 0.5,
                 clearcoat: 0.8,
@@ -2465,8 +2465,8 @@
 
                 const moleculeGeom = new THREE.SphereGeometry(0.3 + Math.random() * 0.2, 4, 4);
                 const moleculeMat = new THREE.MeshStandardMaterial({
-                    color: 0x00f5d4,
-                    emissive: 0x00f5d4,
+                    color: 0x0099ff,
+                    emissive: 0x0099ff,
                     emissiveIntensity: 0.6,
                     metalness: 0.3,
                     transparent: true,
@@ -2534,7 +2534,7 @@
             const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 240, 3.2, 8, false);
             const riverTubeMat = new THREE.MeshPhysicalMaterial({
                 color: 0x00a8ff,
-                emissive: 0x00f5d4,
+                emissive: 0x0099ff,
                 emissiveIntensity: 0.45,
                 roughness: 0.15,
                 metalness: 0.8,
@@ -2548,13 +2548,13 @@
             riverLine.receiveShadow = true;
             scene.add(riverLine);
 
-            riverLight = new THREE.PointLight(0x00f5d4, 2, 120);
+            riverLight = new THREE.PointLight(0x0099ff, 2, 120);
             scene.add(riverLight);
 
             // 6. Stage 2: INNOVATION - Jagged canyon walls flanking the descent into the river
             canyonGroup = new THREE.Group();
             const canyonWallMat = new THREE.MeshPhysicalMaterial({
-                color: 0xffffff,
+                color: 0x001f4d,
                 roughness: 0.9,
                 metalness: 0.15,
                 clearcoat: 0.0,
@@ -2613,7 +2613,7 @@
 
             // Add glowing line edges
             const glowLineMat = new THREE.LineBasicMaterial({
-                color: 0x00f5d4,
+                color: 0x0099ff,
                 transparent: true,
                 opacity: 0.8,
                 linewidth: 1
@@ -2770,7 +2770,7 @@
                 const branchCurve = new THREE.CatmullRomCurve3(branchPoints);
                 const branchGeom = new THREE.TubeGeometry(branchCurve, 24, 1.1, 6, false);
                 const branchMat = new THREE.MeshBasicMaterial({
-                    color: 0x00f5d4,
+                    color: 0x0099ff,
                     transparent: true,
                     opacity: 0.4,
                     wireframe: true
@@ -2800,7 +2800,7 @@
 
             const horizonGlowGeom = new THREE.PlaneGeometry(500, 120);
             const horizonGlowMat = new THREE.MeshBasicMaterial({
-                color: 0x00f5d4,
+                color: 0x0099ff,
                 transparent: true,
                 opacity: 0.12,
                 side: THREE.DoubleSide
@@ -2813,7 +2813,7 @@
             for (let i = 0; i < 30; i++) {
                 const hazeMesh = new THREE.Mesh(
                     new THREE.SphereGeometry(0.5, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.35 })
+                    new THREE.MeshBasicMaterial({ color: 0x0099ff, transparent: true, opacity: 0.35 })
                 );
                 hazeMesh.userData.isHaze = true;
                 hazeMesh.position.set(
@@ -2826,8 +2826,8 @@
 
             // Holographic Towers (represent networks)
             const nodeMat = new THREE.MeshStandardMaterial({
-                color: 0x00f5d4,
-                emissive: 0x00f5d4,
+                color: 0x0099ff,
+                emissive: 0x0099ff,
                 emissiveIntensity: 0.8,
                 transparent: true,
                 opacity: 0.95
@@ -2852,7 +2852,7 @@
                 nodeMesh.position.copy(nodePos);
                 oceanGroup.add(nodeMesh);
             }
-            const nodeLineMat = new THREE.LineBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.3 });
+            const nodeLineMat = new THREE.LineBasicMaterial({ color: 0x0099ff, transparent: true, opacity: 0.3 });
             nodePositions.forEach((a, i) => {
                 let nearest = null, nearestDist = Infinity;
                 nodePositions.forEach((b, j) => {
@@ -3151,7 +3151,7 @@
 
             if (pct < 0.20) {
                 let t = Mathutils.map(pct, 0, 0.20, 0, 1);
-                sunColor = new THREE.Color(0x00d4ff).lerp(new THREE.Color(0x00f5d4), t);
+                sunColor = new THREE.Color(0x00d4ff).lerp(new THREE.Color(0x0099ff), t);
                 skyColor = new THREE.Color(0x081630);
                 fogColor = new THREE.Color(0x050b14).lerp(new THREE.Color(0x0a1824), t);
                 tintColor = new THREE.Color(0.85, 0.95, 1.05).lerp(new THREE.Color(0.9, 1.0, 1.0), t);
@@ -3162,7 +3162,7 @@
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0, 0.20, 0.0, 0.2);
             } else if (pct < 0.50) {
                 let t = Mathutils.map(pct, 0.20, 0.50, 0, 1);
-                sunColor = new THREE.Color(0x00f5d4).lerp(new THREE.Color(0xffb703), t);
+                sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
                 skyColor = new THREE.Color(0x0d1f33);
                 fogColor = new THREE.Color(0x0a1824).lerp(new THREE.Color(0x16120f), t);
                 tintColor = new THREE.Color(0.9, 1.0, 1.0).lerp(new THREE.Color(1.08, 0.95, 0.85), t);
@@ -3173,7 +3173,7 @@
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.20, 0.50, 0.2, 0.5);
             } else if (pct < 0.75) {
                 let t = Mathutils.map(pct, 0.50, 0.75, 0, 1);
-                sunColor = new THREE.Color(0xffb703).lerp(new THREE.Color(0x00f5d4), t);
+                sunColor = new THREE.Color(0xffb703).lerp(new THREE.Color(0x0099ff), t);
                 skyColor = new THREE.Color(0x0a1c1a);
                 fogColor = new THREE.Color(0x16120f).lerp(new THREE.Color(0x0a1410), t);
                 tintColor = new THREE.Color(1.08, 0.95, 0.85).lerp(new THREE.Color(0.95, 1.05, 0.95), t);
@@ -3184,7 +3184,7 @@
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.50, 0.75, 0.5, 0.7);
             } else {
                 let t = Mathutils.map(pct, 0.75, 0.96, 0, 1);
-                sunColor = new THREE.Color(0x00f5d4).lerp(new THREE.Color(0xffb703), t);
+                sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
                 skyColor = new THREE.Color(0x180b20);
                 fogColor = new THREE.Color(0x0a1410).lerp(new THREE.Color(0x25141e), t);
                 tintColor = new THREE.Color(0.95, 1.05, 0.95).lerp(new THREE.Color(1.12, 0.9, 1.02), t);
