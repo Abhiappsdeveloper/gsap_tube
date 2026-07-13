@@ -1078,9 +1078,12 @@
         }
 
         @keyframes scoreboard-pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 box-shadow: 0 0 20px rgba(0, 245, 212, 0.3), inset 0 0 20px rgba(0, 245, 212, 0.1);
             }
+
             50% {
                 box-shadow: 0 0 40px rgba(0, 245, 212, 0.5), inset 0 0 40px rgba(0, 245, 212, 0.2);
             }
@@ -1096,9 +1099,11 @@
                 transform: translateY(-30px) scale(0.5);
                 opacity: 0;
             }
+
             50% {
                 transform: translateY(5px);
             }
+
             100% {
                 transform: translateY(0) scale(1);
                 opacity: 1;
@@ -1271,7 +1276,8 @@
             <div class="story-container" id="storyContainer">
                 <h2 id="storyTitle">USA Staffing & Workforce Solutions</h2>
                 <div class="story-content" id="storyContent">
-                    Connect exceptional talent with America's most ambitious companies through smart sourcing, seamless compliance, and people-first hiring.
+                    Connect exceptional talent with America's most ambitious companies through smart sourcing, seamless
+                    compliance, and people-first hiring.
                 </div>
                 <div id="storyActionContainer"><a href="#contact" class="story-action">Let's Ukonnect!</a></div>
                 <div class="story-stat" id="storyStat">PEOPLE. POSITIONS.</div>
@@ -1315,6 +1321,7 @@
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/UnrealBloomPass.js'></script>
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js'></script>
     <script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/ScrollTrigger.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
     <script src='https://codepen.io/motionharvest/pen/wBvaRbB/2e0a33310abc78fed3c00970d23e6f5c.js'></script>
 
     <!-- ALL ORIGINAL JAVASCRIPT REMAINS UNCHANGED + NEW STORYTELLING LOGIC -->
@@ -3132,8 +3139,8 @@
                 tintColor = new THREE.Color(0.85, 0.95, 1.05).lerp(new THREE.Color(0.9, 1.0, 1.0), t);
                 exposure = Mathutils.map(pct, 0, 0.20, 1.4, 1.1);
                 contrast = 1.08;
-                bloomStrength = 1.2;
-                bloomThreshold = 0.1;
+                bloomStrength = 0.5; // Decreased glow
+                bloomThreshold = 0.35;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0, 0.20, 0.0, 0.2);
             } else if (pct < 0.50) {
                 let t = Mathutils.map(pct, 0.20, 0.50, 0, 1);
@@ -3143,8 +3150,8 @@
                 tintColor = new THREE.Color(0.9, 1.0, 1.0).lerp(new THREE.Color(1.08, 0.95, 0.85), t);
                 exposure = 1.45;
                 contrast = 1.12;
-                bloomStrength = 0.8;
-                bloomThreshold = 0.2;
+                bloomStrength = 0.35; // Decreased glow
+                bloomThreshold = 0.45;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.20, 0.50, 0.2, 0.5);
             } else if (pct < 0.75) {
                 let t = Mathutils.map(pct, 0.50, 0.75, 0, 1);
@@ -3154,8 +3161,8 @@
                 tintColor = new THREE.Color(1.08, 0.95, 0.85).lerp(new THREE.Color(0.95, 1.05, 0.95), t);
                 exposure = 1.55;
                 contrast = 1.05;
-                bloomStrength = 0.9;
-                bloomThreshold = 0.15;
+                bloomStrength = 0.4; // Decreased glow
+                bloomThreshold = 0.4;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.50, 0.75, 0.5, 0.7);
             } else {
                 let t = Mathutils.map(pct, 0.75, 0.96, 0, 1);
@@ -3165,8 +3172,8 @@
                 tintColor = new THREE.Color(0.95, 1.05, 0.95).lerp(new THREE.Color(1.12, 0.9, 1.02), t);
                 exposure = Mathutils.map(pct, 0.75, 0.96, 1.45, 1.75);
                 contrast = 1.08;
-                bloomStrength = Mathutils.map(pct, 0.75, 0.96, 0.9, 1.5);
-                bloomThreshold = 0.05;
+                bloomStrength = Mathutils.map(pct, 0.75, 0.96, 0.4, 0.65); // Decreased glow
+                bloomThreshold = 0.35;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.75, 0.96, 0.7, 1.0);
             }
 
@@ -3290,12 +3297,30 @@
 
         gsap.registerPlugin(ScrollTrigger);
 
+        // Initialize Lenis Smooth Scroll
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            infinite: false,
+            gestureOrientation: 'vertical',
+            normalizeWheel: true
+        });
+        window.lenis = lenis;
+
+        lenis.on('scroll', ScrollTrigger.update);
+
+        gsap.ticker.add((time) => {
+            lenis.raf(time * 1000);
+        });
+
+        gsap.ticker.lagSmoothing(0);
+
         var tl = gsap.timeline({
             scrollTrigger: {
                 trigger: ".scrollTarget",
                 start: "top top",
                 end: "bottom 100%",
-                scrub: 5,
+                scrub: 1.8, // Slightly reduced lag for responsiveness alongside Lenis
                 onUpdate: function (self) {
                     updateStoryContent(self.progress);
                 }
@@ -4359,7 +4384,7 @@
         }
 
         // Add UNIVERSAL click listener to ALL text elements for letter animation
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             let element = e.target;
 
             // Get all possible selector matches for text elements
@@ -4407,10 +4432,14 @@
                 const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
                 const targetScroll = (targetChapter.progress / 100) * maxScroll;
 
-                window.scrollTo({
-                    top: targetScroll,
-                    behavior: 'smooth'
-                });
+                if (window.lenis) {
+                    window.lenis.scrollTo(targetScroll);
+                } else {
+                    window.scrollTo({
+                        top: targetScroll,
+                        behavior: 'smooth'
+                    });
+                }
             });
         });
 
