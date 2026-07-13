@@ -1777,11 +1777,11 @@
         // it) is untouched, so the canyon/rapids/forest/delta/destination stages keep
         // their original shape and placement.
         var points = [
-            [10, 140, 12],      // HERO START — flat elevation on land (changed from 75)
-            [-60, 138, 12],     // pan left, staying on flat ground (changed from 78)
-            [65, 136, 12],      // pan right across flat valley (changed from 76)
-            [100, 125, 12],     // smooth transition at flat elevation (changed from 60)
-            [126, 141, 12],     // INNOVATION stage — flat water flow on land
+            [10, 140, 75],      // HERO START — elevated, pulled back for a wide establishing view
+            [-60, 138, 78],     // pan left, staying at the same height/depth
+            [65, 136, 76],      // pan right across the valley (0–~25% of scroll stays in this hero zone)
+            [100, 125, 60],     // begin a gentle descent to transition point
+            [126, 141, 12],     // reconnects to the original path (was index 3) — canyon descent begins
             [150, 112, 12],     // COLLABORATION stage — flat water flow on land
             [157, 73, 12],      // CANYON stage — flat water flow on land
             [180, 44, 12],      // EXCELLENCE stage — flat water flow on land
