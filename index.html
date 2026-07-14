@@ -2026,8 +2026,8 @@
             customWater.userData.rockWeights = rockWeights;
             scene.add(customWater);
 
-            // Add ambient light for Global Illumination (darkened ambient to fit volcanic black look)
-            const ambLight = new THREE.AmbientLight(0x081630, 0.05);
+            // Add ambient light for Global Illumination (increased brightness to clearly show landscape)
+            const ambLight = new THREE.AmbientLight(0x0b2447, 0.22);
             scene.add(ambLight);
 
             // Add main sun directional light (disabled warm sunlight)
@@ -3178,7 +3178,7 @@
         }
 
         function updateCinematicDirector(pct) {
-            let sunColor, skyColor, fogColor, tintColor, exposure, contrast, bloomThreshold, bloomStrength;
+            let sunColor, skyColor, fogColor, tintColor, exposure, contrast, bloomThreshold, bloomStrength, sunLightIntensity;
 
             if (pct < 0.20) {
                 let t = Mathutils.map(pct, 0, 0.20, 0, 1);
@@ -3186,11 +3186,12 @@
                 skyColor = new THREE.Color(0x081630);
                 fogColor = new THREE.Color(0x050b14).lerp(new THREE.Color(0x0a1824), t);
                 tintColor = new THREE.Color(0.85, 0.95, 1.05).lerp(new THREE.Color(0.9, 1.0, 1.0), t);
-                exposure = Mathutils.map(pct, 0, 0.20, 1.4, 1.1);
+                exposure = Mathutils.map(pct, 0, 0.20, 1.4, 1.15);
                 contrast = 1.08;
                 bloomStrength = 0.5; // Decreased glow
                 bloomThreshold = 0.35;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0, 0.20, 0.0, 0.2);
+                sunLightIntensity = Mathutils.map(pct, 0, 0.20, 0.55, 0.75); // make Stage 0 waterfall hills visible
             } else if (pct < 0.50) {
                 let t = Mathutils.map(pct, 0.20, 0.50, 0, 1);
                 sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
@@ -3202,6 +3203,7 @@
                 bloomStrength = 0.35; // Decreased glow
                 bloomThreshold = 0.45;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.20, 0.50, 0.2, 0.5);
+                sunLightIntensity = Mathutils.map(pct, 0.20, 0.50, 0.75, 0.95); // bright daylight for canyon
             } else if (pct < 0.75) {
                 let t = Mathutils.map(pct, 0.50, 0.75, 0, 1);
                 sunColor = new THREE.Color(0xffb703).lerp(new THREE.Color(0x0099ff), t);
@@ -3213,6 +3215,7 @@
                 bloomStrength = 0.4; // Decreased glow
                 bloomThreshold = 0.4;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.50, 0.75, 0.5, 0.7);
+                sunLightIntensity = Mathutils.map(pct, 0.50, 0.75, 0.95, 0.85); // soft light for forest
             } else {
                 let t = Mathutils.map(pct, 0.75, 0.96, 0, 1);
                 sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
@@ -3224,6 +3227,7 @@
                 bloomStrength = Mathutils.map(pct, 0.75, 0.96, 0.4, 0.65); // Decreased glow
                 bloomThreshold = 0.35;
                 WorldPhysicsState.timeOfDay = Mathutils.map(pct, 0.75, 0.96, 0.7, 1.0);
+                sunLightIntensity = Mathutils.map(pct, 0.75, 0.96, 0.85, 0.75); // twilight glow for delta/bay
             }
 
             scene.fog.color.copy(fogColor);
@@ -3231,6 +3235,7 @@
 
             if (sunLight) {
                 sunLight.color.copy(sunColor);
+                sunLight.intensity = sunLightIntensity;
                 let angle = WorldPhysicsState.timeOfDay * Math.PI - Math.PI / 4;
                 sunLight.position.set(Math.cos(angle) * 150, 120, Math.sin(angle) * 150);
             }
