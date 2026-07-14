@@ -1937,33 +1937,7 @@
             }
             scene.add(rapidsGroup);
 
-            // Add bright glowing flowing parallel lines to COLLABORATION stage - enhanced glow
-            const parallelLineMat = new THREE.LineBasicMaterial({
-                color: 0x00e8ff,
-                transparent: true,
-                opacity: 1.0,
-                linewidth: 4,
-                fog: false
-            });
 
-            // Create multiple flowing parallel lines with enhanced brightness
-            const flowingLinesContainer = new THREE.Group();
-            for (let p = 0; p < 14; p++) {
-                const lineGeom = new THREE.BufferGeometry();
-                const linePoints = [];
-                for (let l = 0; l < 100; l++) {
-                    const t = l / 100;
-                    linePoints.push(new THREE.Vector3(
-                        -50 + t * 100 + Math.sin(t * Math.PI * 2 + p * 0.4) * 5,
-                        -8 + Math.cos(t * Math.PI + p * 0.25) * 7,
-                        -40 + p * 6 + Math.sin(t * Math.PI * 1.5 + p * 0.2) * 4
-                    ));
-                }
-                lineGeom.setFromPoints(linePoints);
-                const line = new THREE.Line(lineGeom, parallelLineMat);
-                flowingLinesContainer.add(line);
-            }
-            rapidsGroup.add(flowingLinesContainer);
 
             // Add point light to illuminate the landscape from water (light source below)
             const collaborationLight = new THREE.PointLight(0x00a8ff, 2.0, 150);
