@@ -4721,27 +4721,7 @@
             }
         });
 
-        // Toggle Real View Logic
-        (function () {
-            const toggleBtn = document.createElement('button');
-            toggleBtn.className = 'hud-toggle-view';
-            toggleBtn.innerHTML = '⁙ VIEW: HUD';
-            document.body.appendChild(toggleBtn);
 
-            toggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.body.classList.toggle('hide-hud');
-                if (document.body.classList.contains('hide-hud')) {
-                    toggleBtn.innerHTML = '⁙ VIEW: REAL';
-                    toggleBtn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                    toggleBtn.style.color = 'rgba(255, 255, 255, 0.6)';
-                } else {
-                    toggleBtn.innerHTML = '⁙ VIEW: HUD';
-                    toggleBtn.style.borderColor = 'rgba(0, 245, 212, 0.4)';
-                    toggleBtn.style.color = '#00f5d4';
-                }
-            });
-        })();
     </script>
 
 </body>
