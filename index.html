@@ -3066,7 +3066,7 @@
                         const distance = 10 + Math.random() * 40; // keep clear of the river
                         const rx = pos.x + binormal.x * distance * side + (Math.random() - 0.5) * 6;
                         const rz = pos.z + binormal.z * distance * side + (Math.random() - 0.5) * 6;
-                        
+
                         let ry;
                         if (t < 0.20) {
                             // Ground Stage 0 rocks around the Y = 60.0 plateau lake shorelines
@@ -3099,6 +3099,25 @@
                 }
             }
             scene.add(globalLandscapeRocksGroup);
+
+            // Hide rocks from all stages visually while preserving their positions and group structures for logic
+            if (typeof rapidsGroup !== 'undefined' && rapidsGroup) {
+                rapidsGroup.children.forEach(child => {
+                    if (child.material === rockMat) {
+                        child.visible = false;
+                    }
+                });
+            }
+            if (typeof oceanGroup !== 'undefined' && oceanGroup) {
+                oceanGroup.children.forEach(child => {
+                    if (child.material === stage6RockMat) {
+                        child.visible = false;
+                    }
+                });
+            }
+            if (typeof globalLandscapeRocksGroup !== 'undefined' && globalLandscapeRocksGroup) {
+                globalLandscapeRocksGroup.visible = false;
+            }
         }
 
         // Initialize custom 3D scenes
