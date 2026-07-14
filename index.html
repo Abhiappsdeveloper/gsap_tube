@@ -3015,6 +3015,55 @@
             }
 
             scene.add(oceanGroup);
+
+            // Global Landscape Rocks Group (always visible)
+            const globalRockMat = new THREE.MeshStandardMaterial({
+                color: 0x2e2f30, // slate gray stone
+                roughness: 0.85,
+                metalness: 0.15
+            });
+
+            const globalLandscapeRocksGroup = new THREE.Group();
+            const upVec = new THREE.Vector3(0, 1, 0);
+
+            for (let step = 0; step <= 65; step++) {
+                const t = (step / 65) * 0.96;
+                const pos = path.getPointAt(t);
+                const tangent = path.getTangentAt(t).normalize();
+                const binormal = new THREE.Vector3().crossVectors(tangent, upVec).normalize();
+
+                // Generate 1-2 rocks on both sides of the river at this interval
+                for (let side = -1; side <= 1; side += 2) {
+                    const count = 1 + Math.floor(Math.random() * 2);
+                    for (let r = 0; r < count; r++) {
+                        const distance = 10 + Math.random() * 40; // keep clear of the river
+                        const rx = pos.x + binormal.x * distance * side + (Math.random() - 0.5) * 6;
+                        const rz = pos.z + binormal.z * distance * side + (Math.random() - 0.5) * 6;
+                        const ry = pos.y - 9.8 + (Math.random() - 0.5) * 1.5;
+
+                        const size = 1.0 + Math.random() * 3.2;
+                        const rockGeom = new THREE.DodecahedronGeometry(size, 1);
+                        const rockMesh = new THREE.Mesh(rockGeom, globalRockMat);
+                        rockMesh.position.set(rx, ry, rz);
+
+                        rockMesh.scale.set(
+                            0.8 + Math.random() * 0.4,
+                            0.5 + Math.random() * 0.8,
+                            0.8 + Math.random() * 0.4
+                        );
+                        rockMesh.rotation.set(
+                            Math.random() * Math.PI,
+                            Math.random() * Math.PI,
+                            Math.random() * Math.PI
+                        );
+
+                        rockMesh.castShadow = true;
+                        rockMesh.receiveShadow = true;
+                        globalLandscapeRocksGroup.add(rockMesh);
+                    }
+                }
+            }
+            scene.add(globalLandscapeRocksGroup);
         }
 
         // Initialize custom 3D scenes
