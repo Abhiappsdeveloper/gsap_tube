@@ -230,7 +230,7 @@
 
         .scrollTarget {
             position: absolute;
-            height: 1000vh;
+            height: 4000vh;
             width: 100px;
             top: 0;
             z-index: 0;
@@ -1752,7 +1752,7 @@
 
         //set up render passes
         var renderScene = new THREE.RenderPass(scene, camera);
-        var bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        var bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 1.5, 0.4, 0.85);
         bloomPass.renderToScreen = false;
         bloomPass.threshold = params.bloomThreshold;
         bloomPass.strength = params.bloomStrength;
@@ -3303,7 +3303,9 @@
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             infinite: false,
             gestureOrientation: 'vertical',
-            normalizeWheel: true
+            normalizeWheel: true,
+            wheelMultiplier: 0.5,
+            touchMultiplier: 0.7
         });
         window.lenis = lenis;
 
