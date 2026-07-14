@@ -1406,7 +1406,6 @@
         let lensDustGroup;
         let futureWaterFlow;
         let futureMountainSilhouettes;
-        let waterMoleculeParticles;
 
         let spatialFilter = null;
         let rapidsPanner = null;
@@ -2486,38 +2485,6 @@
                 futureWaterFlow.add(streamMesh);
             }
 
-            // Water molecule particles floating suspended above the water surface (Stage 0)
-            const waterMoleculeGroup = new THREE.Group();
-            waterMoleculeGroup.userData.isMoleculeGroup = true;
-            const moleculeCount = 100;
-
-            for (let i = 0; i < moleculeCount; i++) {
-                const mx = (Math.random() - 0.5) * 600;
-                const mz = (Math.random() - 0.5) * 600;
-                const my = 60 + 2 + Math.random() * 6; // 2-8 units above water plane (Y = 60)
-
-                const moleculeGeom = new THREE.SphereGeometry(0.3 + Math.random() * 0.2, 4, 4);
-                const moleculeMat = new THREE.MeshStandardMaterial({
-                    color: 0x0099ff,
-                    emissive: 0x0099ff,
-                    emissiveIntensity: 0.6,
-                    metalness: 0.3,
-                    transparent: true,
-                    opacity: 0.8,
-                    blending: THREE.AdditiveBlending
-                });
-
-                const molecule = new THREE.Mesh(moleculeGeom, moleculeMat);
-                molecule.position.set(mx, my, mz);
-                molecule.userData.baseY = my;
-                molecule.userData.index = i;
-
-                waterMoleculeGroup.add(molecule);
-            }
-
-            futureWaterFlow.add(waterMoleculeGroup);
-            waterMoleculeParticles = waterMoleculeGroup;
-
             scene.add(futureWaterFlow);
 
             // Create Dark Mountain Silhouettes for Future Stage
@@ -3468,48 +3435,6 @@
                             const darkPulse = 0.25 + Math.sin(Date.now() * 0.003 + Math.PI) * 0.15;
                             mesh.material.emissiveIntensity = darkPulse * stageFade;
                             mesh.material.opacity = (0.25 + Math.sin(Date.now() * 0.0025) * 0.1) * stageFade;
-                        } else if (mesh.userData.isMoleculeGroup) {
-                            // Herobox light influence on water molecule particles
-                            let lightInfluence = 0;
-
-                            mesh.children.forEach((particle) => {
-                                const index = particle.userData.index;
-                                const baseY = particle.userData.baseY;
-
-                                // Rise and fall motion
-                                particle.position.y = baseY + Math.sin(t * 1.5 + index) * 2.0;
-
-                                // Drift side to side (simulated air movement)
-                                particle.position.x += Math.cos(t * 1.0 + index * 0.1) * 0.01;
-                                particle.position.z += Math.sin(t * 1.2 + index * 0.1) * 0.01;
-
-                                // Gentle rotation to catch light differently
-                                particle.rotation.x += 0.003;
-                                particle.rotation.y += 0.005;
-
-                                // Pulsing opacity (breathing effect)
-                                const pulseOpacity = 0.6 + Math.sin(t * 2.0 + index) * 0.2;
-
-                                if (heroboxMesh) {
-                                    const dist = particle.position.distanceTo(heroboxMesh.position);
-                                    const heroboxLight = heroboxMesh.material.emissiveIntensity || 0;
-                                    lightInfluence = (heroboxLight * 0.8) / (1.0 + dist * 0.01);
-                                }
-
-                                // Particles brighten when herobox glows
-                                particle.material.emissiveIntensity = 0.6 + (lightInfluence * 0.4);
-
-                                // Fade out as scroll progresses beyond Stage 0
-                                particle.material.opacity = pulseOpacity * stageFade;
-
-                                // Boundary recycling - wrap particles that drift too far
-                                const bounds = 350;
-                                if (Math.abs(particle.position.x) > bounds || Math.abs(particle.position.z) > bounds) {
-                                    particle.position.x = (Math.random() - 0.5) * 600;
-                                    particle.position.z = (Math.random() - 0.5) * 600;
-                                    particle.position.y = particle.userData.baseY;
-                                }
-                            });
                         }
                     });
                 }
