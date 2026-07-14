@@ -1439,10 +1439,10 @@
 
         const CameraDirector = {
             shotType: "IMAX_REVEAL", // IMAX_REVEAL, FPV_EXPLORATION, NATURE_DOC, WIDE_REVEAL
-            cameraWeight: 1.0,       // Damping weight for lag inertia
+            cameraWeight: 0.5,       // Damping weight for lag inertia
             lensSize: 50.0,          // Virtual focal length in mm
             focusSubject: new THREE.Vector3(0, 0, 0),
-            shakeIntensity: 0.15,
+            shakeIntensity: 0.1,
             targetFov: 58.0
         };
 
@@ -3107,23 +3107,23 @@
         function updateCameraDirectorState(pct) {
             if (pct < 0.20) {
                 CameraDirector.shotType = "IMAX_REVEAL";
-                CameraDirector.cameraWeight = 0.55;
-                CameraDirector.shakeIntensity = 0.05;
+                CameraDirector.cameraWeight = 0.35;
+                CameraDirector.shakeIntensity = 0.03;
                 CameraDirector.targetFov = 58.0;
             } else if (pct < 0.52) {
                 CameraDirector.shotType = "FPV_EXPLORATION";
-                CameraDirector.cameraWeight = 1.0;
-                CameraDirector.shakeIntensity = 0.35;
+                CameraDirector.cameraWeight = 0.55;
+                CameraDirector.shakeIntensity = 0.20;
                 CameraDirector.targetFov = 64.0;
             } else if (pct < 0.75) {
                 CameraDirector.shotType = "NATURE_DOC";
-                CameraDirector.cameraWeight = 0.7;
-                CameraDirector.shakeIntensity = 0.12;
+                CameraDirector.cameraWeight = 0.45;
+                CameraDirector.shakeIntensity = 0.08;
                 CameraDirector.targetFov = 52.0;
             } else {
                 CameraDirector.shotType = "WIDE_REVEAL";
-                CameraDirector.cameraWeight = 0.4;
-                CameraDirector.shakeIntensity = 0.03;
+                CameraDirector.cameraWeight = 0.25;
+                CameraDirector.shakeIntensity = 0.02;
                 CameraDirector.targetFov = 58.0;
             }
         }
