@@ -1437,6 +1437,12 @@
             return value;
         }
 
+        function getHillHeight(x, z) {
+            const macro = MotionNoise(x * 0.012, z * 0.012, 3) * 7.5; // tall rolling hills
+            const micro = MotionNoise(x * 0.05 + 41.3, z * 0.05, 2) * 1.5; // ridges
+            return -3.0 + macro + micro; // height offset
+        }
+
         const CameraDirector = {
             shotType: "IMAX_REVEAL", // IMAX_REVEAL, FPV_EXPLORATION, NATURE_DOC, WIDE_REVEAL
             cameraWeight: 0.5,       // Damping weight for lag inertia
@@ -2938,41 +2944,7 @@
                 oceanGroup.add(boatGroup);
             });
 
-            // Rocky Rolling Hills (Stage 6: Legacy)
-            // Replaces the neon city map grid with natural rolling hills covered in rocks.
 
-            function getHillHeight(x, z) {
-                const macro = MotionNoise(x * 0.012, z * 0.012, 3) * 7.5; // tall rolling hills
-                const micro = MotionNoise(x * 0.05 + 41.3, z * 0.05, 2) * 1.5; // ridges
-                return -3.0 + macro + micro; // height offset
-            }
-
-            // Create organic rolling hills terrain
-            const hillGeom = new THREE.PlaneGeometry(380, 380, 36, 36);
-            hillGeom.rotateX(-Math.PI / 2); // lie flat
-
-            // Displace vertices to create hills
-            const hillVerts = hillGeom.vertices;
-            for (let i = 0; i < hillVerts.length; i++) {
-                const v = hillVerts[i];
-                // Position relative to destinationPoint
-                const wx = destinationPoint.x + v.x;
-                const wz = destinationPoint.z + v.z;
-                v.y = getHillHeight(wx, wz);
-            }
-            hillGeom.computeVertexNormals();
-
-            const hillMat = new THREE.MeshStandardMaterial({
-                color: 0x18241a, // dark natural grass green
-                roughness: 0.95,
-                metalness: 0.05,
-                flatShading: true // flat shaded look
-            });
-            const hillMesh = new THREE.Mesh(hillGeom, hillMat);
-            hillMesh.position.set(destinationPoint.x, -9.6, destinationPoint.z);
-            hillMesh.receiveShadow = true;
-            hillMesh.castShadow = true;
-            oceanGroup.add(hillMesh);
 
             // Populate with rock boulders
             const stage6RockMat = new THREE.MeshStandardMaterial({
@@ -3015,6 +2987,46 @@
             }
 
             scene.add(oceanGroup);
+
+            // Global Landscape Hills (always visible grass plains)
+            const hillMat = new THREE.MeshStandardMaterial({
+                color: 0x18241a, // dark natural grass green
+                roughness: 0.95,
+                metalness: 0.05,
+                flatShading: true
+            });
+
+            const hillCenters = [
+                { x: 0, z: -220, size: 300 },
+                { x: 90, z: -60, size: 280 },
+                { x: 160, z: 50, size: 260 },
+                { x: destinationPoint.x, z: destinationPoint.z, size: 380 }
+            ];
+
+            const globalLandscapeHillsGroup = new THREE.Group();
+
+            hillCenters.forEach(center => {
+                const hillGeom = new THREE.PlaneGeometry(center.size, center.size, 24, 24);
+                hillGeom.rotateX(-Math.PI / 2); // lie flat
+
+                // Displace vertices to create hills matching the global noise
+                const hillVerts = hillGeom.vertices;
+                for (let i = 0; i < hillVerts.length; i++) {
+                    const v = hillVerts[i];
+                    const wx = center.x + v.x;
+                    const wz = center.z + v.z;
+                    v.y = getHillHeight(wx, wz);
+                }
+                hillGeom.computeVertexNormals();
+
+                const hillMesh = new THREE.Mesh(hillGeom, hillMat);
+                hillMesh.position.set(center.x, -9.6, center.z);
+                hillMesh.receiveShadow = true;
+                hillMesh.castShadow = true;
+                globalLandscapeHillsGroup.add(hillMesh);
+            });
+
+            scene.add(globalLandscapeHillsGroup);
 
             // Global Landscape Rocks Group (always visible)
             const globalRockMat = new THREE.MeshStandardMaterial({
