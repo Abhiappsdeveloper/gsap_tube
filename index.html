@@ -2459,7 +2459,7 @@
             futureWaterFlow.add(deepDarkWater);
 
             // Add a water light point light for reflection enhancement
-            const waterGlowLight = new THREE.PointLight(0x00d4ff, 1.5, 250);
+            const waterGlowLight = new THREE.PointLight(0x00d4ff, 0.0, 250);
             waterGlowLight.position.set(heroViewAnchor.x, 65, heroViewAnchor.z);
             waterGlowLight.userData.isWaterLight = true;
             futureWaterFlow.add(waterGlowLight);
