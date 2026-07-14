@@ -1406,6 +1406,7 @@
         let lensDustGroup;
         let futureWaterFlow;
         let futureMountainSilhouettes;
+        let lighthouseBeam;
 
         let spatialFilter = null;
         let rapidsPanner = null;
@@ -2751,49 +2752,190 @@
                 oceanGroup.add(hazeMesh);
             }
 
-            // Holographic Towers (represent networks)
-            const nodeMat = new THREE.MeshStandardMaterial({
-                color: 0x0099ff,
-                emissive: 0x0099ff,
-                emissiveIntensity: 0.8,
-                transparent: true,
-                opacity: 0.95
+            // Coastal Islands, Lighthouse & Sailboats (Maritime Delta)
+            const islandMat = new THREE.MeshStandardMaterial({
+                color: 0x141f16, // dark rocky stone
+                roughness: 0.95,
+                metalness: 0.05
             });
-            const nodePositions = [];
-            for (let i = 0; i < 14; i++) {
-                const nodePos = new THREE.Vector3(
-                    destinationPoint.x + (Math.random() - 0.5) * 180,
-                    -8.5,
-                    destinationPoint.z + (Math.random() - 0.5) * 180
-                );
-                nodePositions.push(nodePos);
 
-                const towerGeom = new THREE.CylinderGeometry(0.2, 0.8, 4, 6);
-                const towerMesh = new THREE.Mesh(towerGeom, nodeMat);
-                towerMesh.position.copy(nodePos).add(new THREE.Vector3(0, -2, 0));
-                oceanGroup.add(towerMesh);
+            const sandMat = new THREE.MeshStandardMaterial({
+                color: 0x2c3b2e, // dark mossy sand
+                roughness: 0.9
+            });
 
-                const crystalGeom = new THREE.OctahedronGeometry(1.2, 0);
-                const nodeMesh = new THREE.Mesh(crystalGeom, nodeMat);
-                nodeMesh.userData.isNode = true;
-                nodeMesh.position.copy(nodePos);
-                oceanGroup.add(nodeMesh);
-            }
-            const nodeLineMat = new THREE.LineBasicMaterial({ color: 0x0099ff, transparent: true, opacity: 0.3 });
-            nodePositions.forEach((a, i) => {
-                let nearest = null, nearestDist = Infinity;
-                nodePositions.forEach((b, j) => {
-                    if (i === j) return;
-                    const dist = a.distanceTo(b);
-                    if (dist < nearestDist) {
-                        nearestDist = dist;
-                        nearest = b;
-                    }
-                });
-                if (nearest) {
-                    const lineGeom = new THREE.BufferGeometry().setFromPoints([a, nearest]);
-                    oceanGroup.add(new THREE.Line(lineGeom, nodeLineMat));
+            // Create small rocky islands scattered in the bay
+            const islandPositions = [
+                { x: destinationPoint.x - 60, y: -9.8, z: destinationPoint.z + 40, rx: 25, ry: 4, rz: 18 },
+                { x: destinationPoint.x + 80, y: -9.8, z: destinationPoint.z - 50, rx: 35, ry: 6, rz: 22 },
+                { x: destinationPoint.x - 30, y: -9.8, z: destinationPoint.z - 70, rx: 18, ry: 3, rz: 14 },
+                { x: destinationPoint.x + 50, y: -9.8, z: destinationPoint.z + 60, rx: 22, ry: 4, rz: 16 }
+            ];
+
+            islandPositions.forEach((pos, idx) => {
+                const islandGeom = new THREE.CylinderGeometry(pos.rx * 0.8, pos.rx, pos.ry, 8);
+                const islandMesh = new THREE.Mesh(islandGeom, islandMat);
+                islandMesh.position.set(pos.x, pos.y + pos.ry * 0.5, pos.z);
+                islandMesh.receiveShadow = true;
+                islandMesh.castShadow = true;
+                oceanGroup.add(islandMesh);
+
+                // Add moss/sand top layer
+                const capGeom = new THREE.CylinderGeometry(pos.rx * 0.82, pos.rx * 0.8, 0.2, 8);
+                const capMesh = new THREE.Mesh(capGeom, sandMat);
+                capMesh.position.set(pos.x, pos.y + pos.ry + 0.1, pos.z);
+                oceanGroup.add(capMesh);
+
+                // If it's the second island, build a lighthouse on it!
+                if (idx === 1) {
+                    const lighthouseGroup = new THREE.Group();
+                    lighthouseGroup.position.set(pos.x, pos.y + pos.ry, pos.z);
+
+                    // 1. Tower Body
+                    const towerGeom = new THREE.CylinderGeometry(1.2, 2.2, 16, 8);
+                    const towerMat = new THREE.MeshStandardMaterial({
+                        color: 0xdddddd,
+                        roughness: 0.8,
+                        metalness: 0.1
+                    });
+                    const tower = new THREE.Mesh(towerGeom, towerMat);
+                    tower.position.y = 8;
+                    tower.castShadow = true;
+                    lighthouseGroup.add(tower);
+
+                    // Red bands on the tower
+                    const bandGeom = new THREE.CylinderGeometry(1.5, 1.8, 4, 8);
+                    const bandMat = new THREE.MeshStandardMaterial({ color: 0x992222, roughness: 0.8 });
+                    const redBand = new THREE.Mesh(bandGeom, bandMat);
+                    redBand.position.y = 10;
+                    lighthouseGroup.add(redBand);
+
+                    // 2. Platform
+                    const platformGeom = new THREE.CylinderGeometry(2.0, 2.0, 0.4, 8);
+                    const platformMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 });
+                    const platform = new THREE.Mesh(platformGeom, platformMat);
+                    platform.position.y = 16.2;
+                    lighthouseGroup.add(platform);
+
+                    // 3. Lantern Room
+                    const lanternGeom = new THREE.CylinderGeometry(1.2, 1.2, 2.0, 6, 1, true);
+                    const lanternMat = new THREE.MeshStandardMaterial({
+                        color: 0x111111,
+                        roughness: 0.1,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    const lantern = new THREE.Mesh(lanternGeom, lanternMat);
+                    lantern.position.y = 17.4;
+                    lighthouseGroup.add(lantern);
+
+                    // 4. Dome
+                    const domeGeom = new THREE.SphereGeometry(1.2, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+                    const dome = new THREE.Mesh(domeGeom, platformMat);
+                    dome.position.y = 18.4;
+                    lighthouseGroup.add(dome);
+
+                    // 5. Bulb
+                    const bulbGeom = new THREE.SphereGeometry(0.5, 8, 8);
+                    const bulbMat = new THREE.MeshBasicMaterial({ color: 0xfff3a8 });
+                    const bulb = new THREE.Mesh(bulbGeom, bulbMat);
+                    bulb.position.y = 17.4;
+                    lighthouseGroup.add(bulb);
+
+                    // 6. Rotating light beam (Horizontal cone)
+                    const beamGeom = new THREE.ConeGeometry(3.5, 45, 8);
+                    beamGeom.rotateX(Math.PI / 2);
+                    beamGeom.translate(0, 0, 22.5); // pivot at apex
+                    const beamMat = new THREE.MeshBasicMaterial({
+                        color: 0xfff099,
+                        transparent: true,
+                        opacity: 0.28,
+                        blending: THREE.AdditiveBlending,
+                        side: THREE.DoubleSide
+                    });
+                    lighthouseBeam = new THREE.Mesh(beamGeom, beamMat);
+                    lighthouseBeam.position.set(0, 17.4, 0);
+                    lighthouseGroup.add(lighthouseBeam);
+
+                    // 7. Light source
+                    const lightSource = new THREE.PointLight(0xffea75, 4.0, 180);
+                    lightSource.position.set(0, 17.4, 0);
+                    lighthouseGroup.add(lightSource);
+
+                    oceanGroup.add(lighthouseGroup);
                 }
+            });
+
+            // Create 5 simple sailboats floating on the bay
+            const sailMat = new THREE.MeshStandardMaterial({
+                color: 0xe8e8e8,
+                roughness: 0.9,
+                side: THREE.DoubleSide
+            });
+            const hullMat = new THREE.MeshStandardMaterial({
+                color: 0x3d2715,
+                roughness: 0.8
+            });
+
+            const boatPositions = [
+                { x: destinationPoint.x - 80, z: destinationPoint.z - 20, scale: 0.9, rot: 0.8 },
+                { x: destinationPoint.x + 20, z: destinationPoint.z + 90, scale: 1.1, rot: -1.2 },
+                { x: destinationPoint.x - 20, z: destinationPoint.z + 50, scale: 0.75, rot: 2.1 },
+                { x: destinationPoint.x + 100, z: destinationPoint.z + 10, scale: 1.0, rot: -0.4 },
+                { x: destinationPoint.x - 110, z: destinationPoint.z - 90, scale: 0.8, rot: 1.5 }
+            ];
+
+            boatPositions.forEach((pos) => {
+                const boatGroup = new THREE.Group();
+                boatGroup.position.set(pos.x, -9.6, pos.z);
+                boatGroup.rotation.y = pos.rot;
+                boatGroup.scale.set(pos.scale, pos.scale, pos.scale);
+
+                // Hull
+                const hullGeom = new THREE.BoxGeometry(3.6, 0.6, 1.4);
+                const hull = new THREE.Mesh(hullGeom, hullMat);
+                hull.castShadow = true;
+                boatGroup.add(hull);
+
+                // Bow
+                const bowGeom = new THREE.ConeGeometry(0.8, 1.2, 3);
+                bowGeom.rotateX(Math.PI / 2);
+                bowGeom.rotateY(Math.PI);
+                bowGeom.scale(1.4, 0.6, 1.0);
+                const bow = new THREE.Mesh(bowGeom, hullMat);
+                bow.position.set(0, 0, 2.2);
+                boatGroup.add(bow);
+
+                // Mast
+                const mastGeom = new THREE.CylinderGeometry(0.06, 0.08, 5.0, 5);
+                const mast = new THREE.Mesh(mastGeom, hullMat);
+                mast.position.set(0, 2.5, 0.4);
+                boatGroup.add(mast);
+
+                // Sails
+                const mainSailGeom = new THREE.BufferGeometry();
+                const vertices = new Float32Array([
+                    0, 0.5, 0.4,
+                    0, 4.5, 0.4,
+                    0, 0.8, -1.8
+                ]);
+                mainSailGeom.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+                mainSailGeom.computeVertexNormals();
+                const mainSail = new THREE.Mesh(mainSailGeom, sailMat);
+                boatGroup.add(mainSail);
+
+                const jibSailGeom = new THREE.BufferGeometry();
+                const jibVertices = new Float32Array([
+                    0, 0.6, 2.0,
+                    0, 3.8, 0.4,
+                    0, 0.6, 0.6
+                ]);
+                jibSailGeom.addAttribute('position', new THREE.BufferAttribute(jibVertices, 3));
+                jibSailGeom.computeVertexNormals();
+                const jibSail = new THREE.Mesh(jibSailGeom, sailMat);
+                boatGroup.add(jibSail);
+
+                oceanGroup.add(boatGroup);
             });
 
             // Extended Legacy Network - realistic glowing city-map (mirrors the
@@ -3624,6 +3766,11 @@
                         dust.position.y = (Math.random() - 0.5) * 12;
                     }
                 });
+            }
+
+            // Rotate lighthouse beam if active
+            if (lighthouseBeam) {
+                lighthouseBeam.rotation.y += 0.015;
             }
 
             // Starfields slow rotation
