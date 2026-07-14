@@ -2566,16 +2566,16 @@
             riverCurve = new THREE.CatmullRomCurve3(riverPoints);
             const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 240, 3.2, 8, false);
             const riverTubeMat = new THREE.MeshPhysicalMaterial({
-                color: 0x00a8ff,
-                emissive: 0x0099ff,
+                color: 0x004466,
+                emissive: 0x00a8ff,
                 emissiveIntensity: 0.45,
-                roughness: 0.15,
-                metalness: 0.8,
+                roughness: 0.05,
+                metalness: 0.1,
                 clearcoat: 1.0,
-                clearcoatRoughness: 0.05,
+                clearcoatRoughness: 0.02,
                 transparent: true,
-                opacity: 0.55,
-                wireframe: true
+                opacity: 0.85,
+                wireframe: false
             });
             riverLine = new THREE.Mesh(riverTubeGeom, riverTubeMat);
             riverLine.receiveShadow = true;
@@ -2751,11 +2751,15 @@
                 }
                 const branchCurve = new THREE.CatmullRomCurve3(branchPoints);
                 const branchGeom = new THREE.TubeGeometry(branchCurve, 24, 1.1, 6, false);
-                const branchMat = new THREE.MeshBasicMaterial({
-                    color: 0x0099ff,
+                const branchMat = new THREE.MeshStandardMaterial({
+                    color: 0x004466,
+                    emissive: 0x00a8ff,
+                    emissiveIntensity: 0.35,
+                    roughness: 0.05,
+                    metalness: 0.1,
                     transparent: true,
-                    opacity: 0.4,
-                    wireframe: true
+                    opacity: 0.8,
+                    wireframe: false
                 });
                 deltaGroup.add(new THREE.Mesh(branchGeom, branchMat));
             }
