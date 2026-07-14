@@ -3054,6 +3054,7 @@
 
             for (let step = 0; step <= 65; step++) {
                 const t = (step / 65) * 0.96;
+                if (t < 0.07) continue; // Skip rocks generated before/behind the herobox
                 const pos = path.getPointAt(t);
                 const tangent = path.getTangentAt(t).normalize();
                 const binormal = new THREE.Vector3().crossVectors(tangent, upVec).normalize();
