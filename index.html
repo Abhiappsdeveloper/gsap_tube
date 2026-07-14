@@ -2567,16 +2567,29 @@
             }
             riverCurve = new THREE.CatmullRomCurve3(riverPoints);
             const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 240, 3.2, 8, false);
+            const riverWaterTexture = new THREE.CanvasTexture(waterCanvas);
+            riverWaterTexture.wrapS = THREE.RepeatWrapping;
+            riverWaterTexture.wrapT = THREE.RepeatWrapping;
+            riverWaterTexture.repeat.set(2, 32);
+
+            const riverNormalMap = new THREE.CanvasTexture(normalCanvas);
+            riverNormalMap.wrapS = THREE.RepeatWrapping;
+            riverNormalMap.wrapT = THREE.RepeatWrapping;
+            riverNormalMap.repeat.set(2, 32);
+
             const riverTubeMat = new THREE.MeshPhysicalMaterial({
-                color: 0x004466,
-                emissive: 0x00a8ff,
-                emissiveIntensity: 0.45,
-                roughness: 0.05,
-                metalness: 0.1,
+                map: riverWaterTexture,
+                normalMap: riverNormalMap,
+                normalScale: new THREE.Vector2(0.4, 0.4),
+                color: 0xffffff,
+                emissive: 0x0066cc,
+                emissiveIntensity: 0.25,
+                roughness: 0.15,
+                metalness: 0.8,
                 clearcoat: 1.0,
-                clearcoatRoughness: 0.02,
+                clearcoatRoughness: 0.05,
                 transparent: true,
-                opacity: 0.85,
+                opacity: 0.7,
                 wireframe: false
             });
             riverLine = new THREE.Mesh(riverTubeGeom, riverTubeMat);
@@ -2590,8 +2603,8 @@
             canyonGroup = new THREE.Group();
             const canyonWallMat = new THREE.MeshPhysicalMaterial({
                 color: 0x001f4d,
-                roughness: 0.9,
-                metalness: 0.15,
+                roughness: 0.95, // Increased roughness for porous canyon rock texture
+                metalness: 0.02, // Decreased metalness to prevent plasticky reflections
                 clearcoat: 0.0,
                 vertexColors: THREE.VertexColors
             });
@@ -2617,6 +2630,27 @@
                     wall.castShadow = true;
                     wall.receiveShadow = true;
                     canyonGroup.add(wall);
+
+                    // Add smaller rock debris and boulders along the base of the canyon walls
+                    const debrisCount = 1 + Math.floor(Math.random() * 2);
+                    for (let d = 0; d < debrisCount; d++) {
+                        const debrisGeom = new THREE.IcosahedronGeometry(1.2 + Math.random() * 1.8, 0);
+                        displaceMountainGeometry(debrisGeom, 0.4, i * 19.3 + d * 7.1);
+
+                        const debrisPos = new THREE.Vector3(
+                            node.x + side * (16 + Math.random() * 6), // closer to the riverbed than the main wall
+                            node.y - 9.8 + Math.random() * 1.5, // resting on the valley floor
+                            node.z + (Math.random() - 0.5) * 12
+                        );
+                        applyGeologicalColors(debrisGeom, debrisPos);
+
+                        const debrisMesh = new THREE.Mesh(debrisGeom, canyonWallMat);
+                        debrisMesh.position.copy(debrisPos);
+                        debrisMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                        debrisMesh.castShadow = true;
+                        debrisMesh.receiveShadow = true;
+                        canyonGroup.add(debrisMesh);
+                    }
                 });
             }
             scene.add(canyonGroup);
@@ -3690,6 +3724,20 @@
                     customWater.material.map.offset.y -= 0.0008;
                     if (customWater.material.map.offset.y < -1.0) {
                         customWater.material.map.offset.y += 1.0;
+                    }
+                }
+
+                // Animate river line texture to show fast flowing motion
+                if (riverLine && riverLine.material.map) {
+                    riverLine.material.map.offset.y -= 0.0015;
+                    if (riverLine.material.map.offset.y < -1.0) {
+                        riverLine.material.map.offset.y += 1.0;
+                    }
+                }
+                if (riverLine && riverLine.material.normalMap) {
+                    riverLine.material.normalMap.offset.y -= 0.0015;
+                    if (riverLine.material.normalMap.offset.y < -1.0) {
+                        riverLine.material.normalMap.offset.y += 1.0;
                     }
                 }
 
