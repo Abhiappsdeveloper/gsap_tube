@@ -3006,11 +3006,6 @@
                     lighthouseBeam.position.set(0, 17.4, 0);
                     lighthouseGroup.add(lighthouseBeam);
 
-                    // 7. Light source
-                    const lightSource = new THREE.PointLight(0xffea75, 4.0, 180);
-                    lightSource.position.set(0, 17.4, 0);
-                    lighthouseGroup.add(lightSource);
-
                     oceanGroup.add(lighthouseGroup);
                 }
             });
@@ -3441,7 +3436,7 @@
 
             if (sunLight) {
                 sunLight.color.copy(sunColor);
-                sunLight.intensity = sunLightIntensity;
+                sunLight.intensity = 0.0; // sunLight disabled
                 let angle = WorldPhysicsState.timeOfDay * Math.PI - Math.PI / 4;
                 sunLight.position.set(Math.cos(angle) * 150, 120, Math.sin(angle) * 150);
             }
