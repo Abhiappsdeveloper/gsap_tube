@@ -3654,6 +3654,38 @@
                 riverLine.visible = (currentCameraPercentage > 0.15);
                 const flowSpeed = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.52) ? 0.003 : 0.0012;
                 riverLine.material.emissiveIntensity = 0.35 + Math.sin(Date.now() * flowSpeed) * 0.15;
+
+                if (riverLine.visible) {
+                    const currentEndRatio = Math.min(currentCameraPercentage, 0.96);
+                    if (currentEndRatio > 0.05) {
+                        const subPoints = [];
+                        const numPoints = 60;
+                        for (let i = 0; i <= numPoints; i++) {
+                            const ratio = (i / numPoints) * currentEndRatio;
+                            const node = path.getPointAt(ratio);
+                            subPoints.push(new THREE.Vector3(node.x, node.y - 9.8, node.z));
+                        }
+                        const subCurve = new THREE.CatmullRomCurve3(subPoints);
+
+                        // Dispose of old geometry to prevent memory leaks
+                        if (riverLine.geometry) {
+                            riverLine.geometry.dispose();
+                        }
+
+                        // Generate dynamic segments count and rebuild geometry
+                        const segments = Math.max(10, Math.floor((currentEndRatio / 0.96) * 240));
+                        riverLine.geometry = new THREE.TubeGeometry(subCurve, segments, 3.2, 8, false);
+
+                        // Keep texture flow scaling consistent
+                        const repeatV = (currentEndRatio / 0.96) * 32;
+                        if (riverLine.material.map) {
+                            riverLine.material.map.repeat.y = repeatV;
+                        }
+                        if (riverLine.material.normalMap) {
+                            riverLine.material.normalMap.repeat.y = repeatV;
+                        }
+                    }
+                }
             }
 
             // Manage Stage Opacities and Swapping (Fading canyon, forest sway, rapids bob)
