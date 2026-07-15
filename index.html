@@ -1437,6 +1437,10 @@
         let deltaGroup;
         let oceanGroup;
         let customWater;
+        let leftTributaryMesh;
+        let rightTributaryMesh;
+        let leftTributaryCurve;
+        let rightTributaryCurve;
 
         let sunLight;
         let cinematicPass;
@@ -2005,8 +2009,8 @@
                     node.z + rightVec.z * offset
                 ));
             }
-            const leftTributaryCurve = new THREE.CatmullRomCurve3(leftTributaryPoints);
-            const leftTributaryMesh = new THREE.Mesh(
+            leftTributaryCurve = new THREE.CatmullRomCurve3(leftTributaryPoints);
+            leftTributaryMesh = new THREE.Mesh(
                 new THREE.TubeGeometry(leftTributaryCurve, 32, 1.2, 8, false),
                 simpleRiverMat
             );
@@ -2031,8 +2035,8 @@
                     node.z + rightVec.z * offset
                 ));
             }
-            const rightTributaryCurve = new THREE.CatmullRomCurve3(rightTributaryPoints);
-            const rightTributaryMesh = new THREE.Mesh(
+            rightTributaryCurve = new THREE.CatmullRomCurve3(rightTributaryPoints);
+            rightTributaryMesh = new THREE.Mesh(
                 new THREE.TubeGeometry(rightTributaryCurve, 32, 1.2, 8, false),
                 simpleRiverMat
             );
@@ -3685,6 +3689,50 @@
                             riverLine.material.normalMap.repeat.y = repeatV;
                         }
                     }
+                }
+            }
+
+            // Rebuild Left Tributary on scroll progress (Collaboration stage: 0.36 to 0.52)
+            if (leftTributaryMesh && rapidsGroup && rapidsGroup.visible && leftTributaryCurve) {
+                const tributaryProgress = Mathutils.map(currentCameraPercentage, 0.36, 0.52, 0.0, 1.0);
+                if (tributaryProgress > 0.02) {
+                    leftTributaryMesh.visible = true;
+                    const subPoints = [];
+                    const numPoints = 20;
+                    for (let i = 0; i <= numPoints; i++) {
+                        const ratio = (i / numPoints) * tributaryProgress;
+                        subPoints.push(leftTributaryCurve.getPointAt(ratio));
+                    }
+                    const subCurve = new THREE.CatmullRomCurve3(subPoints);
+                    if (leftTributaryMesh.geometry) {
+                        leftTributaryMesh.geometry.dispose();
+                    }
+                    const segments = Math.max(4, Math.floor(tributaryProgress * 32));
+                    leftTributaryMesh.geometry = new THREE.TubeGeometry(subCurve, segments, 1.2, 8, false);
+                } else {
+                    leftTributaryMesh.visible = false;
+                }
+            }
+
+            // Rebuild Right Tributary on scroll progress (Collaboration stage: 0.36 to 0.52)
+            if (rightTributaryMesh && rapidsGroup && rapidsGroup.visible && rightTributaryCurve) {
+                const tributaryProgress = Mathutils.map(currentCameraPercentage, 0.36, 0.52, 0.0, 1.0);
+                if (tributaryProgress > 0.02) {
+                    rightTributaryMesh.visible = true;
+                    const subPoints = [];
+                    const numPoints = 20;
+                    for (let i = 0; i <= numPoints; i++) {
+                        const ratio = (i / numPoints) * tributaryProgress;
+                        subPoints.push(rightTributaryCurve.getPointAt(ratio));
+                    }
+                    const subCurve = new THREE.CatmullRomCurve3(subPoints);
+                    if (rightTributaryMesh.geometry) {
+                        rightTributaryMesh.geometry.dispose();
+                    }
+                    const segments = Math.max(4, Math.floor(tributaryProgress * 32));
+                    rightTributaryMesh.geometry = new THREE.TubeGeometry(subCurve, segments, 1.2, 8, false);
+                } else {
+                    rightTributaryMesh.visible = false;
                 }
             }
 
