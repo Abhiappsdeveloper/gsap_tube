@@ -1928,6 +1928,13 @@
             // Preload texture
             spikeyTexture = new THREE.TextureLoader().load('https://s3-us-west-2.amazonaws.com/s.cdpn.io/68819/spikey.png');
 
+            // Simple glowing flowing river material used by side tributaries
+            const simpleRiverMat = new THREE.MeshBasicMaterial({
+                color: 0x00d4ff,
+                transparent: true,
+                opacity: 0.7
+            });
+
             // 1. Stage 3: COLLABORATION - Jagged rapids rocks (created first for proximity weight precalculation)
             rapidsGroup = new THREE.Group();
             const rockMat = new THREE.MeshPhysicalMaterial({
@@ -1990,6 +1997,59 @@
             const collaborationLight = new THREE.PointLight(0x00a8ff, 2.0, 150);
             collaborationLight.position.set(60, -15, 60);
             rapidsGroup.add(collaborationLight);
+
+            // Create Left and Right Tributaries at the start of the Collaboration Stage
+            const leftTributaryPoints = [];
+            for (let i = 0; i <= 15; i++) {
+                const ratio = 0.36 + (i / 15) * (0.52 - 0.36);
+                const node = path.getPointAt(ratio);
+                const tangent = path.getTangentAt(ratio).normalize();
+                const rightVec = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
+
+                // Curves out to the left (offset from -6 to -36)
+                const t = i / 15;
+                const offset = -6.0 - t * 30.0;
+
+                leftTributaryPoints.push(new THREE.Vector3(
+                    node.x + rightVec.x * offset,
+                    node.y - 9.8,
+                    node.z + rightVec.z * offset
+                ));
+            }
+            const leftTributaryCurve = new THREE.CatmullRomCurve3(leftTributaryPoints);
+            const leftTributaryMesh = new THREE.Mesh(
+                new THREE.TubeGeometry(leftTributaryCurve, 32, 1.2, 8, false),
+                simpleRiverMat
+            );
+            leftTributaryMesh.receiveShadow = true;
+            leftTributaryMesh.castShadow = true;
+            rapidsGroup.add(leftTributaryMesh);
+
+            const rightTributaryPoints = [];
+            for (let i = 0; i <= 15; i++) {
+                const ratio = 0.36 + (i / 15) * (0.52 - 0.36);
+                const node = path.getPointAt(ratio);
+                const tangent = path.getTangentAt(ratio).normalize();
+                const rightVec = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
+
+                // Curves out to the right (offset from +6 to +25)
+                const t = i / 15;
+                const offset = 6.0 + t * 19.0;
+
+                rightTributaryPoints.push(new THREE.Vector3(
+                    node.x + rightVec.x * offset,
+                    node.y - 9.8,
+                    node.z + rightVec.z * offset
+                ));
+            }
+            const rightTributaryCurve = new THREE.CatmullRomCurve3(rightTributaryPoints);
+            const rightTributaryMesh = new THREE.Mesh(
+                new THREE.TubeGeometry(rightTributaryCurve, 32, 1.2, 8, false),
+                simpleRiverMat
+            );
+            rightTributaryMesh.receiveShadow = true;
+            rightTributaryMesh.castShadow = true;
+            rapidsGroup.add(rightTributaryMesh);
 
             // 2. Reflective River/Lake Water Plane with Proximity Foam & Ripple Weights
             const waterGeom = new THREE.PlaneGeometry(1000, 1000, 48, 48);
@@ -2657,12 +2717,6 @@
             scene.add(canyonGroup);
 
             // Add simple glowing flowing river element - no shader injection
-            const simpleRiverMat = new THREE.MeshBasicMaterial({
-                color: 0x00d4ff,
-                emissive: 0x0088ff,
-                transparent: true,
-                opacity: 0.7
-            });
 
             // Create flowing river shape using simple cylinders
             const riverContainer = new THREE.Group();
