@@ -1740,7 +1740,23 @@
 
         //Create an empty scene
         var scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050b14);
+        var skyTextureCanvas = document.createElement('canvas');
+        skyTextureCanvas.width = 16;
+        skyTextureCanvas.height = 512;
+        var skyTextureCtx = skyTextureCanvas.getContext('2d');
+        var skyGradientTexture = new THREE.CanvasTexture(skyTextureCanvas);
+        skyGradientTexture.minFilter = THREE.LinearFilter;
+        skyGradientTexture.magFilter = THREE.LinearFilter;
+        scene.background = skyGradientTexture;
+
+        function updateSkyGradient(topColor, bottomColor) {
+            var grad = skyTextureCtx.createLinearGradient(0, 0, 0, 512);
+            grad.addColorStop(0, topColor.getStyle());
+            grad.addColorStop(1, bottomColor.getStyle());
+            skyTextureCtx.fillStyle = grad;
+            skyTextureCtx.fillRect(0, 0, 16, 512);
+            skyGradientTexture.needsUpdate = true;
+        }
         scene.fog = new THREE.Fog(0x050b14, 0, 800);
 
         //Create a perspective camera
@@ -2699,16 +2715,17 @@
             // All trees removed - forestGroup now only contains structures and lines (see below)
             scene.add(forestGroup);
 
-            // Add glowing structures and flowing lines to EXCELLENCE stage
-            const excellenceStructureMat = new THREE.MeshBasicMaterial({
-                color: 0x00d4ff,
-                emissive: 0x0088ff,
+            const excellenceStructureMat = new THREE.MeshStandardMaterial({
+                color: 0x010815,
+                emissive: 0x0066ff, // Royal Blue light color like in attached image
+                emissiveIntensity: 2.0,
+                roughness: 0.15,
+                metalness: 0.85,
                 transparent: true,
                 opacity: 0.8
             });
 
             // Create glowing cyan rectangular structures (buildings/vision)
-            const excellenceContainer = new THREE.Group();
             const structurePositions = [
                 { x: -35, y: -5, z: 40, scale: 1.8 },
                 { x: 0, y: -6, z: 50, scale: 1.2 },
@@ -2725,9 +2742,11 @@
                 );
                 const structure = new THREE.Mesh(structGeom, excellenceStructureMat);
                 structure.position.set(pos.x, pos.y, pos.z);
-                excellenceContainer.add(structure);
+                structure.castShadow = true;
+                structure.receiveShadow = true;
+                structure.userData.isStructure = true;
+                forestGroup.add(structure);
             });
-            forestGroup.add(excellenceContainer);
 
 
 
@@ -3116,8 +3135,8 @@
             if (pct < 0.15) {
                 let t = Mathutils.map(pct, 0, 0.15, 0, 1);
                 sunColor = new THREE.Color(0x00d4ff).lerp(new THREE.Color(0x0099ff), t);
-                skyColor = new THREE.Color(0x081630);
-                fogColor = new THREE.Color(0x050b14).lerp(new THREE.Color(0x0a1824), t);
+                skyColor = new THREE.Color(0x010714);
+                fogColor = new THREE.Color(0x184175);
                 tintColor = new THREE.Color(0.85, 0.95, 1.05).lerp(new THREE.Color(0.9, 1.0, 1.0), t);
                 exposure = Mathutils.map(pct, 0, 0.15, 1.4, 1.15);
                 contrast = 1.08;
@@ -3128,8 +3147,8 @@
             } else if (pct < 0.52) {
                 let t = Mathutils.map(pct, 0.15, 0.52, 0, 1);
                 sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
-                skyColor = new THREE.Color(0x0d1f33);
-                fogColor = new THREE.Color(0x0a1824).lerp(new THREE.Color(0x16120f), t);
+                skyColor = new THREE.Color(0x010714);
+                fogColor = new THREE.Color(0x184175);
                 tintColor = new THREE.Color(0.9, 1.0, 1.0).lerp(new THREE.Color(1.08, 0.95, 0.85), t);
                 exposure = 1.45;
                 contrast = 1.12;
@@ -3140,8 +3159,8 @@
             } else if (pct < 0.88) {
                 let t = Mathutils.map(pct, 0.52, 0.88, 0, 1);
                 sunColor = new THREE.Color(0xffb703).lerp(new THREE.Color(0x0099ff), t);
-                skyColor = new THREE.Color(0x0a1c1a);
-                fogColor = new THREE.Color(0x16120f).lerp(new THREE.Color(0x0a1410), t);
+                skyColor = new THREE.Color(0x010714);
+                fogColor = new THREE.Color(0x184175);
                 tintColor = new THREE.Color(1.08, 0.95, 0.85).lerp(new THREE.Color(0.95, 1.05, 0.95), t);
                 exposure = 1.55;
                 contrast = 1.05;
@@ -3152,8 +3171,8 @@
             } else {
                 let t = Mathutils.map(pct, 0.88, 0.96, 0, 1);
                 sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
-                skyColor = new THREE.Color(0x180b20);
-                fogColor = new THREE.Color(0x0a1410).lerp(new THREE.Color(0x25141e), t);
+                skyColor = new THREE.Color(0x010714);
+                fogColor = new THREE.Color(0x184175);
                 tintColor = new THREE.Color(0.95, 1.05, 0.95).lerp(new THREE.Color(1.12, 0.9, 1.02), t);
                 exposure = Mathutils.map(pct, 0.88, 0.96, 1.45, 1.75);
                 contrast = 1.08;
@@ -3163,6 +3182,7 @@
                 sunLightIntensity = Mathutils.map(pct, 0.88, 0.96, 0.85, 0.75); // twilight glow for delta/bay
             }
 
+            updateSkyGradient(skyColor, fogColor);
             scene.fog.color.copy(fogColor);
             renderer.setClearColor(fogColor);
 
@@ -3239,10 +3259,13 @@
                 else if (pct > 0.69) opacity = Mathutils.map(pct, 0.69, 0.72, 1, 0);
                 if (pct > 0.72 || pct < 0.52) opacity = 0;
                 forestGroup.visible = (opacity > 0);
-                forestGroup.children.forEach(child => {
+                forestGroup.children.forEach((child, idx) => {
                     if (child.material) {
                         child.material.transparent = true;
                         child.material.opacity = opacity;
+                        if (child.userData.isStructure) {
+                            child.material.emissiveIntensity = 2.0 * (0.8 + 0.4 * Math.sin(idx + Date.now() * 0.002)) * opacity;
+                        }
                     }
                 });
             }
