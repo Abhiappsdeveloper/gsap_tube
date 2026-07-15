@@ -2693,24 +2693,7 @@
             }
             scene.add(canyonGroup);
 
-            // Add simple glowing flowing river element - no shader injection
 
-            // Create flowing river shape using simple cylinders
-            const riverContainer = new THREE.Group();
-            for (let i = 0; i < 6; i++) {
-                const riverPart = new THREE.Mesh(
-                    new THREE.CylinderGeometry(1.2, 1.0, 6, 8),
-                    simpleRiverMat
-                );
-                riverPart.position.set(
-                    Math.sin(i * 0.5) * 8,
-                    -5 - i * 1.2,
-                    i * 2 - 5
-                );
-                riverPart.rotation.z = Math.sin(i) * 0.2;
-                riverContainer.add(riverPart);
-            }
-            canyonGroup.add(riverContainer);
 
 
 
