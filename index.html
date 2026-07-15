@@ -2908,82 +2908,8 @@
                 const capGeom = new THREE.CylinderGeometry(pos.rx * 0.82, pos.rx * 0.8, 0.2, 8);
                 const capMesh = new THREE.Mesh(capGeom, sandMat);
                 capMesh.position.set(pos.x, pos.y + pos.ry + 0.1, pos.z);
-                oceanGroup.add(capMesh);
-
-                // If it's the second island, build a lighthouse on it!
-                if (idx === 1) {
-                    const lighthouseGroup = new THREE.Group();
-                    lighthouseGroup.position.set(pos.x, pos.y + pos.ry, pos.z);
-
-                    // 1. Tower Body
-                    const towerGeom = new THREE.CylinderGeometry(1.2, 2.2, 16, 8);
-                    const towerMat = new THREE.MeshStandardMaterial({
-                        color: 0xdddddd,
-                        roughness: 0.8,
-                        metalness: 0.1
-                    });
-                    const tower = new THREE.Mesh(towerGeom, towerMat);
-                    tower.position.y = 8;
-                    tower.castShadow = true;
-                    lighthouseGroup.add(tower);
-
-                    // Red bands on the tower
-                    const bandGeom = new THREE.CylinderGeometry(1.5, 1.8, 4, 8);
-                    const bandMat = new THREE.MeshStandardMaterial({ color: 0x992222, roughness: 0.8 });
-                    const redBand = new THREE.Mesh(bandGeom, bandMat);
-                    redBand.position.y = 10;
-                    lighthouseGroup.add(redBand);
-
-                    // 2. Platform
-                    const platformGeom = new THREE.CylinderGeometry(2.0, 2.0, 0.4, 8);
-                    const platformMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 });
-                    const platform = new THREE.Mesh(platformGeom, platformMat);
-                    platform.position.y = 16.2;
-                    lighthouseGroup.add(platform);
-
-                    // 3. Lantern Room
-                    const lanternGeom = new THREE.CylinderGeometry(1.2, 1.2, 2.0, 6, 1, true);
-                    const lanternMat = new THREE.MeshStandardMaterial({
-                        color: 0x111111,
-                        roughness: 0.1,
-                        transparent: true,
-                        opacity: 0.3
-                    });
-                    const lantern = new THREE.Mesh(lanternGeom, lanternMat);
-                    lantern.position.y = 17.4;
-                    lighthouseGroup.add(lantern);
-
-                    // 4. Dome
-                    const domeGeom = new THREE.SphereGeometry(1.2, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-                    const dome = new THREE.Mesh(domeGeom, platformMat);
-                    dome.position.y = 18.4;
-                    lighthouseGroup.add(dome);
-
-                    // 5. Bulb
-                    const bulbGeom = new THREE.SphereGeometry(0.5, 8, 8);
-                    const bulbMat = new THREE.MeshBasicMaterial({ color: 0xfff3a8 });
-                    const bulb = new THREE.Mesh(bulbGeom, bulbMat);
-                    bulb.position.y = 17.4;
-                    lighthouseGroup.add(bulb);
-
-                    // 6. Rotating light beam (Horizontal cone)
-                    const beamGeom = new THREE.ConeGeometry(3.5, 45, 8);
-                    beamGeom.rotateX(Math.PI / 2);
-                    beamGeom.translate(0, 0, 22.5); // pivot at apex
-                    const beamMat = new THREE.MeshBasicMaterial({
-                        color: 0xfff099,
-                        transparent: true,
-                        opacity: 0.28,
-                        blending: THREE.AdditiveBlending,
-                        side: THREE.DoubleSide
-                    });
-                    lighthouseBeam = new THREE.Mesh(beamGeom, beamMat);
-                    lighthouseBeam.position.set(0, 17.4, 0);
-                    lighthouseGroup.add(lighthouseBeam);
-
-                    oceanGroup.add(lighthouseGroup);
-                }
             });
+
 
             // Create 5 simple sailboats floating on the bay
             const sailMat = new THREE.MeshStandardMaterial({
@@ -3918,10 +3844,7 @@
                 });
             }
 
-            // Rotate lighthouse beam if active
-            if (lighthouseBeam) {
-                lighthouseBeam.rotation.y += 0.015;
-            }
+
 
 
 
