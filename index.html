@@ -2772,32 +2772,6 @@
             });
             forestGroup.add(excellenceContainer);
 
-            // Add flowing lines across the landscape
-            const excellenceLineMat = new THREE.LineBasicMaterial({
-                color: 0x00e8ff,
-                transparent: true,
-                opacity: 0.85,
-                linewidth: 2,
-                fog: false
-            });
-
-            const excellenceLinesContainer = new THREE.Group();
-            for (let e = 0; e < 10; e++) {
-                const lineGeom = new THREE.BufferGeometry();
-                const linePoints = [];
-                for (let l = 0; l < 100; l++) {
-                    const t = l / 100;
-                    linePoints.push(new THREE.Vector3(
-                        -60 + t * 120 + Math.sin(t * Math.PI + e * 0.4) * 6,
-                        -10 + Math.cos(t * Math.PI * 1.5 + e * 0.3) * 3,
-                        30 + e * 4 + Math.sin(t * Math.PI * 2 + e * 0.2) * 5
-                    ));
-                }
-                lineGeom.setFromPoints(linePoints);
-                const line = new THREE.Line(lineGeom, excellenceLineMat);
-                excellenceLinesContainer.add(line);
-            }
-            forestGroup.add(excellenceLinesContainer);
 
 
             // 8. Stage 5: PURPOSE - Branching streams
@@ -2850,31 +2824,7 @@
             oceanPlane.receiveShadow = true;
             oceanGroup.add(oceanPlane);
 
-            const horizonGlowGeom = new THREE.PlaneGeometry(500, 120);
-            const horizonGlowMat = new THREE.MeshBasicMaterial({
-                color: 0x0099ff,
-                transparent: true,
-                opacity: 0.12,
-                side: THREE.DoubleSide
-            });
-            const horizonGlow = new THREE.Mesh(horizonGlowGeom, horizonGlowMat);
-            horizonGlow.position.set(destinationPoint.x + 120, 10, destinationPoint.z);
-            horizonGlow.rotation.y = Math.PI / 2;
-            oceanGroup.add(horizonGlow);
 
-            for (let i = 0; i < 30; i++) {
-                const hazeMesh = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.5, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0x0099ff, transparent: true, opacity: 0.35 })
-                );
-                hazeMesh.userData.isHaze = true;
-                hazeMesh.position.set(
-                    destinationPoint.x + (Math.random() - 0.5) * 160,
-                    -6 + Math.random() * 10,
-                    destinationPoint.z + (Math.random() - 0.5) * 160
-                );
-                oceanGroup.add(hazeMesh);
-            }
 
             // Coastal Islands, Lighthouse & Sailboats (Maritime Delta)
             const islandMat = new THREE.MeshStandardMaterial({
@@ -2911,77 +2861,6 @@
             });
 
 
-            // Create 5 simple sailboats floating on the bay
-            const sailMat = new THREE.MeshStandardMaterial({
-                color: 0xe8e8e8,
-                roughness: 0.9,
-                side: THREE.DoubleSide
-            });
-            const hullMat = new THREE.MeshStandardMaterial({
-                color: 0x3d2715,
-                roughness: 0.8
-            });
-
-            const boatPositions = [
-                { x: destinationPoint.x - 80, z: destinationPoint.z - 20, scale: 0.9, rot: 0.8 },
-                { x: destinationPoint.x + 20, z: destinationPoint.z + 90, scale: 1.1, rot: -1.2 },
-                { x: destinationPoint.x - 20, z: destinationPoint.z + 50, scale: 0.75, rot: 2.1 },
-                { x: destinationPoint.x + 100, z: destinationPoint.z + 10, scale: 1.0, rot: -0.4 },
-                { x: destinationPoint.x - 110, z: destinationPoint.z - 90, scale: 0.8, rot: 1.5 }
-            ];
-
-            boatPositions.forEach((pos) => {
-                const boatGroup = new THREE.Group();
-                boatGroup.position.set(pos.x, -9.6, pos.z);
-                boatGroup.rotation.y = pos.rot;
-                boatGroup.scale.set(pos.scale, pos.scale, pos.scale);
-
-                // Hull
-                const hullGeom = new THREE.BoxGeometry(3.6, 0.6, 1.4);
-                const hull = new THREE.Mesh(hullGeom, hullMat);
-                hull.castShadow = true;
-                boatGroup.add(hull);
-
-                // Bow
-                const bowGeom = new THREE.ConeGeometry(0.8, 1.2, 3);
-                bowGeom.rotateX(Math.PI / 2);
-                bowGeom.rotateY(Math.PI);
-                bowGeom.scale(1.4, 0.6, 1.0);
-                const bow = new THREE.Mesh(bowGeom, hullMat);
-                bow.position.set(0, 0, 2.2);
-                boatGroup.add(bow);
-
-                // Mast
-                const mastGeom = new THREE.CylinderGeometry(0.06, 0.08, 5.0, 5);
-                const mast = new THREE.Mesh(mastGeom, hullMat);
-                mast.position.set(0, 2.5, 0.4);
-                boatGroup.add(mast);
-
-                // Sails
-                const mainSailGeom = new THREE.BufferGeometry();
-                const vertices = new Float32Array([
-                    0, 0.5, 0.4,
-                    0, 4.5, 0.4,
-                    0, 0.8, -1.8
-                ]);
-                mainSailGeom.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-                mainSailGeom.computeVertexNormals();
-                const mainSail = new THREE.Mesh(mainSailGeom, sailMat);
-                boatGroup.add(mainSail);
-
-                const jibSailGeom = new THREE.BufferGeometry();
-                const jibVertices = new Float32Array([
-                    0, 0.6, 2.0,
-                    0, 3.8, 0.4,
-                    0, 0.6, 0.6
-                ]);
-                jibSailGeom.addAttribute('position', new THREE.BufferAttribute(jibVertices, 3));
-                jibSailGeom.computeVertexNormals();
-                const jibSail = new THREE.Mesh(jibSailGeom, sailMat);
-                boatGroup.add(jibSail);
-
-                oceanGroup.add(boatGroup);
-            });
 
 
 
@@ -3148,11 +3027,7 @@
         // Initialize custom 3D scenes
         initCustomStages();
 
-        //Create a point light in our scene
-        //Create a camera point light in our scene
-        var light = new THREE.PointLight(0xfff4e0, .35, 120, 1.0); // Increased distance range to 120 units for canyon illumination
-        light.castShadow = true;
-        scene.add(light);
+
 
         let lastCameraPercentage = 0;
         let smoothCameraPercent = 0;
@@ -3242,8 +3117,7 @@
             // FPV camera roll
             camera.rotation.z = cameraRotationZ;
 
-            // Follow-light position
-            light.position.set(p2.x, p2.y, p2.z);
+
 
             // 4. Velocity-based FOV (Lens breathing)
             const velocity = Math.abs(smoothCameraPercent - lastCameraPercentage);
@@ -3801,9 +3675,7 @@
                 riverLight.position.copy(lightPos);
                 riverLight.visible = (currentCameraPercentage >= 0.15);
             }
-            if (light) {
-                light.intensity = (currentCameraPercentage < 0.15) ? 0.0 : 0.35;
-            }
+
             if (riverLine) {
                 riverLine.visible = (currentCameraPercentage > 0.15);
                 const flowSpeed = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.52) ? 0.003 : 0.0012;
