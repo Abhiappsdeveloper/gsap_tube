@@ -3258,20 +3258,26 @@
                 }
             }
 
-            // Elevate the camera Y position during top view to look from a higher altitude (increasing visible landscape distance)
+            const normalX = p1.x + noiseX - tangent.x * startOffset;
+            const normalY = p1.y + noiseY - tangent.y * startOffset;
+            const normalZ = p1.z + noiseZ - tangent.z * startOffset;
+
+            // Stable high altitude for the top-down view (so it doesn't dip and rise during transition)
+            const topViewY = 85.0;
+
             c.position.set(
-                p1.x + noiseX - tangent.x * startOffset,
-                p1.y + noiseY - tangent.y * startOffset + (topViewBlend * 75.0), // Elevated by 75 units for high-altitude drone overview
-                p1.z + noiseZ - tangent.z * startOffset
+                normalX,
+                normalY + (topViewY - normalY) * topViewBlend, // Directly blends to the stable high altitude
+                normalZ
             );
 
             // Cinematic Look-Ahead Bias: tilt slightly upward when descending inside the canyon
             // Adjust to top-down angle during Innovation & Collaboration Stages (0.15 to 0.52)
             const lookTarget = p2.clone();
             if (smoothCameraPercent >= 0.15 && smoothCameraPercent < 0.52) {
-                const normalY = lookTarget.y + 3.5;
-                const topDownY = p1.y - 120.0; // Aim camera steep downward below the landscape to match the higher elevation
-                lookTarget.y = normalY + (topDownY - normalY) * topViewBlend;
+                const normalLookY = lookTarget.y + 3.5;
+                const topDownLookY = -10.0; // Point camera straight down at the riverbed level
+                lookTarget.y = normalLookY + (topDownLookY - normalLookY) * topViewBlend;
 
                 // Adjust up-vector to prevent flipping/spinning at near-vertical angles
                 const normalUp = new THREE.Vector3(0, 1, 0);
