@@ -1437,7 +1437,7 @@
         let deltaGroup;
         let oceanGroup;
         let customWater;
-        let sparkleGroup;
+
         let sunLight;
         let cinematicPass;
         let prevFrameTarget;
@@ -1993,10 +1993,6 @@
 
 
 
-            // Add point light to illuminate the landscape from water (light source below)
-            const collaborationLight = new THREE.PointLight(0x00a8ff, 2.0, 150);
-            collaborationLight.position.set(60, -15, 60);
-            rapidsGroup.add(collaborationLight);
 
             // Create Left and Right Tributaries at the start of the Collaboration Stage
             const leftTributaryPoints = [];
@@ -2201,21 +2197,6 @@
                 scene.add(mRight);
             }
 
-            // Sparkle/mist particles drifting through the air across the whole valley
-            sparkleGroup = new THREE.Group();
-            for (let i = 0; i < 65; i++) {
-                const sparkle = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.18, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0x0099ff, transparent: true, opacity: 0.85 })
-                );
-                sparkle.position.set(
-                    sourcePointNode.x + (Math.random() - 0.5) * 150,
-                    -9 + Math.random() * 8,
-                    sourcePointNode.z + (Math.random() - 0.5) * 150
-                );
-                sparkleGroup.add(sparkle);
-            }
-            scene.add(sparkleGroup);
 
             // 4. Stage 0: SOURCE - Central glowing hero box flanked by two dark silhouetted
             const heroP1 = path.getPointAt(0);
@@ -3832,25 +3813,6 @@
                 }
             }
 
-            // Drift sparkles/mist through the valley air in wind direction
-            if (sparkleGroup) {
-                sparkleGroup.visible = (currentCameraPercentage < 0.15);
-                if (sparkleGroup.visible) {
-                    const windShiftX = WorldPhysicsState.windVector.x * WorldPhysicsState.windSpeed * 0.01;
-                    const windShiftZ = WorldPhysicsState.windVector.z * WorldPhysicsState.windSpeed * 0.01;
-                    sparkleGroup.children.forEach((sp, idx) => {
-                        sp.position.y += Math.sin(idx + Date.now() * 0.0012) * 0.012;
-                        sp.position.x += Math.cos(idx + Date.now() * 0.001) * 0.008 + windShiftX;
-                        sp.position.z += windShiftZ;
-
-                        // Boundary recycling
-                        if (Math.abs(sp.position.x) > 300 || Math.abs(sp.position.z) > 300) {
-                            sp.position.x = (Math.random() - 0.5) * 150;
-                            sp.position.z = (Math.random() - 0.5) * 150;
-                        }
-                    });
-                }
-            }
 
             // 2. Stage 1: FUTURE Monolith rotations
             if (sourcePeaksGroup) {
@@ -3961,10 +3923,7 @@
                 lighthouseBeam.rotation.y += 0.015;
             }
 
-            // Starfields slow rotation
-            particleSystem1.rotation.y += 0.00002;
-            particleSystem2.rotation.x += 0.00005;
-            particleSystem3.rotation.z += 0.00001;
+
 
             // Post-processing passes and temporal frame copying
             if (cinematicPass) {
@@ -4063,59 +4022,7 @@
         // Initialize HUD frame path coordinates on startup
         updateHUDFrame();
 
-        //particle system
 
-        var particleCount = 6800,
-            particles1 = new THREE.Geometry(),
-            particles2 = new THREE.Geometry(),
-            particles3 = new THREE.Geometry(),
-            pMaterial = new THREE.ParticleBasicMaterial({
-                color: 0xFFFFFF,
-                size: .5,
-                map: spikeyTexture,
-                transparent: true,
-                blending: THREE.AdditiveBlending
-            });
-
-        // now create the individual particles
-        for (var p = 0; p < particleCount; p++) {
-            var pX = Math.random() * 500 - 250,
-                pY = Math.random() * 50 - 25,
-                pZ = Math.random() * 500 - 250,
-                particle = new THREE.Vector3(pX, pY, pZ);
-
-            particles1.vertices.push(particle);
-        }
-
-        // now create the individual particles
-        for (var p = 0; p < particleCount; p++) {
-            var pX = Math.random() * 500,
-                pY = Math.random() * 10 - 5,
-                pZ = Math.random() * 500,
-                particle = new THREE.Vector3(pX, pY, pZ);
-
-            particles2.vertices.push(particle);
-        }
-
-        // now create the individual particles
-        for (var p = 0; p < particleCount; p++) {
-            var pX = Math.random() * 500,
-                pY = Math.random() * 10 - 5,
-                pZ = Math.random() * 500,
-                particle = new THREE.Vector3(pX, pY, pZ);
-
-            particles3.vertices.push(particle);
-        }
-
-        // create the particle system
-        var particleSystem1 = new THREE.ParticleSystem(particles1, pMaterial);
-        var particleSystem2 = new THREE.ParticleSystem(particles2, pMaterial);
-        var particleSystem3 = new THREE.ParticleSystem(particles3, pMaterial);
-
-        // add it to the scene
-        scene.add(particleSystem1);
-        scene.add(particleSystem2);
-        scene.add(particleSystem3);
 
         document.addEventListener('mousemove', function (evt) {
             cameraRotationProxyX = Mathutils.map(evt.clientX, 0, window.innerWidth, 3.24, 3.04);
