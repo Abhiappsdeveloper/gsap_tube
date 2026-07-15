@@ -1979,6 +1979,7 @@
                 var splashParticles = new THREE.Points(splashGeom, splashMat);
                 splashParticles.position.copy(rock.position);
                 splashParticles.userData.isSplash = true;
+                splashParticles.visible = false; // Hide the splash particles visually
                 rapidsGroup.add(splashParticles);
             }
             scene.add(rapidsGroup);
