@@ -2818,12 +2818,6 @@
             }
             forestGroup.add(excellenceLinesContainer);
 
-            // Add point lights from the glowing structures to illuminate landscape
-            structurePositions.forEach(pos => {
-                const structLight = new THREE.PointLight(0x0088ff, 1.5, 120);
-                structLight.position.set(pos.x, pos.y + 5, pos.z);
-                forestGroup.add(structLight);
-            });
 
             // 8. Stage 5: PURPOSE - Branching streams
             deltaGroup = new THREE.Group();
