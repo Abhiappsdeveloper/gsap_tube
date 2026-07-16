@@ -2597,15 +2597,19 @@
             });
             scene.add(futureMountainSilhouettes);
 
-            // 5. Primary River - flows the entire length of the valley
+            // 5. Primary River - flows from the start of the canyon (0.15) to the end (0.96)
             const riverPoints = [];
             for (let i = 0; i <= 60; i++) {
-                const ratio = (i / 60) * 0.96;
+                const ratio = 0.15 + (i / 60) * (0.96 - 0.15);
                 const node = path.getPointAt(ratio);
                 riverPoints.push(new THREE.Vector3(node.x, node.y - 9.8, node.z));
             }
             riverCurve = new THREE.CatmullRomCurve3(riverPoints);
-            const riverTubeGeom = new THREE.TubeGeometry(riverCurve, 240, 3.2, 8, false);
+            // Initialize with a tiny segment at 0.15 to avoid rendering a full static river structure at startup
+            const riverTubeGeom = new THREE.TubeGeometry(
+                new THREE.CatmullRomCurve3([riverPoints[0], riverPoints[1]]),
+                10, 3.2, 8, false
+            );
             const riverWaterTexture = new THREE.CanvasTexture(waterCanvas);
             riverWaterTexture.wrapS = THREE.RepeatWrapping;
             riverWaterTexture.wrapT = THREE.RepeatWrapping;
@@ -3642,13 +3646,22 @@
                 const flowSpeed = (currentCameraPercentage >= 0.15 && currentCameraPercentage < 0.52) ? 0.003 : 0.0012;
                 riverLine.material.emissiveIntensity = 0.35 + Math.sin(Date.now() * flowSpeed) * 0.15;
 
+                // Fade in river opacity to prevent vertical column pop-in at 16% scroll
+                if (currentCameraPercentage < 0.28) {
+                    riverLine.material.opacity = Mathutils.map(currentCameraPercentage, 0.15, 0.28, 0.0, 0.7);
+                } else {
+                    riverLine.material.opacity = 0.7;
+                }
+
                 if (riverLine.visible) {
                     const currentEndRatio = Math.min(currentCameraPercentage, 0.96);
-                    if (currentEndRatio > 0.05) {
+                    const startRatio = 0.15;
+                    const endRatio = Math.max(startRatio, currentEndRatio);
+                    if (endRatio > startRatio) {
                         const subPoints = [];
                         const numPoints = 60;
                         for (let i = 0; i <= numPoints; i++) {
-                            const ratio = (i / numPoints) * currentEndRatio;
+                            const ratio = startRatio + (i / numPoints) * (endRatio - startRatio);
                             const node = path.getPointAt(ratio);
                             subPoints.push(new THREE.Vector3(node.x, node.y - 9.8, node.z));
                         }
@@ -3660,11 +3673,11 @@
                         }
 
                         // Generate dynamic segments count and rebuild geometry
-                        const segments = Math.max(10, Math.floor((currentEndRatio / 0.96) * 240));
+                        const segments = Math.max(10, Math.floor(((endRatio - startRatio) / 0.81) * 240));
                         riverLine.geometry = new THREE.TubeGeometry(subCurve, segments, 3.2, 8, false);
 
                         // Keep texture flow scaling consistent
-                        const repeatV = (currentEndRatio / 0.96) * 32;
+                        const repeatV = ((endRatio - startRatio) / 0.81) * 32;
                         if (riverLine.material.map) {
                             riverLine.material.map.repeat.y = repeatV;
                         }
