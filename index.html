@@ -1393,67 +1393,79 @@
          without modifying the original rockShaderInjection code or logic. -->
     <script>
         (function () {
-            // WebGL prototype debugger
-            try {
-                const devDiv = document.createElement('div');
-                devDiv.style.position = 'fixed';
-                devDiv.style.top = '10px';
-                devDiv.style.left = '10px';
-                devDiv.style.zIndex = '99999';
-                devDiv.style.background = 'rgba(0,0,0,0.85)';
-                devDiv.style.color = 'lime';
-                devDiv.style.fontFamily = 'monospace';
-                devDiv.style.padding = '10px';
-                devDiv.innerHTML = '<h3>WebGL Debugger</h3>';
+            // Create a floating debugger console on screen
+            const devConsole = document.createElement('div');
+            devConsole.id = 'dev-console-debugger';
+            devConsole.style.position = 'fixed';
+            devConsole.style.top = '10px';
+            devConsole.style.left = '10px';
+            devConsole.style.width = '600px';
+            devConsole.style.height = '400px';
+            devConsole.style.overflowY = 'scroll';
+            devConsole.style.zIndex = '999999';
+            devConsole.style.background = 'rgba(0,0,0,0.95)';
+            devConsole.style.color = '#00ff00';
+            devConsole.style.fontFamily = 'monospace';
+            devConsole.style.fontSize = '12px';
+            devConsole.style.padding = '10px';
+            devConsole.style.border = '2px solid #00ff00';
+            devConsole.innerHTML = '<h3>Floating Console Debugger</h3>';
+            document.documentElement.appendChild(devConsole);
 
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl');
-                if (!gl) {
-                    devDiv.innerHTML += 'No WebGL context<br>';
-                } else {
-                    devDiv.innerHTML += 'Context: ' + gl.constructor.name + '<br>';
-                    devDiv.innerHTML += 'gl.shaderSource exists on instance: ' + (gl.hasOwnProperty('shaderSource')) + '<br>';
-
-                    let proto = Object.getPrototypeOf(gl);
-                    while (proto) {
-                        devDiv.innerHTML += 'Proto: ' + proto.constructor.name + ' has shaderSource: ' + proto.hasOwnProperty('shaderSource') + '<br>';
-                        proto = Object.getPrototypeOf(proto);
-                    }
-                }
-                document.documentElement.appendChild(devDiv);
-            } catch (err) {
-                console.error("Debugger error:", err);
-            }
-
-            const patchShaderSource = function (source) {
-                if (source.includes('${shader.vertexShader}')) {
-                    let resolved = THREE.ShaderLib.physical.vertexShader;
-                    resolved = resolved.replace(
-                        '#include <worldpos_vertex>',
-                        '#include <worldpos_vertex>\nvWorldPos = worldPosition.xyz;'
-                    );
-                    source = source.replace('${shader.vertexShader}', resolved);
-                }
-                if (source.includes('${shader.fragmentShader}')) {
-                    let resolved = THREE.ShaderLib.physical.fragmentShader;
-                    resolved = resolved.replace(
-                        '#include <color_fragment>',
-                        '#include <color_fragment>\nfloat band = sin(vWorldPos.y * 0.6) * 0.12 + sin(vWorldPos.y * 2.2) * 0.04;\ndiffuseColor.rgb *= (0.9 + band);'
-                    ).replace(
-                        '#include <roughnessmap_fragment>',
-                        '#include <roughnessmap_fragment>\nfloat heightFactor = clamp((vWorldPos.y + 10.0) / 12.0, 0.0, 1.0);\nfloat wetness = (1.0 - heightFactor) * 0.85 * (0.65 + 0.35 * (typeof WorldPhysicsState !== \'undefined\' ? WorldPhysicsState.humidity : 0.5));\nroughnessFactor = mix(roughnessFactor, 0.04, wetness);'
-                    );
-                    source = source.replace('${shader.fragmentShader}', resolved);
-                }
-                return source;
+            window.logToDev = function (msg) {
+                devConsole.innerHTML += msg + '<br>';
+                devConsole.scrollTop = devConsole.scrollHeight;
             };
 
-            const BaseContext = typeof WebGLRenderingContextBase !== 'undefined' ? WebGLRenderingContextBase : WebGLRenderingContext;
-            const originalShaderSource = BaseContext.prototype.shaderSource;
-            Object.defineProperty(BaseContext.prototype, 'shaderSource', {
-                value: function (shader, source) {
-                    source = patchShaderSource(source);
-                    originalShaderSource.call(this, shader, source);
+            window.addEventListener('error', function (e) {
+                logToDev("<span style='color:red;'>JS ERROR: " + e.message + " at " + e.filename + ":" + e.lineno + "</span>");
+            });
+
+            logToDev("Canvas getContext patch loaded!");
+            const originalGetContext = HTMLCanvasElement.prototype.getContext;
+            Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+                value: function (type, attributes) {
+                    logToDev("Canvas getContext called with type: " + type);
+                    const gl = originalGetContext.call(this, type, attributes);
+                    if (gl && (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl')) {
+                        logToDev("Found WebGL/WebGL2 context, wrapping shaderSource!");
+                        const originalShaderSource = gl.shaderSource;
+                        gl.shaderSource = function (shader, source) {
+                            const expandIncludes = function (string) {
+                                const pattern = /^[ \t]*#include <([\w\.\-]+)>/gm;
+                                function replace(match, include) {
+                                    let chunk = THREE.ShaderChunk[include];
+                                    if (!chunk) return '';
+
+                                    if (include === 'worldpos_vertex') {
+                                        chunk = chunk + '\nvWorldPos = worldPosition.xyz;';
+                                    } else if (include === 'color_fragment') {
+                                        chunk = chunk + '\nfloat band = sin(vWorldPos.y * 0.6) * 0.12 + sin(vWorldPos.y * 2.2) * 0.04;\ndiffuseColor.rgb *= (0.9 + band);';
+                                    } else if (include === 'roughnessmap_fragment') {
+                                        chunk = chunk + '\nfloat heightFactor = clamp((vWorldPos.y + 10.0) / 12.0, 0.0, 1.0);\nfloat wetness = (1.0 - heightFactor) * 0.85 * (0.65 + 0.35 * ' + (typeof WorldPhysicsState !== 'undefined' ? WorldPhysicsState.humidity : 0.5) + ');\nroughnessFactor = mix(roughnessFactor, 0.04, wetness);';
+                                    }
+
+                                    return expandIncludes(chunk);
+                                }
+                                return string.replace(pattern, replace);
+                            };
+
+                            if (source.includes('${shader.vertexShader}')) {
+                                logToDev("Interceded vertex shader compile! Replacing...");
+                                let resolved = THREE.ShaderLib.physical.vertexShader;
+                                resolved = expandIncludes(resolved);
+                                source = source.replace('${shader.vertexShader}', resolved);
+                            }
+                            if (source.includes('${shader.fragmentShader}')) {
+                                logToDev("Interceded fragment shader compile! Replacing...");
+                                let resolved = THREE.ShaderLib.physical.fragmentShader;
+                                resolved = expandIncludes(resolved);
+                                source = source.replace('${shader.fragmentShader}', resolved);
+                            }
+                            originalShaderSource.call(this, shader, source);
+                        };
+                    }
+                    return gl;
                 },
                 writable: true,
                 configurable: true
