@@ -1388,6 +1388,74 @@
             <a href="#contact" class="footer-chat-btn">CHAT WITH US</a>
         </div>
     </footer>
+    <!-- Monkey-patch WebGL rendering context shaderSource to intercept and resolve
+         un-interpolated shader template literals at the browser native WebGL level,
+         without modifying the original rockShaderInjection code or logic. -->
+    <script>
+        (function () {
+            // WebGL prototype debugger
+            try {
+                const devDiv = document.createElement('div');
+                devDiv.style.position = 'fixed';
+                devDiv.style.top = '10px';
+                devDiv.style.left = '10px';
+                devDiv.style.zIndex = '99999';
+                devDiv.style.background = 'rgba(0,0,0,0.85)';
+                devDiv.style.color = 'lime';
+                devDiv.style.fontFamily = 'monospace';
+                devDiv.style.padding = '10px';
+                devDiv.innerHTML = '<h3>WebGL Debugger</h3>';
+                
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl');
+                if (!gl) {
+                    devDiv.innerHTML += 'No WebGL context<br>';
+                } else {
+                    devDiv.innerHTML += 'Context: ' + gl.constructor.name + '<br>';
+                    devDiv.innerHTML += 'gl.shaderSource exists on instance: ' + (gl.hasOwnProperty('shaderSource')) + '<br>';
+                    
+                    let proto = Object.getPrototypeOf(gl);
+                    while (proto) {
+                        devDiv.innerHTML += 'Proto: ' + proto.constructor.name + ' has shaderSource: ' + proto.hasOwnProperty('shaderSource') + '<br>';
+                        proto = Object.getPrototypeOf(proto);
+                    }
+                }
+                document.documentElement.appendChild(devDiv);
+            } catch (err) {
+                console.error("Debugger error:", err);
+            }
+
+            const patchShaderSource = function (source) {
+                if (source.includes('${shader.vertexShader}')) {
+                    let resolved = THREE.ShaderLib.physical.vertexShader;
+                    resolved = resolved.replace(
+                        '#include <worldpos_vertex>',
+                        '#include <worldpos_vertex>\nvWorldPos = worldPosition.xyz;'
+                    );
+                    source = source.replace('${shader.vertexShader}', resolved);
+                }
+                if (source.includes('${shader.fragmentShader}')) {
+                    let resolved = THREE.ShaderLib.physical.fragmentShader;
+                    resolved = resolved.replace(
+                        '#include <color_fragment>',
+                        '#include <color_fragment>\nfloat band = sin(vWorldPos.y * 0.6) * 0.12 + sin(vWorldPos.y * 2.2) * 0.04;\ndiffuseColor.rgb *= (0.9 + band);'
+                    ).replace(
+                        '#include <roughnessmap_fragment>',
+                        '#include <roughnessmap_fragment>\nfloat heightFactor = clamp((vWorldPos.y + 10.0) / 12.0, 0.0, 1.0);\nfloat wetness = (1.0 - heightFactor) * 0.85 * (0.65 + 0.35 * (typeof WorldPhysicsState !== \'undefined\' ? WorldPhysicsState.humidity : 0.5));\nroughnessFactor = mix(roughnessFactor, 0.04, wetness);'
+                    );
+                    source = source.replace('${shader.fragmentShader}', resolved);
+                }
+                return source;
+            };
+
+            const BaseContext = typeof WebGLRenderingContextBase !== 'undefined' ? WebGLRenderingContextBase : WebGLRenderingContext;
+            const originalShaderSource = BaseContext.prototype.shaderSource;
+            BaseContext.prototype.shaderSource = function (shader, source) {
+                source = patchShaderSource(source);
+                originalShaderSource.call(this, shader, source);
+            };
+        })();
+    </script>
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js'></script>
@@ -3113,15 +3181,27 @@
 
                 // Adjust up-vector to prevent flipping/spinning at near-vertical angles
                 const normalUp = new THREE.Vector3(0, 1, 0);
-                const topViewUp = new THREE.Vector3(tangent.x, 0, tangent.z).normalize();
+                let topViewUp;
+                if (smoothCameraPercent >= 0.36) {
+                    // Lock the top-view orientation to the horizontal direction at 0.36
+                    // to prevent landscape rotation after the second stage 'innovation' ends
+                    const fixedTangent = path.getTangentAt(0.36).normalize();
+                    topViewUp = new THREE.Vector3(fixedTangent.x, 0, fixedTangent.z).normalize();
+                } else {
+                    topViewUp = new THREE.Vector3(tangent.x, 0, tangent.z).normalize();
+                }
                 c.up.copy(normalUp.clone().lerp(topViewUp, topViewBlend));
             } else {
                 c.up.set(0, 1, 0);
             }
             c.lookAt(lookTarget);
 
-            // FPV camera roll
-            camera.rotation.z = cameraRotationZ;
+            // FPV camera roll (disabled after Stage 1 'innovation')
+            if (smoothCameraPercent >= 0.36) {
+                camera.rotation.z = 0;
+            } else {
+                camera.rotation.z = cameraRotationZ;
+            }
 
 
 
