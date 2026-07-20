@@ -1257,6 +1257,45 @@
         </div>
     </div>
 
+    <!-- HUD PRELOADER SIMULATION (ISOLATED IN INDEPENDENT SCRIPT BLOCK) -->
+    <script>
+        (function () {
+            const preloader = document.getElementById('hudPreloader');
+            const percentEl = document.getElementById('preloaderPercent');
+            const blocks = document.querySelectorAll('.hud-preloader-block');
+            const progressEl = document.getElementById('preloaderProgress');
+            const logoEl = document.getElementById('preloaderLogo');
+            let currentPercent = 0;
+
+            const interval = setInterval(() => {
+                currentPercent += Math.floor(Math.random() * 5) + 3;
+                if (currentPercent >= 100) {
+                    currentPercent = 100;
+                    clearInterval(interval);
+
+                    setTimeout(() => {
+                        progressEl.classList.add('hide');
+                        logoEl.classList.add('show');
+
+                        setTimeout(() => {
+                            preloader.classList.add('fade-out');
+                        }, 1000);
+                    }, 400);
+                }
+
+                percentEl.textContent = currentPercent + '%';
+
+                const activeBlocksCount = Math.floor((currentPercent / 100) * blocks.length);
+                blocks.forEach((block, index) => {
+                    if (index < activeBlocksCount) {
+                        block.classList.add('active');
+                    }
+                });
+            }, 80);
+        })();
+    </script>
+
+
     <!-- FIXED HUD BORDER FRAME -->
     <svg class="hud-frame-svg" id="hudFrameSvg" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
         <!-- Soft Glow Outer Path -->
@@ -4253,42 +4292,6 @@
                 playClickSound();
             });
         }
-
-        // HUD PRELOADER SIMULATION
-        (function () {
-            const preloader = document.getElementById('hudPreloader');
-            const percentEl = document.getElementById('preloaderPercent');
-            const blocks = document.querySelectorAll('.hud-preloader-block');
-            const progressEl = document.getElementById('preloaderProgress');
-            const logoEl = document.getElementById('preloaderLogo');
-            let currentPercent = 0;
-
-            const interval = setInterval(() => {
-                currentPercent += Math.floor(Math.random() * 5) + 3;
-                if (currentPercent >= 100) {
-                    currentPercent = 100;
-                    clearInterval(interval);
-
-                    setTimeout(() => {
-                        progressEl.classList.add('hide');
-                        logoEl.classList.add('show');
-
-                        setTimeout(() => {
-                            preloader.classList.add('fade-out');
-                        }, 1000);
-                    }, 400);
-                }
-
-                percentEl.textContent = currentPercent + '%';
-
-                const activeBlocksCount = Math.floor((currentPercent / 100) * blocks.length);
-                blocks.forEach((block, index) => {
-                    if (index < activeBlocksCount) {
-                        block.classList.add('active');
-                    }
-                });
-            }, 80);
-        })();
 
         // ===== UNIVERSAL TEXT LETTER ANIMATION =====
         function animateButtonLetters(element) {
