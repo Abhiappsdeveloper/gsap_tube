@@ -1450,10 +1450,14 @@
 
             const BaseContext = typeof WebGLRenderingContextBase !== 'undefined' ? WebGLRenderingContextBase : WebGLRenderingContext;
             const originalShaderSource = BaseContext.prototype.shaderSource;
-            BaseContext.prototype.shaderSource = function (shader, source) {
-                source = patchShaderSource(source);
-                originalShaderSource.call(this, shader, source);
-            };
+            Object.defineProperty(BaseContext.prototype, 'shaderSource', {
+                value: function (shader, source) {
+                    source = patchShaderSource(source);
+                    originalShaderSource.call(this, shader, source);
+                },
+                writable: true,
+                configurable: true
+            });
         })();
     </script>
 
