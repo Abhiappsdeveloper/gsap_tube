@@ -1405,7 +1405,7 @@
                 devDiv.style.fontFamily = 'monospace';
                 devDiv.style.padding = '10px';
                 devDiv.innerHTML = '<h3>WebGL Debugger</h3>';
-                
+
                 const canvas = document.createElement('canvas');
                 const gl = canvas.getContext('webgl');
                 if (!gl) {
@@ -1413,7 +1413,7 @@
                 } else {
                     devDiv.innerHTML += 'Context: ' + gl.constructor.name + '<br>';
                     devDiv.innerHTML += 'gl.shaderSource exists on instance: ' + (gl.hasOwnProperty('shaderSource')) + '<br>';
-                    
+
                     let proto = Object.getPrototypeOf(gl);
                     while (proto) {
                         devDiv.innerHTML += 'Proto: ' + proto.constructor.name + ' has shaderSource: ' + proto.hasOwnProperty('shaderSource') + '<br>';
