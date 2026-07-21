@@ -2929,15 +2929,15 @@
             // We place 9 heroboxes clustered ahead of the camera at scroll 66% (from 0.67 to 0.71)
             const exBoxStages = [0.67, 0.675, 0.68, 0.685, 0.69, 0.695, 0.70, 0.705, 0.71];
             const exBoxOffsets = [
-                { side: -1, distance: 7, height: 9, size: 4.6 },    // left, high
-                { side: 1, distance: 5, height: 8, size: 4 },       // right, high
-                { side: -1, distance: 6, height: 6, size: 5.3 },    // left, low
-                { side: 1, distance: 8, height: 10, size: 4.6 },    // right, high
-                { side: -1, distance: 4, height: 4, size: 3.3 },    // left, low, smaller
-                { side: 1, distance: 3, height: 2, size: 2 },       // right, close to landscape, decreased size
-                { side: -1, distance: 5, height: 7.5, size: 3.6 },  // left, high
-                { side: 1, distance: 4, height: 2, size: 2 },       // right, close to landscape, decreased size
-                { side: -1, distance: 3, height: 5, size: 4 }       // left, medium-low
+                { side: -1, distance: 18, height: 6, size: 4.6 },   // left, high
+                { side: 1, distance: 22, height: 5.3, size: 4 },    // right, high (new)
+                { side: -1, distance: 10, height: 4, size: 5.3 },   // left, low
+                { side: 1, distance: 14, height: 6.7, size: 4.6 },  // right, high (new)
+                { side: -1, distance: 15, height: 2.7, size: 3.3 }, // left, low, smaller
+                { side: 1, distance: 8, height: 1.3, size: 2 },     // right, close to landscape, decreased size
+                { side: -1, distance: 24, height: 5, size: 3.6 },   // left, high (new)
+                { side: 1, distance: 16, height: 3.5, size: 2 },    // right, close to landscape, decreased size
+                { side: -1, distance: 8, height: 3.3, size: 4 }     // left, medium-low
             ];
 
             exBoxStages.forEach((tPct, idx) => {
