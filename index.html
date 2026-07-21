@@ -3281,14 +3281,9 @@
             } else if (pct < 0.52) {
                 let t = Mathutils.map(pct, 0.15, 0.52, 0, 1);
                 sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
-                // For Innovation stage (0.15 to 0.36), make the background sky and fog pitch black
-                if (pct >= 0.15 && pct < 0.36) {
-                    skyColor = new THREE.Color(0x000000);
-                    fogColor = new THREE.Color(0x000000);
-                } else {
-                    skyColor = new THREE.Color(0x010714);
-                    fogColor = new THREE.Color(0x184175);
-                }
+                // For Innovation and Collaboration stages (0.15 to 0.52), make the background sky and fog pitch black
+                skyColor = new THREE.Color(0x000000);
+                fogColor = new THREE.Color(0x000000);
                 tintColor = new THREE.Color(0.9, 1.0, 1.0).lerp(new THREE.Color(1.08, 0.95, 0.85), t);
                 exposure = 1.45;
                 contrast = 1.12;
