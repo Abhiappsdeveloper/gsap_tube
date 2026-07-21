@@ -2762,6 +2762,10 @@
             riverLine.receiveShadow = true;
             scene.add(riverLine);
 
+            // Assign the same material to side tributaries so they match the main river
+            if (leftTributaryMesh) leftTributaryMesh.material = riverTubeMat;
+            if (rightTributaryMesh) rightTributaryMesh.material = riverTubeMat;
+
 
 
             // 6. Stage 2: INNOVATION - Jagged canyon walls flanking the descent into the river
