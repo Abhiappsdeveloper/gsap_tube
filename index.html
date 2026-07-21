@@ -1410,6 +1410,7 @@
             devConsole.style.padding = '10px';
             devConsole.style.border = '2px solid #00ff00';
             devConsole.innerHTML = '<h3>Floating Console Debugger</h3>';
+            devConsole.style.display = 'none';
             document.documentElement.appendChild(devConsole);
 
             window.logToDev = function (msg) {
@@ -2762,9 +2763,12 @@
             riverLine.receiveShadow = true;
             scene.add(riverLine);
 
-            // Assign the same material to side tributaries so they match the main river
-            if (leftTributaryMesh) leftTributaryMesh.material = riverTubeMat;
-            if (rightTributaryMesh) rightTributaryMesh.material = riverTubeMat;
+            // Configure the simpleRiverMat (used by side tributaries) to match the main river's texture and color
+            if (typeof simpleRiverMat !== 'undefined' && simpleRiverMat) {
+                simpleRiverMat.map = riverWaterTexture;
+                simpleRiverMat.color.setHex(0xffffff);
+                simpleRiverMat.needsUpdate = true;
+            }
 
 
 
