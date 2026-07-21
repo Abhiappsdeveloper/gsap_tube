@@ -2870,6 +2870,103 @@
                 forestGroup.add(structure);
             });
 
+            // Create multiple heroboxes (blue/cyan cubes) similar to the FUTURE stage herobox, flying just above the landscape
+            // We place them along the EXCELLENCE stage path (scroll progress 0.52 to 0.72)
+            const excellenceWaveformCanvas = document.createElement('canvas');
+            excellenceWaveformCanvas.width = 256;
+            excellenceWaveformCanvas.height = 256;
+            const exCtx = excellenceWaveformCanvas.getContext('2d');
+            const exGrad = exCtx.createLinearGradient(0, 0, 0, 256);
+            exGrad.addColorStop(0, '#1a3a4a');
+            exGrad.addColorStop(1, '#0f2a38');
+            exCtx.fillStyle = exGrad;
+            exCtx.fillRect(0, 0, 256, 256);
+
+            // Generate waveform texture logic
+            for (let y = 15; y < 250; y += 30) {
+                exCtx.strokeStyle = Math.random() > 0.5 ? '#00f5d4' : '#00d4ff';
+                exCtx.lineWidth = 1.0 + Math.random() * 1.0;
+                exCtx.globalAlpha = 0.5 + Math.random() * 0.45;
+                exCtx.beginPath();
+                exCtx.moveTo(0, y);
+                for (let x = 0; x <= 256; x += 10) {
+                    const amp = 4 + Math.random() * 8;
+                    const waveY = y + Math.sin(x * 0.1 + y) * amp;
+                    exCtx.lineTo(x, waveY);
+                }
+                exCtx.stroke();
+            }
+            exCtx.globalAlpha = 1.0;
+            const exWaveformTex = new THREE.CanvasTexture(excellenceWaveformCanvas);
+            exWaveformTex.wrapS = THREE.RepeatWrapping;
+            exWaveformTex.wrapT = THREE.RepeatWrapping;
+
+            // Shared materials for efficiency
+            const exOuterMat = new THREE.MeshPhysicalMaterial({
+                color: 0x3a5a7a,
+                metalness: 0.92,
+                roughness: 0.04,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.02,
+                transparent: true,
+                opacity: 0.2,
+                transmission: 0.9,
+                map: exWaveformTex,
+                emissive: 0x0099ff,
+                emissiveMap: exWaveformTex,
+                emissiveIntensity: 0.5,
+                vertexColors: THREE.NoColors,
+                envMapIntensity: 0.95,
+                specularIntensity: 1.0
+            });
+
+            const exCoreMat = new THREE.MeshStandardMaterial({
+                color: 0x050505,
+                emissive: 0x0099ff,
+                emissiveIntensity: 0.25
+            });
+
+            // We place 6 heroboxes scattered along the EXCELLENCE section of the path
+            const exBoxStages = [0.53, 0.56, 0.60, 0.63, 0.67, 0.70];
+            const exBoxOffsets = [
+                { side: -1, distance: 38, height: 18, size: 14 }, // left, high
+                { side: 1, distance: 44, height: 12, size: 16 },  // right, low
+                { side: -1, distance: 28, height: 8, size: 10 },  // left, low, smaller
+                { side: 1, distance: 35, height: 22, size: 18 },  // right, high, larger
+                { side: -1, distance: 46, height: 15, size: 15 }, // left, medium
+                { side: 1, distance: 30, height: 10, size: 12 }   // right, medium-low
+            ];
+
+            exBoxStages.forEach((tPct, idx) => {
+                const config = exBoxOffsets[idx];
+                const p = path.getPointAt(tPct);
+                const tangent = path.getTangentAt(tPct).normalize();
+                const up = new THREE.Vector3(0, 1, 0);
+                const binormal = new THREE.Vector3().crossVectors(tangent, up).normalize();
+
+                // Compute exact position
+                const posX = p.x + binormal.x * config.side * config.distance;
+                const posZ = p.z + binormal.z * config.side * config.distance;
+                const posY = p.y + config.height; // Float above the landscape
+
+                // Outer Box
+                const boxGeom = new THREE.BoxGeometry(config.size, config.size, config.size, 2, 2, 2);
+                const boxMesh = new THREE.Mesh(boxGeom, exOuterMat.clone()); // clone to allow individual opacity/intensity control
+                boxMesh.position.set(posX, posY, posZ);
+                boxMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                boxMesh.castShadow = true;
+                boxMesh.userData.isExcellenceBox = true;
+                forestGroup.add(boxMesh);
+
+                // Inner Core (Octahedron)
+                const coreSize = config.size * 0.39;
+                const coreGeom = new THREE.OctahedronGeometry(coreSize, 0);
+                const coreMesh = new THREE.Mesh(coreGeom, exCoreMat.clone()); // clone to allow individual control
+                coreMesh.position.copy(boxMesh.position);
+                coreMesh.userData.isExcellenceCore = true;
+                forestGroup.add(coreMesh);
+            });
+
 
 
             // 8. Stage 5: PURPOSE - Branching streams
@@ -3884,6 +3981,30 @@
 
             // Manage Stage Opacities and Swapping (Fading canyon, forest sway, rapids bob)
             updateStageTransitions(currentCameraPercentage);
+
+            // Animate and adjust opacity/emission of Excellence stage heroboxes
+            if (forestGroup && forestGroup.visible) {
+                let stageOpacity = 1.0;
+                const pct = currentCameraPercentage;
+                if (pct < 0.52) stageOpacity = 0;
+                else if (pct < 0.55) stageOpacity = Mathutils.map(pct, 0.52, 0.55, 0, 1);
+                else if (pct > 0.69) stageOpacity = Mathutils.map(pct, 0.69, 0.72, 1, 0);
+                if (pct > 0.72 || pct < 0.52) stageOpacity = 0;
+
+                forestGroup.children.forEach((child, idx) => {
+                    if (child.userData.isExcellenceBox) {
+                        child.rotation.y -= 0.01;
+                        child.material.opacity = 0.25 * stageOpacity;
+                        child.material.emissiveIntensity = 0.7 * (0.9 + 0.5 * Math.sin(idx + Date.now() * 0.002)) * stageOpacity;
+                    }
+                    if (child.userData.isExcellenceCore) {
+                        child.rotation.x += 0.015;
+                        child.rotation.y += 0.02;
+                        child.material.opacity = stageOpacity;
+                        child.material.emissiveIntensity = (Math.sin(idx + Date.now() * 0.002) * 0.1 + 0.25) * stageOpacity;
+                    }
+                });
+            }
 
             // Wind sway on forest canopies
             if (forestGroup && forestGroup.visible) {
