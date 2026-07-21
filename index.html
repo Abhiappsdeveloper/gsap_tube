@@ -2775,7 +2775,7 @@
             // 6. Stage 2: INNOVATION - Jagged canyon walls flanking the descent into the river
             canyonGroup = new THREE.Group();
             const canyonWallMat = new THREE.MeshPhysicalMaterial({
-                color: 0x001f4d,
+                color: 0x020202,
                 roughness: 0.95, // Increased roughness for porous canyon rock texture
                 metalness: 0.02, // Decreased metalness to prevent plasticky reflections
                 clearcoat: 0.0,
@@ -3281,8 +3281,14 @@
             } else if (pct < 0.52) {
                 let t = Mathutils.map(pct, 0.15, 0.52, 0, 1);
                 sunColor = new THREE.Color(0x0099ff).lerp(new THREE.Color(0xffb703), t);
-                skyColor = new THREE.Color(0x010714);
-                fogColor = new THREE.Color(0x184175);
+                // For Innovation stage (0.15 to 0.36), make the background sky and fog pitch black
+                if (pct >= 0.15 && pct < 0.36) {
+                    skyColor = new THREE.Color(0x000000);
+                    fogColor = new THREE.Color(0x000000);
+                } else {
+                    skyColor = new THREE.Color(0x010714);
+                    fogColor = new THREE.Color(0x184175);
+                }
                 tintColor = new THREE.Color(0.9, 1.0, 1.0).lerp(new THREE.Color(1.08, 0.95, 0.85), t);
                 exposure = 1.45;
                 contrast = 1.12;
@@ -3340,6 +3346,12 @@
         }
 
         function updateStageTransitions(pct) {
+            // Hide the global blue customWater plane during Stage 2 (Innovation) descent
+            // to allow only black canyon structures and fog to be visible below the river.
+            if (customWater) {
+                customWater.visible = (pct < 0.15 || pct >= 0.36);
+            }
+
             // Stage 2 (canyon)
             if (canyonGroup) {
                 let opacity = 1.0;
