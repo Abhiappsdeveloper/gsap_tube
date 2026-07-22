@@ -2876,10 +2876,7 @@
             excellenceWaveformCanvas.width = 256;
             excellenceWaveformCanvas.height = 256;
             const exCtx = excellenceWaveformCanvas.getContext('2d');
-            const exGrad = exCtx.createLinearGradient(0, 0, 0, 256);
-            exGrad.addColorStop(0, '#1a3a4a');
-            exGrad.addColorStop(1, '#0f2a38');
-            exCtx.fillStyle = exGrad;
+            exCtx.fillStyle = '#000000'; // pure black background to preserve texture contrast under high emissive intensity
             exCtx.fillRect(0, 0, 256, 256);
 
             // Generate waveform texture logic
