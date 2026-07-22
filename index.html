@@ -3101,12 +3101,11 @@
                 oceanGroup.add(rockMesh);
             }
 
-            // We place 25 small heroboxes near the end of the path (scroll progress 0.94 to 0.995) floating in the air (similar to 66% stage)
+            // We place 25 small heroboxes near the end of the path resting on the landscape (slopes & shore)
             const legBoxOffsets = [];
             const numBoxes = 25;
             for (let i = 0; i < numBoxes; i++) {
                 legBoxOffsets.push({
-                    height: (1.0 + (i * 0.8) % 3) / 5,   // float height decreased by 5x
                     size: 0.5 + (i * 0.15) % 0.6    // size between 0.5 and 1.1 (very small)
                 });
             }
@@ -3116,20 +3115,26 @@
             for (let i = 0; i < numBoxes; i++) {
                 const config = legBoxOffsets[i];
 
-                // Distribute along the path (progress 0.94 to 0.995)
-                const tPct = 0.94 + i * 0.0022;
-                const p = path.getPointAt(tPct);
-                const tangent = path.getTangentAt(tPct).normalize();
+                // Distribute along the path and extrapolate forward into the bay (progress 0.94 to 1.15)
+                const tPct = 0.94 + i * 0.009;
+                const clampedT = Math.min(1.0, tPct);
+                const p = path.getPointAt(clampedT);
+                const tangent = path.getTangentAt(clampedT).normalize();
                 const up = new THREE.Vector3(0, 1, 0);
                 const binormal = new THREE.Vector3().crossVectors(tangent, up).normalize();
 
-                // Compute exact position floating in the air
-                // We keep side distance closer (between 3 and 10 units) to keep them in camera view
-                const sideDist = 3 + (i * 2.3) % 8;
+                // Compute exact position resting on the landscape slopes (clamped above water level -9.9)
+                // We keep side distance closer (between 4 and 14 units) to keep them in camera view
+                const sideDist = 4 + (i * 2.3) % 10;
                 const side = i % 2 === 0 ? -1 : 1;
-                const posX = p.x + binormal.x * side * sideDist;
-                const posZ = p.z + binormal.z * side * sideDist;
-                const posY = p.y + config.height;
+
+                // Extrapolate forward along the look vector past the end of the path
+                const forwardOffset = tPct > 1.0 ? (tPct - 1.0) * 260 : 0;
+                const posX = p.x + tangent.x * forwardOffset + binormal.x * side * sideDist;
+                const posZ = p.z + tangent.z * forwardOffset + binormal.z * side * sideDist;
+
+                const terrainY = -9.6 + getHillHeight(posX, posZ);
+                const posY = Math.max(-9.8, terrainY) + config.size / 2; // resting on land/slopes
 
                 const finalPos = new THREE.Vector3(posX, posY, posZ);
                 boxPositions.push(finalPos);
