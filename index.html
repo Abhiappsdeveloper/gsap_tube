@@ -3101,37 +3101,43 @@
                 oceanGroup.add(rockMesh);
             }
 
-            // We place 18 small heroboxes near the end of the path (scroll progress 0.88 to 0.96)
-            const legBoxStages = [];
-            for (let i = 0; i < 18; i++) {
-                legBoxStages.push(0.88 + i * 0.0045);
-            }
+            // We place 25 small heroboxes near the end of the path (scroll progress 0.94 to 0.995) floating in the air (similar to 66% stage)
             const legBoxOffsets = [];
-            for (let i = 0; i < 18; i++) {
+            const numBoxes = 25;
+            for (let i = 0; i < numBoxes; i++) {
                 legBoxOffsets.push({
-                    side: i % 2 === 0 ? -1 : 1,
-                    distance: 12 + (i * 3.7) % 20, // distances between 12 and 32
-                    height: 1.0 + (i * 1.3) % 3,   // float height between 1.0 and 4.0
-                    size: 0.6 + (i * 0.3) % 0.8    // size between 0.6 and 1.4 (very small)
+                    height: 1.0 + (i * 0.8) % 3,   // float height between 1.0 and 4.0
+                    size: 0.5 + (i * 0.15) % 0.6    // size between 0.5 and 1.1 (very small)
                 });
             }
 
-            legBoxStages.forEach((tPct, idx) => {
-                const config = legBoxOffsets[idx];
+            const boxPositions = [];
+
+            for (let i = 0; i < numBoxes; i++) {
+                const config = legBoxOffsets[i];
+
+                // Distribute along the path (progress 0.94 to 0.995)
+                const tPct = 0.94 + i * 0.0022;
                 const p = path.getPointAt(tPct);
                 const tangent = path.getTangentAt(tPct).normalize();
                 const up = new THREE.Vector3(0, 1, 0);
                 const binormal = new THREE.Vector3().crossVectors(tangent, up).normalize();
 
-                // Compute exact position
-                const posX = p.x + binormal.x * config.side * config.distance;
-                const posZ = p.z + binormal.z * config.side * config.distance;
-                const posY = p.y + config.height; // Float above the landscape
+                // Compute exact position floating in the air
+                // We keep side distance closer (between 3 and 10 units) to keep them in camera view
+                const sideDist = 3 + (i * 2.3) % 8;
+                const side = i % 2 === 0 ? -1 : 1;
+                const posX = p.x + binormal.x * side * sideDist;
+                const posZ = p.z + binormal.z * side * sideDist;
+                const posY = p.y + config.height;
+
+                const finalPos = new THREE.Vector3(posX, posY, posZ);
+                boxPositions.push(finalPos);
 
                 // Outer Box
                 const boxGeom = new THREE.BoxGeometry(config.size, config.size, config.size, 2, 2, 2);
                 const boxMesh = new THREE.Mesh(boxGeom, exOuterMat.clone());
-                boxMesh.position.set(posX, posY, posZ);
+                boxMesh.position.copy(finalPos);
                 boxMesh.castShadow = true;
                 boxMesh.userData.isLegacyBox = true;
                 oceanGroup.add(boxMesh);
@@ -3143,7 +3149,38 @@
                 coreMesh.position.copy(boxMesh.position);
                 coreMesh.userData.isLegacyCore = true;
                 oceanGroup.add(coreMesh);
+            }
+
+            // Connect heroboxes with glowing wires/lines (web/constellation pattern)
+            const linePositions = [];
+            for (let i = 0; i < boxPositions.length; i++) {
+                const distances = [];
+                for (let j = 0; j < boxPositions.length; j++) {
+                    if (i === j) continue;
+                    distances.push({ index: j, dist: boxPositions[i].distanceTo(boxPositions[j]) });
+                }
+                distances.sort((a, b) => a.dist - b.dist);
+
+                // Connect to the 2 nearest neighbors if they are within 50 units
+                for (let k = 0; k < Math.min(2, distances.length); k++) {
+                    const neighbor = distances[k];
+                    if (neighbor.dist < 50) {
+                        linePositions.push(boxPositions[i].x, boxPositions[i].y, boxPositions[i].z);
+                        linePositions.push(boxPositions[neighbor.index].x, boxPositions[neighbor.index].y, boxPositions[neighbor.index].z);
+                    }
+                }
+            }
+
+            const wireGeometry = new THREE.BufferGeometry();
+            wireGeometry.addAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+            const wireMat = new THREE.LineBasicMaterial({
+                color: 0x00f5d4,
+                transparent: true,
+                opacity: 0.55
             });
+            const wires = new THREE.LineSegments(wireGeometry, wireMat);
+            wires.userData.isLegacyWire = true;
+            oceanGroup.add(wires);
 
             scene.add(oceanGroup);
 
@@ -4052,6 +4089,9 @@
                     if (child.userData.isLegacyCore) {
                         child.material.opacity = 1.0;
                         child.material.emissiveIntensity = 0.25;
+                    }
+                    if (child.userData.isLegacyWire) {
+                        child.material.opacity = 0.55;
                     }
                 });
             }
