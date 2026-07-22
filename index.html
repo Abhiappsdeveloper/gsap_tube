@@ -2956,7 +2956,6 @@
                 const boxGeom = new THREE.BoxGeometry(config.size, config.size, config.size, 2, 2, 2);
                 const boxMesh = new THREE.Mesh(boxGeom, exOuterMat.clone()); // clone to allow individual opacity/intensity control
                 boxMesh.position.set(posX, posY, posZ);
-                boxMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
                 boxMesh.castShadow = true;
                 boxMesh.userData.isExcellenceBox = true;
                 forestGroup.add(boxMesh);
@@ -3996,13 +3995,10 @@
 
                 forestGroup.children.forEach((child, idx) => {
                     if (child.userData.isExcellenceBox) {
-                        child.rotation.y -= 0.01;
                         child.material.opacity = 0.25 * stageOpacity;
                         child.material.emissiveIntensity = 0.7 * (0.9 + 0.5 * Math.sin(idx + Date.now() * 0.002)) * stageOpacity;
                     }
                     if (child.userData.isExcellenceCore) {
-                        child.rotation.x += 0.015;
-                        child.rotation.y += 0.02;
                         child.material.opacity = stageOpacity;
                         child.material.emissiveIntensity = (Math.sin(idx + Date.now() * 0.002) * 0.1 + 0.25) * stageOpacity;
                     }
