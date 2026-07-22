@@ -2969,6 +2969,113 @@
                 forestGroup.add(coreMesh);
             });
 
+            // We place 25 small heroboxes resting on the landscape slopes at scroll progress 0.67 to 0.80 (Excellence stage)
+            const exLandBoxOffsets = [];
+            const numExLandBoxes = 25;
+            for (let i = 0; i < numExLandBoxes; i++) {
+                exLandBoxOffsets.push({
+                    size: 0.5 + (i * 0.15) % 0.6    // size between 0.5 and 1.1 (very small)
+                });
+            }
+
+            const exLandBoxPositions = [];
+
+            for (let i = 0; i < numExLandBoxes; i++) {
+                const config = exLandBoxOffsets[i];
+
+                // Distribute along the path (progress 0.67 to 0.80)
+                const tPct = 0.67 + i * 0.0054;
+                const p = path.getPointAt(tPct);
+                const tangent = path.getTangentAt(tPct).normalize();
+                const up = new THREE.Vector3(0, 1, 0);
+                const binormal = new THREE.Vector3().crossVectors(tangent, up).normalize();
+
+                // Compute exact position resting on the landscape slopes
+                // sideDist between 12 and 30 units to place them on the side hills of the valley
+                const sideDist = 12 + (i * 3.3) % 18;
+                const side = i % 2 === 0 ? -1 : 1;
+                const posX = p.x + binormal.x * side * sideDist;
+                const posZ = p.z + binormal.z * side * sideDist;
+
+                const terrainY = -9.6 + getHillHeight(posX, posZ);
+                const posY = Math.max(-9.8, terrainY) + config.size / 2; // resting on land/slopes
+
+                const finalPos = new THREE.Vector3(posX, posY, posZ);
+                exLandBoxPositions.push(finalPos);
+
+                // Outer Box
+                const boxGeom = new THREE.BoxGeometry(config.size, config.size, config.size, 2, 2, 2);
+                const boxMesh = new THREE.Mesh(boxGeom, exOuterMat.clone());
+                boxMesh.position.copy(finalPos);
+                boxMesh.castShadow = true;
+                boxMesh.userData.isExcellenceBox = true; // participate in Excellence rendering updates
+                forestGroup.add(boxMesh);
+
+                // Inner Core (Octahedron)
+                const coreSize = config.size * 0.39;
+                const coreGeom = new THREE.OctahedronGeometry(coreSize, 0);
+                const coreMesh = new THREE.Mesh(coreGeom, exCoreMat.clone());
+                coreMesh.position.copy(boxMesh.position);
+                coreMesh.userData.isExcellenceCore = true; // participate in Excellence rendering updates
+                forestGroup.add(coreMesh);
+            }
+
+            // Connect heroboxes with glowing wires/lines (web/constellation pattern)
+            const exLandLinePositions = [];
+            const addExThickLine = (pA, pB, positionsArray, thickOffset) => {
+                // Center line
+                positionsArray.push(pA.x, pA.y, pA.z);
+                positionsArray.push(pB.x, pB.y, pB.z);
+
+                // Perpendicular vector in XZ plane
+                const dir = new THREE.Vector3().subVectors(pB, pA);
+                const perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(thickOffset);
+
+                // Parallel offset lines (to create 3x thickness visually)
+                positionsArray.push(pA.x + perp.x, pA.y + perp.y, pA.z + perp.z);
+                positionsArray.push(pB.x + perp.x, pB.y + perp.y, pB.z + perp.z);
+
+                positionsArray.push(pA.x - perp.x, pA.y - perp.y, pA.z - perp.z);
+                positionsArray.push(pB.x - perp.x, pB.y - perp.y, pB.z - perp.z);
+            };
+
+            for (let i = 0; i < exLandBoxPositions.length; i++) {
+                // Connect to the next box in the sequence (creates a continuous path crossing the river)
+                if (i < exLandBoxPositions.length - 1) {
+                    addExThickLine(exLandBoxPositions[i], exLandBoxPositions[i + 1], exLandLinePositions, 0.08);
+                }
+
+                // Also connect to the nearest neighbor on the same side (even index to even, odd to odd) to form side clusters
+                const distances = [];
+                for (let j = 0; j < exLandBoxPositions.length; j++) {
+                    if (i === j) continue;
+                    // Only check neighbors on the same side
+                    if ((i % 2) === (j % 2)) {
+                        distances.push({ index: j, dist: exLandBoxPositions[i].distanceTo(exLandBoxPositions[j]) });
+                    }
+                }
+                distances.sort((a, b) => a.dist - b.dist);
+
+                // Connect to the nearest same-side neighbor
+                if (distances.length > 0) {
+                    const neighbor = distances[0];
+                    if (neighbor.dist < 50) {
+                        addExThickLine(exLandBoxPositions[i], exLandBoxPositions[neighbor.index], exLandLinePositions, 0.08);
+                    }
+                }
+            }
+
+            const exLandWireGeometry = new THREE.BufferGeometry();
+            exLandWireGeometry.addAttribute('position', new THREE.Float32BufferAttribute(exLandLinePositions, 3));
+            const exLandWireMat = new THREE.LineBasicMaterial({
+                color: 0x0066cc, // water color (glowing river blue)
+                transparent: true,
+                opacity: 0.85
+            });
+            const exLandWires = new THREE.LineSegments(exLandWireGeometry, exLandWireMat);
+            exLandWires.userData.isExcellenceWire = true; // participate in rendering updates
+            forestGroup.add(exLandWires);
+
 
 
             // 8. Stage 5: PURPOSE - Branching streams
@@ -4105,6 +4212,9 @@
                     if (child.userData.isExcellenceCore) {
                         child.material.opacity = 1.0;
                         child.material.emissiveIntensity = 0.25;
+                    }
+                    if (child.userData.isExcellenceWire) {
+                        child.material.opacity = 0.85;
                     }
                 });
             }
