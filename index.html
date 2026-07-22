@@ -3106,7 +3106,7 @@
             const numBoxes = 25;
             for (let i = 0; i < numBoxes; i++) {
                 legBoxOffsets.push({
-                    height: 1.0 + (i * 0.8) % 3,   // float height between 1.0 and 4.0
+                    height: (1.0 + (i * 0.8) % 3) / 5,   // float height decreased by 5x
                     size: 0.5 + (i * 0.15) % 0.6    // size between 0.5 and 1.1 (very small)
                 });
             }
