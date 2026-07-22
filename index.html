@@ -3986,21 +3986,14 @@
 
             // Animate and adjust opacity/emission of Excellence stage heroboxes
             if (forestGroup && forestGroup.visible) {
-                let stageOpacity = 1.0;
-                const pct = currentCameraPercentage;
-                if (pct < 0.52) stageOpacity = 0;
-                else if (pct < 0.55) stageOpacity = Mathutils.map(pct, 0.52, 0.55, 0, 1);
-                else if (pct > 0.69) stageOpacity = Mathutils.map(pct, 0.69, 0.72, 1, 0);
-                if (pct > 0.72 || pct < 0.52) stageOpacity = 0;
-
                 forestGroup.children.forEach((child, idx) => {
                     if (child.userData.isExcellenceBox) {
-                        child.material.opacity = 0.25 * stageOpacity;
-                        child.material.emissiveIntensity = 0.7 * (0.9 + 0.5 * Math.sin(idx + Date.now() * 0.002)) * stageOpacity;
+                        child.material.opacity = 0.25;
+                        child.material.emissiveIntensity = 0.7;
                     }
                     if (child.userData.isExcellenceCore) {
-                        child.material.opacity = stageOpacity;
-                        child.material.emissiveIntensity = (Math.sin(idx + Date.now() * 0.002) * 0.1 + 0.25) * stageOpacity;
+                        child.material.opacity = 1.0;
+                        child.material.emissiveIntensity = 0.25;
                     }
                 });
             }
