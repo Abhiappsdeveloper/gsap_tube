@@ -3159,16 +3159,26 @@
             // Connect heroboxes with glowing wires/lines (web/constellation pattern)
             const linePositions = [];
             for (let i = 0; i < boxPositions.length; i++) {
+                // Connect to the next box in the sequence (creates a continuous path crossing the river)
+                if (i < boxPositions.length - 1) {
+                    linePositions.push(boxPositions[i].x, boxPositions[i].y, boxPositions[i].z);
+                    linePositions.push(boxPositions[i + 1].x, boxPositions[i + 1].y, boxPositions[i + 1].z);
+                }
+
+                // Also connect to the nearest neighbor on the same side (even index to even, odd to odd) to form side clusters
                 const distances = [];
                 for (let j = 0; j < boxPositions.length; j++) {
                     if (i === j) continue;
-                    distances.push({ index: j, dist: boxPositions[i].distanceTo(boxPositions[j]) });
+                    // Only check neighbors on the same side (both even or both odd indices)
+                    if ((i % 2) === (j % 2)) {
+                        distances.push({ index: j, dist: boxPositions[i].distanceTo(boxPositions[j]) });
+                    }
                 }
                 distances.sort((a, b) => a.dist - b.dist);
 
-                // Connect to the 2 nearest neighbors if they are within 50 units
-                for (let k = 0; k < Math.min(2, distances.length); k++) {
-                    const neighbor = distances[k];
+                // Connect to the nearest same-side neighbor
+                if (distances.length > 0) {
+                    const neighbor = distances[0];
                     if (neighbor.dist < 50) {
                         linePositions.push(boxPositions[i].x, boxPositions[i].y, boxPositions[i].z);
                         linePositions.push(boxPositions[neighbor.index].x, boxPositions[neighbor.index].y, boxPositions[neighbor.index].z);
