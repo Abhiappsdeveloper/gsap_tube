@@ -4206,12 +4206,12 @@
             if (forestGroup && forestGroup.visible) {
                 forestGroup.children.forEach((child, idx) => {
                     if (child.userData.isExcellenceBox) {
-                        child.material.opacity = 0.25;
-                        child.material.emissiveIntensity = 0.7;
+                        child.material.opacity = 0.35; // slightly higher opacity for stronger glass glow
+                        child.material.emissiveIntensity = 2.4; // 3.4x higher emission for extra glow
                     }
                     if (child.userData.isExcellenceCore) {
                         child.material.opacity = 1.0;
-                        child.material.emissiveIntensity = 0.25;
+                        child.material.emissiveIntensity = 2.2; // 8x higher core emission
                     }
                     if (child.userData.isExcellenceWire) {
                         child.material.opacity = 0.85;
@@ -4223,12 +4223,12 @@
             if (oceanGroup && oceanGroup.visible) {
                 oceanGroup.children.forEach((child, idx) => {
                     if (child.userData.isLegacyBox) {
-                        child.material.opacity = 0.25;
-                        child.material.emissiveIntensity = 0.7;
+                        child.material.opacity = 0.35; // slightly higher opacity for stronger glass glow
+                        child.material.emissiveIntensity = 2.4; // 3.4x higher emission for extra glow
                     }
                     if (child.userData.isLegacyCore) {
                         child.material.opacity = 1.0;
-                        child.material.emissiveIntensity = 0.25;
+                        child.material.emissiveIntensity = 2.2; // 8x higher core emission
                     }
                     if (child.userData.isLegacyWire) {
                         child.material.opacity = 0.85;
