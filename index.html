@@ -2131,7 +2131,8 @@
                 }
 
                 for (let w = 0; w < this.numWires; w++) {
-                    const angle = (w / this.numWires) * Math.PI * 2;
+                    const baseFraction = this.numWires > 1 ? (w / (this.numWires - 1)) * 2 - 1 : 0;
+                    const phaseW = w * 1.7; // unique deterministic phase offset for each wire
                     const offsetPoints = [];
 
                     for (let i = 0; i <= N; i++) {
@@ -2149,8 +2150,15 @@
                             normal = new THREE.Vector3().crossVectors(binormal, tangent).normalize();
                         }
 
-                        const offsetX = Math.cos(angle) * radius;
-                        const offsetY = Math.sin(angle) * radius;
+                        // Determine horizontal and vertical offsets using sine waves for weaving currents
+                        const waveX = Math.sin(t * Math.PI * 5 + phaseW) * 0.25;
+                        const ratioX = baseFraction + waveX;
+
+                        // Vertical offset is kept small to keep the river flat
+                        const ratioY = Math.cos(t * Math.PI * 7 + phaseW * 1.5) * 0.12;
+
+                        const offsetX = ratioX * radius;
+                        const offsetY = ratioY * radius;
 
                         const offsetPoint = point.clone()
                             .addScaledVector(binormal, offsetX)
