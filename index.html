@@ -2044,6 +2044,131 @@
             return texture;
         }
 
+        class ParallelWiresGroup extends THREE.Group {
+            constructor(numWires, wireRadius, material) {
+                super();
+                this.numWires = numWires;
+                this.wireRadius = wireRadius;
+                this._material = material;
+                this._geometry = null;
+
+                this.wires = [];
+                for (let i = 0; i < numWires; i++) {
+                    const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
+                    this.add(mesh);
+                    this.wires.push(mesh);
+                }
+
+                if (this._castShadow !== undefined) {
+                    this.castShadow = this._castShadow;
+                }
+                if (this._receiveShadow !== undefined) {
+                    this.receiveShadow = this._receiveShadow;
+                }
+            }
+
+            get material() {
+                return this._material;
+            }
+
+            set material(val) {
+                this._material = val;
+                if (this.wires) {
+                    this.wires.forEach(w => w.material = val);
+                }
+            }
+
+            get castShadow() {
+                return this._castShadow !== undefined ? this._castShadow : false;
+            }
+
+            set castShadow(val) {
+                this._castShadow = val;
+                if (this.wires) {
+                    this.wires.forEach(w => w.castShadow = val);
+                }
+            }
+
+            get receiveShadow() {
+                return this._receiveShadow !== undefined ? this._receiveShadow : false;
+            }
+
+            set receiveShadow(val) {
+                this._receiveShadow = val;
+                if (this.wires) {
+                    this.wires.forEach(w => w.receiveShadow = val);
+                }
+            }
+
+            get geometry() {
+                return this._geometry;
+            }
+
+            set geometry(geom) {
+                this._geometry = geom;
+                if (!geom || !geom.parameters || !geom.parameters.path) {
+                    this.wires.forEach((w, idx) => {
+                        if (idx === 0) {
+                            w.geometry = geom;
+                        } else {
+                            if (w.geometry) w.geometry.dispose();
+                            w.geometry = new THREE.BufferGeometry();
+                        }
+                    });
+                    return;
+                }
+
+                const mainPath = geom.parameters.path;
+                const radius = geom.parameters.radius || 1.2;
+                const segments = geom.parameters.tubularSegments || 64;
+
+                const N = segments;
+                let frames;
+                try {
+                    frames = mainPath.computeFrenetFrames(N, false);
+                } catch (e) {
+                    // fallback
+                }
+
+                for (let w = 0; w < this.numWires; w++) {
+                    const angle = (w / this.numWires) * Math.PI * 2;
+                    const offsetPoints = [];
+
+                    for (let i = 0; i <= N; i++) {
+                        const t = i / N;
+                        const point = mainPath.getPointAt(t);
+                        let normal, binormal;
+
+                        if (frames && frames.normals[i] && frames.binormals[i]) {
+                            normal = frames.normals[i];
+                            binormal = frames.binormals[i];
+                        } else {
+                            const tangent = mainPath.getTangentAt(t).normalize();
+                            const up = new THREE.Vector3(0, 1, 0);
+                            binormal = new THREE.Vector3().crossVectors(tangent, up).normalize();
+                            normal = new THREE.Vector3().crossVectors(binormal, tangent).normalize();
+                        }
+
+                        const offsetX = Math.cos(angle) * radius;
+                        const offsetY = Math.sin(angle) * radius;
+
+                        const offsetPoint = point.clone()
+                            .addScaledVector(binormal, offsetX)
+                            .addScaledVector(normal, offsetY);
+                        offsetPoints.push(offsetPoint);
+                    }
+
+                    const offsetCurve = new THREE.CatmullRomCurve3(offsetPoints);
+                    const wireGeom = new THREE.TubeGeometry(offsetCurve, segments, this.wireRadius, 6, false);
+
+                    if (this.wires[w].geometry) {
+                        this.wires[w].geometry.dispose();
+                    }
+                    this.wires[w].geometry = wireGeom;
+                }
+            }
+        }
+
         // ===== INITIALIZE CUSTOM 3D HUD STAGES =====
         function initCustomStages() {
             // Preload texture
@@ -2134,10 +2259,8 @@
                 ));
             }
             leftTributaryCurve = new THREE.CatmullRomCurve3(leftTributaryPoints);
-            leftTributaryMesh = new THREE.Mesh(
-                new THREE.TubeGeometry(leftTributaryCurve, 32, 1.2, 8, false),
-                simpleRiverMat
-            );
+            leftTributaryMesh = new ParallelWiresGroup(3, 0.2, simpleRiverMat);
+            leftTributaryMesh.geometry = new THREE.TubeGeometry(leftTributaryCurve, 32, 1.2, 8, false);
             leftTributaryMesh.receiveShadow = true;
             leftTributaryMesh.castShadow = true;
             rapidsGroup.add(leftTributaryMesh);
@@ -2160,10 +2283,8 @@
                 ));
             }
             rightTributaryCurve = new THREE.CatmullRomCurve3(rightTributaryPoints);
-            rightTributaryMesh = new THREE.Mesh(
-                new THREE.TubeGeometry(rightTributaryCurve, 32, 1.2, 8, false),
-                simpleRiverMat
-            );
+            rightTributaryMesh = new ParallelWiresGroup(3, 0.2, simpleRiverMat);
+            rightTributaryMesh.geometry = new THREE.TubeGeometry(rightTributaryCurve, 32, 1.2, 8, false);
             rightTributaryMesh.receiveShadow = true;
             rightTributaryMesh.castShadow = true;
             rapidsGroup.add(rightTributaryMesh);
@@ -2759,7 +2880,8 @@
                 opacity: 0.7,
                 wireframe: false
             });
-            riverLine = new THREE.Mesh(riverTubeGeom, riverTubeMat);
+            riverLine = new ParallelWiresGroup(4, 0.4, riverTubeMat);
+            riverLine.geometry = riverTubeGeom;
             riverLine.receiveShadow = true;
             scene.add(riverLine);
 
@@ -3103,7 +3225,9 @@
                     opacity: 0.8,
                     wireframe: false
                 });
-                deltaGroup.add(new THREE.Mesh(branchGeom, branchMat));
+                const branchWires = new ParallelWiresGroup(3, 0.15, branchMat);
+                branchWires.geometry = branchGeom;
+                deltaGroup.add(branchWires);
             }
             scene.add(deltaGroup);
 
