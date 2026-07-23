@@ -2944,10 +2944,11 @@
                 const up = new THREE.Vector3(0, 1, 0);
                 const binormal = new THREE.Vector3().crossVectors(tangent, up).normalize();
 
-                // Compute exact position
+                // Compute exact position resting on the landscape slopes
                 const posX = p.x + binormal.x * config.side * config.distance;
                 const posZ = p.z + binormal.z * config.side * config.distance;
-                const posY = p.y + config.height; // Float above the landscape
+                const terrainY = -9.6 + getHillHeight(posX, posZ);
+                const posY = Math.max(-9.8, terrainY) + config.size / 2; // resting on land/slopes
 
                 // Outer Box
                 const boxGeom = new THREE.BoxGeometry(config.size, config.size, config.size, 2, 2, 2);
