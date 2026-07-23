@@ -2259,7 +2259,7 @@
                 ));
             }
             leftTributaryCurve = new THREE.CatmullRomCurve3(leftTributaryPoints);
-            leftTributaryMesh = new ParallelWiresGroup(6, 0.04, simpleRiverMat);
+            leftTributaryMesh = new ParallelWiresGroup(12, 0.015, simpleRiverMat);
             leftTributaryMesh.geometry = new THREE.TubeGeometry(leftTributaryCurve, 32, 1.2, 8, false);
             leftTributaryMesh.receiveShadow = true;
             leftTributaryMesh.castShadow = true;
@@ -2283,7 +2283,7 @@
                 ));
             }
             rightTributaryCurve = new THREE.CatmullRomCurve3(rightTributaryPoints);
-            rightTributaryMesh = new ParallelWiresGroup(6, 0.04, simpleRiverMat);
+            rightTributaryMesh = new ParallelWiresGroup(12, 0.015, simpleRiverMat);
             rightTributaryMesh.geometry = new THREE.TubeGeometry(rightTributaryCurve, 32, 1.2, 8, false);
             rightTributaryMesh.receiveShadow = true;
             rightTributaryMesh.castShadow = true;
@@ -2880,7 +2880,7 @@
                 opacity: 0.7,
                 wireframe: false
             });
-            riverLine = new ParallelWiresGroup(8, 0.08, riverTubeMat);
+            riverLine = new ParallelWiresGroup(16, 0.03, riverTubeMat);
             riverLine.geometry = riverTubeGeom;
             riverLine.receiveShadow = true;
             scene.add(riverLine);
@@ -3225,7 +3225,7 @@
                     opacity: 0.8,
                     wireframe: false
                 });
-                const branchWires = new ParallelWiresGroup(6, 0.03, branchMat);
+                const branchWires = new ParallelWiresGroup(12, 0.01, branchMat);
                 branchWires.geometry = branchGeom;
                 deltaGroup.add(branchWires);
             }
