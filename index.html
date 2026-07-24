@@ -3,6 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+    <!-- ===== PERFORMANCE & RENDERING HINTS (CSS-ONLY, NO DESIGN CHANGES) ===== -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="color-scheme" content="dark light">
     <title>Ukonnect - USA Staffing & Workforce Solutions</title>
     <!-- Google Fonts: Outfit & Gaming HUD Fonts (Orbitron, Share Tech Mono) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,6 +32,11 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            /* ===== RENDERING OPTIMIZATION (CSS-ONLY) ===== */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            backface-visibility: hidden;
         }
 
         /* HEADER NAVBAR - HUD STYLE */
@@ -226,6 +235,14 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            /* ===== HD RENDERING - CSS ONLY (NO DESIGN CHANGES) ===== */
+            image-rendering: crisp-edges;  /* High-quality upscaling */
+            -webkit-font-smoothing: antialiased;  /* Better text on canvas */
+            -moz-osx-font-smoothing: grayscale;  /* Better text rendering */
+            backface-visibility: hidden;  /* GPU optimization */
+            will-change: transform;  /* GPU acceleration hint */
+            transform: translate3d(0, 0, 0);  /* Force GPU rendering */
+            filter: saturate(1.02);  /* Subtle clarity boost */
         }
 
         .scrollTarget {
@@ -768,6 +785,8 @@
             height: calc(100% - 40px);
             pointer-events: none;
             z-index: 9998;
+            /* ===== SUBTLE CLARITY BOOST (CSS FILTER - NO DESIGN CHANGE) ===== */
+            filter: contrast(1.05);  /* 5% contrast boost for perceived sharpness */
         }
 
         /* Sci-Fi HUD Left Menu & Indicators */
