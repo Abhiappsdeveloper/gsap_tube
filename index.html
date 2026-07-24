@@ -1992,6 +1992,7 @@
 
         cinematicPass = new THREE.ShaderPass(CinematicShader);
         cinematicPass.renderToScreen = false;
+        window.cinematicPass = cinematicPass;  // Expose for hd-mode.js access
 
         // Add sharpening pass (non-invasive enhancement, can be disabled)
         var sharpeningPass = new THREE.ShaderPass(SharpeningShader);
