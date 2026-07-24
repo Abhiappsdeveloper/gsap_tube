@@ -1901,6 +1901,10 @@
             canvas: document.querySelector("canvas"),
             antialias: true
         });
+
+        // ===== CRITICAL: Enable Device Pixel Ratio =====
+        const dpr = window.devicePixelRatio || 1;
+        renderer.setPixelRatio(dpr);
         renderer.setSize(ww, wh);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -2342,7 +2346,7 @@
             rapidsGroup.add(rightTributaryMesh);
 
             // 2. Reflective River/Lake Water Plane with Proximity Foam & Ripple Weights
-            const waterGeom = new THREE.PlaneGeometry(1000, 1000, 48, 48);
+            const waterGeom = new THREE.PlaneGeometry(1000, 1000, 96, 96); // QUALITY: 48→96 segments
             const waterColors = [];
             for (let i = 0; i < waterGeom.vertices.length; i++) {
                 waterColors.push(new THREE.Color(0x020d21));
@@ -2451,7 +2455,7 @@
             scene.add(waterReflectLight);
 
             // 3. Stage 1: FUTURE peaks/mountains
-            const mountainGeom = new THREE.SphereGeometry(30, 24, 24);
+            const mountainGeom = new THREE.SphereGeometry(30, 48, 48); // QUALITY: 24→48 segments
             const mountainMat = new THREE.MeshPhysicalMaterial({
                 color: 0x050505,
                 roughness: 0.9,
@@ -2621,7 +2625,7 @@
             });
             flankMountainMat.onBeforeCompile = rockShaderInjection;
 
-            const flankMountainGeom = new THREE.SphereGeometry(34, 20, 20);
+            const flankMountainGeom = new THREE.SphereGeometry(34, 40, 40); // QUALITY: 20→40
             const flankMountainAnchor = heroP1.clone().addScaledVector(heroForward, 240);
 
             // Stage 0 Rim Light (disabled white point light behind monolith peaks)
@@ -2716,7 +2720,7 @@
             const flowingWaterTexture = generateFlowingWaterTexture();
 
             // Create a local water plane for Future Stage at Y = -9.8 (slightly above customWater to prevent z-fighting but resting at the valley floor)
-            const futureWaterGeom = new THREE.PlaneGeometry(600, 600, 32, 32);
+            const futureWaterGeom = new THREE.PlaneGeometry(600, 600, 64, 64); // QUALITY: 32→64
             const futureWaterMat = new THREE.MeshPhysicalMaterial({
                 map: flowingWaterTexture,
                 color: 0x000d1a,
@@ -2742,7 +2746,7 @@
             futureWaterFlow.add(futureWaterPlane);
 
             // Bright water light surface layer (glow overlay) - creates shining effect
-            const waterGlowGeom = new THREE.PlaneGeometry(600, 600, 16, 16);
+            const waterGlowGeom = new THREE.PlaneGeometry(600, 600, 32, 32); // QUALITY: 16→32
             const waterGlowMat = new THREE.MeshBasicMaterial({
                 color: 0x00d4ff,
                 transparent: true,
@@ -2760,7 +2764,7 @@
             futureWaterFlow.add(futureWaterGlow);
 
             // Dark water surface with internal light - creates depth
-            const darkWaterSurfaceGeom = new THREE.PlaneGeometry(600, 600, 20, 20);
+            const darkWaterSurfaceGeom = new THREE.PlaneGeometry(600, 600, 48, 48); // QUALITY: 20→48
             const darkWaterSurfaceMat = new THREE.MeshPhysicalMaterial({
                 color: 0x000d1f,
                 emissive: 0x004080,
@@ -2961,7 +2965,7 @@
                 const ratio = 0.15 + (i / 16) * 0.21;
                 const node = path.getPointAt(ratio);
                 [-1, 1].forEach(side => {
-                    const wallGeom = new THREE.ConeGeometry(9 + Math.random() * 5, 26 + Math.random() * 14, 5);
+                    const wallGeom = new THREE.ConeGeometry(9 + Math.random() * 5, 26 + Math.random() * 14, 12); // QUALITY: 5→12
                     displaceCanyonWallGeometry(wallGeom, i * 37.4);
 
                     const pos = new THREE.Vector3(
@@ -4490,7 +4494,10 @@
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
 
+            // QUALITY: Use device pixel ratio for HD on resize
+            renderer.setPixelRatio(dpr);
             renderer.setSize(width, height);
+            composer.setPixelRatio(dpr);
             composer.setSize(width, height);
 
             updateHUDFrame();
