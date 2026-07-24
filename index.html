@@ -1713,6 +1713,45 @@
             `
         };
 
+        // ===== UNSHARP MASK SHARPENING SHADER (Non-Invasive) =====
+        const SharpeningShader = {
+            uniforms: {
+                "tDiffuse": { value: null },
+                "uSharpenAmount": { value: 0.8 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform float uSharpenAmount;
+                varying vec2 vUv;
+
+                void main() {
+                    vec2 texelSize = vec2(1.0 / 1920.0, 1.0 / 1080.0);
+
+                    // Center sample
+                    vec3 center = texture2D(tDiffuse, vUv).rgb;
+
+                    // Surrounding samples for unsharp mask
+                    vec3 top = texture2D(tDiffuse, vUv + vec2(0.0, texelSize.y)).rgb;
+                    vec3 bottom = texture2D(tDiffuse, vUv - vec2(0.0, texelSize.y)).rgb;
+                    vec3 left = texture2D(tDiffuse, vUv - vec2(texelSize.x, 0.0)).rgb;
+                    vec3 right = texture2D(tDiffuse, vUv + vec2(texelSize.x, 0.0)).rgb;
+
+                    // Unsharp mask: enhance edges
+                    vec3 edges = (center * 4.0 - top - bottom - left - right) * uSharpenAmount;
+                    vec3 sharpened = center + edges;
+
+                    gl_FragColor = vec4(sharpened, 1.0);
+                }
+            `
+        };
+
         // ===== PROCEDURAL GEOLOGY AND COLORING UTILITIES =====
         function displaceMountainGeometry(geom, scaleFactor, seed) {
             const verts = geom.vertices;
@@ -1927,6 +1966,10 @@
         cinematicPass = new THREE.ShaderPass(CinematicShader);
         cinematicPass.renderToScreen = false;
 
+        // Add sharpening pass (non-invasive enhancement, can be disabled)
+        var sharpeningPass = new THREE.ShaderPass(SharpeningShader);
+        sharpeningPass.renderToScreen = false;
+
         var copyPass = new THREE.ShaderPass(THREE.CopyShader);
         copyPass.renderToScreen = true;
 
@@ -1935,6 +1978,7 @@
         composer.addPass(renderScene);
         composer.addPass(bloomPass);
         composer.addPass(cinematicPass);
+        composer.addPass(sharpeningPass); // Add sharpening AFTER cinematic effects, BEFORE final copy
         composer.addPass(copyPass);
 
         //Array of points
