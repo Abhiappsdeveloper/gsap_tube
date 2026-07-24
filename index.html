@@ -1493,6 +1493,9 @@
         })();
     </script>
 
+    <!-- HD Mode Enhancement (Non-Invasive - Can be removed anytime) -->
+    <script src="hd-mode.js"></script>
+
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js'></script>
     <script src='https://unpkg.com/three@0.100.0/examples/js/postprocessing/EffectComposer.js'></script>
@@ -1646,11 +1649,12 @@
                 "uTime": { value: 0 },
                 "uExposure": { value: 1.0 },
                 "uContrast": { value: 1.05 },
-                "uChromaticAberration": { value: 0.025 },
-                "uFilmGrain": { value: 0.03 },
-                "uVignette": { value: 0.35 },
+                // ===== PROFESSIONAL HD CLARITY SETTINGS =====
+                "uChromaticAberration": { value: 0.002 },  // 92% reduction - ultra-sharp
+                "uFilmGrain": { value: 0.002 },            // 93% reduction - crystal clear
+                "uVignette": { value: 0.08 },              // 77% reduction - full visible area
                 "uColorGradingTint": { value: new THREE.Color(1.0, 1.0, 1.0) },
-                "uBlendPrev": { value: 0.08 }
+                "uBlendPrev": { value: 0.0 }               // 100% removal - no blur
             },
             vertexShader: `
                 varying vec2 vUv;
